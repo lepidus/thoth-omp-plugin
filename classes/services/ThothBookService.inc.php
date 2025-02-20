@@ -58,6 +58,9 @@ class ThothBookService
         ));
 
         $this->repository->edit($thothBook);
+        $publication->setData('thothBookId', $thothBook->getWorkId());
+
+        ThothService::contribution()->manageByPublication($publication);
     }
 
     public function validate($publication)

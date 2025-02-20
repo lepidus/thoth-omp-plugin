@@ -31,16 +31,7 @@ class ThothContributionService
     {
         $thothContribution = $this->factory->createFromAuthor($author, $primaryContactId);
         $thothContribution->setWorkId($thothWorkId);
-
-        $filter = empty($author->getOrcid()) ? $author->getFullName(false) : $author->getOrcid();
-        $thothContributor = ThothRepo::contributor()->find($filter);
-
-        if ($thothContributor === null) {
-            $thothContributorId = ThothService::contributor()->register($author);
-            $thothContribution->setContributorId($thothContributorId);
-        } else {
-            $thothContribution->setContributorId($thothContributor->getContributorId());
-        }
+        $thothContribution->setContributorId(ThothService::contributor()->getIdByAuthor($author));
 
         $thothContributionId = $this->repository->add($thothContribution);
 
@@ -68,5 +59,52 @@ class ThothContributionService
         foreach ($authors as $author) {
             $this->register($author, $thothChapterId);
         }
+    }
+
+    public function manageByPublication($publication)
+    {
+        $thothBookId = $publication->getData('thothBookId');
+        $authors = DAORegistry::getDAO('AuthorDAO')->getByPublicationId($publication->getId());
+        $primaryContactId = $publication->getData('primaryContactId');
+
+        $oldThothContributions = $this->repository
+            ->getQueryBuilder()
+            ->filterByThothWorkId($thothBookId)
+            ->getMany();
+
+        $newThothContributions = [];
+        foreach ($authors as $author) {
+            $newThothContribution = $this->factory->createFromAuthor($author, $primaryContactId);
+            $newThothContribution->setWorkId($thothBookId);
+            $newThothContribution->setContributorId(ThothService::contributor()->getIdByAuthor($author));
+            $newThothContributions[] = $newThothContribution;
+        }
+
+        $deletedThothContributions = array_udiff(
+            $oldThothContributions,
+            $newThothContributions,
+            [$this, 'compare']
+        );
+
+        $addedThothContributions = array_udiff(
+            $newThothContributions,
+            $oldThothContributions,
+            [$this, 'compare']
+        );
+
+        foreach ($deletedThothContributions as $deletedThothContribution) {
+            $this->repository->delete($deletedThothContribution->getContributionId());
+        }
+
+        foreach ($addedThothContributions as $addedThothContribution) {
+            $this->repository->add($addedThothContribution);
+        }
+    }
+
+    private function compare($a, $b)
+    {
+        return ($a->getFullName() <=> $b->getFullName()) !== 0
+            ? $a->getFullName() <=> $b->getFullName()
+            : $a->getBiography() <=> $b->getBiography();
     }
 }

@@ -15,6 +15,8 @@
 
 use ThothApi\GraphQL\Models\Contribution as ThothContribution;
 
+import('plugins.generic.thoth.classes.queryBuilders.ThothContributionQueryBuilder');
+
 class ThothContributionRepository
 {
     protected $thothClient;
@@ -22,6 +24,11 @@ class ThothContributionRepository
     public function __construct($thothClient)
     {
         $this->thothClient = $thothClient;
+    }
+
+    public function getQueryBuilder()
+    {
+        return new ThothContributionQueryBuilder($this->thothClient);
     }
 
     public function new(array $data = [])

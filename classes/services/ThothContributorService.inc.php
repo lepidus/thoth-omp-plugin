@@ -31,4 +31,16 @@ class ThothContributorService
         $thothContributor = $this->factory->createFromAuthor($author);
         return $this->repository->add($thothContributor);
     }
+
+    public function getIdByAuthor($author)
+    {
+        $filter = empty($author->getOrcid()) ? $author->getFullName(false) : $author->getOrcid();
+        $thothContributor = $this->repository->find($filter);
+
+        if ($thothContributor !== null) {
+            return $thothContributor->getContributorId();
+        }
+
+        return $this->register($author);
+    }
 }
