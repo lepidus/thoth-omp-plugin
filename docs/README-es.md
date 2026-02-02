@@ -2,7 +2,7 @@
 
 # Plugin Thoth OMP
 
-Integración en progreso de OMP y [Thoth](https://thoth.pub/) para la comunicación y sincronización de datos de libros entre las dos plataformas.
+Intercambio de metadatos entre OMP y Thoth Open Metadata para facilitar la transferencia y la posterior mejora de los datos a nivel de libro y capítulo en la plataforma de metadatos de libre uso y autoservicio [Thoth](https://thoth.pub/), lo que permite a los usuarios de OMP generar metadatos en múltiples formatos específicos para libros, incluidos ONIX, MARC, KBART, Crossref XML, etc.
 
 ## Compatibilidad
 
