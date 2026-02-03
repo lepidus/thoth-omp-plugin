@@ -73,7 +73,7 @@ On the Thoth page, you can bulk submit a selection of titles from OMP into Thoth
 
 ![page](/images/page.png)
 
-## OMP-Thoth Mapping
+## OMP-Thoth Mapping of Data Fields
 
 <details>
     <summary>Click here to see the data relationship between Thoth and OMP</summary>
@@ -125,7 +125,7 @@ On the Thoth page, you can bulk submit a selection of titles from OMP into Thoth
 
 ## Credits
 
-This plugin was idealized and sponsored by [Thoth](https://thoth.pub/).
+This plugin was idealized and sponsored by [Thoth Open Metadata](https://thoth.pub/).
 
 Developed by [Lepidus Tecnologia](https://github.com/lepidus).
 
@@ -133,6 +133,6 @@ Developed by [Lepidus Tecnologia](https://github.com/lepidus).
 
 This plugin is licensed under the GNU General Public License v3.0 - [See the License file.](/LICENSE)
 
-Copyright (c) 2024 Lepidus Tecnologia
+Copyright (c) 2024-2026 Lepidus Tecnologia
 
-Copyright (c) 2024 Thoth
+Copyright (c) 2024-2026 Thoth Open Metadata
