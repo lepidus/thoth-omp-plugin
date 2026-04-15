@@ -33,8 +33,7 @@ class ThothSettingsForm extends Form
     private $encryption;
 
     private const SETTINGS = [
-        'email',
-        'password',
+        'token',
         'testEnvironment',
     ];
 
@@ -50,11 +49,10 @@ class ThothSettingsForm extends Form
         $form = $this;
         $this->addCheck(new FormValidatorCustom(
             $this,
-            'password',
+            'token',
             'required',
             'plugins.generic.thoth.settings.invalidCredentials',
-            function ($password) use ($form) {
-                $email = trim($this->getData('email'));
+            function ($token) use ($form) {
                 $testEnvironment = $this->getData('testEnvironment');
                 $httpConfig = [];
                 if ($testEnvironment) {
@@ -64,7 +62,7 @@ class ThothSettingsForm extends Form
                 $client = new Client($httpConfig);
 
                 try {
-                    $client->login($email, $password);
+                    $client->setToken(trim($token))->me();
                 } catch (QueryException $e) {
                     return false;
                 }
@@ -79,10 +77,10 @@ class ThothSettingsForm extends Form
     public function initData()
     {
         foreach (self::SETTINGS as $setting) {
-            if ($setting == 'password') {
-                $password = $this->plugin->getSetting($this->contextId, $setting);
-                $this->_data[$setting] = ($this->encryption->secretConfigExists() && $password) ?
-                    $this->encryption->decryptString($password) :
+            if ($setting == 'token') {
+                $token = $this->plugin->getSetting($this->contextId, $setting);
+                $this->_data[$setting] = ($this->encryption->secretConfigExists() && $token) ?
+                    $this->encryption->decryptString($token) :
                     null;
                 continue;
             }
@@ -104,20 +102,20 @@ class ThothSettingsForm extends Form
 
     public function execute(...$functionArgs)
     {
-        $this->encryptPassword();
+        $this->encryptToken();
         foreach (self::SETTINGS as $setting) {
             $this->plugin->updateSetting($this->contextId, $setting, trim($this->getData($setting)), 'string');
         }
         parent::execute(...$functionArgs);
     }
 
-    private function encryptPassword()
+    private function encryptToken()
     {
-        $password = $this->getData('password');
+        $token = trim($this->getData('token'));
 
-        if (!$this->encryption->textIsEncrypted($password)) {
-            $encryptedPassword = $this->encryption->encryptString($password);
-            $this->setData('password', $encryptedPassword);
+        if (!$this->encryption->textIsEncrypted($token)) {
+            $encryptedToken = $this->encryption->encryptString($token);
+            $this->setData('token', $encryptedToken);
         }
     }
 }

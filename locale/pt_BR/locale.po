@@ -16,20 +16,17 @@ msgstr "Ambiente de testes"
 msgid "plugins.generic.thoth.settings.testEnvironment.description"
 msgstr "Marque essa opção caso possua uma instância local da API do Thoth. (http://localhost:8000)"
 
-msgid "plugins.generic.thoth.settings.email"
-msgstr "Email"
-
-msgid "plugins.generic.thoth.settings.password"
-msgstr "Senha"
+msgid "plugins.generic.thoth.settings.token"
+msgstr "Token de acesso pessoal"
 
 msgid "plugins.generic.thoth.settings.invalidCredentials"
-msgstr "Credenciais inválidas"
+msgstr "Token de acesso pessoal inválido"
 
 msgid "plugins.generic.thoth.settings.secretKeyEmpty"
 msgstr "O administrador do seu site deve definir um segredo no arquivo de configuração ('api_key_secret')."
 
 msgid "plugins.generic.thoth.credentialsMissing"
-msgstr "Credenciais do Thoth não configuradas."
+msgstr "Token de acesso pessoal do Thoth não configurado."
 
 msgid "plugins.generic.thoth.field.place.label"
 msgstr "Local de Publicação"
