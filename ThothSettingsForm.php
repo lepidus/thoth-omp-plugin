@@ -34,8 +34,7 @@ require_once(dirname(__FILE__) . '/vendor/autoload.php');
 class ThothSettingsForm extends Form
 {
     private const SETTINGS = [
-        'email',
-        'password',
+        'token',
         'customThothApi',
         'customThothApiUrl',
     ];
@@ -84,10 +83,10 @@ class ThothSettingsForm extends Form
 
         $this->addCheck(new FormValidatorCustom(
             $this,
-            'password',
+            'token',
             'required',
             'plugins.generic.thoth.settings.invalidCredentials',
-            fn ($password) => $this->validateCredentials(trim($this->getData('email')), $password)
+            fn ($token) => $this->validateCredentials(trim($token))
         ));
     }
 
@@ -97,7 +96,7 @@ class ThothSettingsForm extends Form
             $value = $this->plugin->getSetting($this->contextId, $setting);
             $this->setData(
                 $setting,
-                $setting === 'password' && $value ? Crypt::decrypt($value) : $value
+                $setting === 'token' && $value ? Crypt::decrypt($value) : $value
             );
         }
     }
@@ -116,7 +115,7 @@ class ThothSettingsForm extends Form
 
     public function execute(...$functionArgs): void
     {
-        $this->setData('password', Crypt::encrypt($this->getData('password')));
+        $this->setData('token', Crypt::encrypt(trim($this->getData('token'))));
 
         foreach (self::SETTINGS as $setting) {
             $this->plugin->updateSetting($this->contextId, $setting, trim($this->getData($setting)), 'string');
@@ -125,7 +124,7 @@ class ThothSettingsForm extends Form
         parent::execute(...$functionArgs);
     }
 
-    private function validateCredentials(string $email, string $password): bool
+    private function validateCredentials(string $token): bool
     {
         $httpConfig = [];
         if ($this->getData('customThothApi') && $this->getData('customThothApiUrl')) {
@@ -133,7 +132,7 @@ class ThothSettingsForm extends Form
         }
 
         try {
-            (new Client($httpConfig))->login($email, $password);
+            (new Client($httpConfig))->setToken($token)->me();
             return true;
         } catch (QueryException) {
             return false;

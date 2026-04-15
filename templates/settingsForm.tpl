@@ -28,11 +28,8 @@
 	{include file="common/formErrors.tpl"}
 
 	{fbvFormArea id="thothSettings"}
-		{fbvFormSection title="plugins.generic.thoth.settings.email"}
-			{fbvElement type="email" id="email" label="plugins.generic.thoth.settings.email" value=$email required="true" size=$fbvStyles.size.SMALL}
-		{/fbvFormSection}	
-		{fbvFormSection title="plugins.generic.thoth.settings.password"}
-			{fbvElement type="text" password="true" id="password" label="plugins.generic.thoth.settings.password" value=$password required="true" size=$fbvStyles.size.SMALL}
+		{fbvFormSection title="plugins.generic.thoth.settings.token"}
+			{fbvElement type="text" password="true" id="token" label="plugins.generic.thoth.settings.token" value=$token required="true" size=$fbvStyles.size.SMALL}
 		{/fbvFormSection}
 
 		{fbvFormSection list="true" title="plugins.generic.thoth.settings.customThothApi"}
