@@ -30,11 +30,11 @@ This plugin is compatible with the following PKP applications:
 
 After enabling the plugin, go to the plugin settings and fill in:
 
-- **Email** and **Password**: Credentials for a Thoth account to connect with the API.
+- **Personal access token**: A valid Thoth personal access token used to authenticate API requests.
 - **Custom Thoth API**: Check this option to use a custom Thoth API instead of the official one.
 - **Thoth API URL**: The URL of the custom Thoth API (only required when the custom API option is enabled).
 
-<img src="/docs/images/plugin_settings.png" alt="Plugin settings form with email, password, custom API and URL fields" width="700">
+<img src="/docs/images/plugin_settings.png" alt="Plugin settings form with personal access token, custom API and URL fields" width="700">
 
 ### Registering Monographs
 
