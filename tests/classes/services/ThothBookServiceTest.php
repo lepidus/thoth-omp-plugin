@@ -21,7 +21,9 @@ import('classes.publication.Publication');
 import('lib.pkp.classes.core.PKPRequest');
 import('lib.pkp.tests.PKPTestCase');
 import('plugins.generic.thoth.classes.factories.ThothBookFactory');
+import('plugins.generic.thoth.classes.repositories.ThothAbstractRepository');
 import('plugins.generic.thoth.classes.repositories.ThothBookRepository');
+import('plugins.generic.thoth.classes.repositories.ThothTitleRepository');
 import('plugins.generic.thoth.classes.services.ThothBookService');
 
 class ThothBookServiceTest extends PKPTestCase
@@ -29,12 +31,20 @@ class ThothBookServiceTest extends PKPTestCase
     public function setUp(): void
     {
         parent::setUp();
-        $this->backup = ThothContainer::getInstance()->backup('client');
+        $container = ThothContainer::getInstance();
+        $this->backups = [
+            'client' => $container->backup('client'),
+            'abstractRepository' => $container->backup('abstractRepository'),
+            'titleRepository' => $container->backup('titleRepository'),
+        ];
     }
 
     protected function tearDown(): void
     {
-        ThothContainer::getInstance()->set('client', $this->backup);
+        $container = ThothContainer::getInstance();
+        foreach ($this->backups as $key => $factory) {
+            $container->set($key, $factory);
+        }
         parent::tearDown();
     }
 
@@ -43,6 +53,14 @@ class ThothBookServiceTest extends PKPTestCase
         ThothContainer::getInstance()->set('client', function () {
             return $this->getMockBuilder(ThothClient::class)->getMock();
         });
+
+        $mockAbstractRepository = $this->getMockBuilder(ThothAbstractRepository::class)
+            ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
+            ->setMethods(['new', 'add'])
+            ->getMock();
+        $mockAbstractRepository->method('new')->willReturnSelf();
+        $mockAbstractRepository->expects($this->once())->method('add');
+        ThothContainer::getInstance()->set('abstractRepository', fn () => $mockAbstractRepository);
 
         $mockFactory = $this->getMockBuilder(ThothBookFactory::class)
             ->setMethods(['createFromPublication'])
@@ -59,7 +77,26 @@ class ThothBookServiceTest extends PKPTestCase
             ->method('add')
             ->will($this->returnValue('d8fa2e63-5513-45e5-84c1-e9c2d89f99d3'));
 
-        $mockPublication = $this->getMockBuilder(Publication::class)->getMock();
+        $mockTitleRepository = $this->getMockBuilder(ThothTitleRepository::class)
+            ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
+            ->setMethods(['new', 'add'])
+            ->getMock();
+        $mockTitleRepository->method('new')->willReturnSelf();
+        $mockTitleRepository->expects($this->once())->method('add');
+        ThothContainer::getInstance()->set('titleRepository', fn () => $mockTitleRepository);
+
+        $mockPublication = $this->getMockBuilder(Publication::class)
+            ->setMethods(['getData', 'getLocalizedFullTitle', 'getLocalizedTitle', 'getLocalizedData'])
+            ->getMock();
+        $mockPublication->method('getData')->will($this->returnValueMap([
+            ['locale', null, 'en_US'],
+        ]));
+        $mockPublication->method('getLocalizedFullTitle')->will($this->returnValue('My book title: My book subtitle'));
+        $mockPublication->method('getLocalizedTitle')->will($this->returnValue('My book title'));
+        $mockPublication->method('getLocalizedData')->will($this->returnValueMap([
+            ['subtitle', null, null, 'My book subtitle'],
+            ['abstract', null, null, 'This is my book abstract'],
+        ]));
 
         $thothImprintId = 'f740cf4e-16d1-487c-9a92-615882a591e9';
 

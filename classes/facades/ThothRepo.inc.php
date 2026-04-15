@@ -23,6 +23,11 @@ class ThothRepo
         return ThothContainer::getInstance()->get('accountRepository');
     }
 
+    public static function abstract()
+    {
+        return ThothContainer::getInstance()->get('abstractRepository');
+    }
+
     public static function affiliation()
     {
         return ThothContainer::getInstance()->get('affiliationRepository');
@@ -71,6 +76,11 @@ class ThothRepo
     public static function subject()
     {
         return ThothContainer::getInstance()->get('subjectRepository');
+    }
+
+    public static function title()
+    {
+        return ThothContainer::getInstance()->get('titleRepository');
     }
 
     public static function workRelation()
