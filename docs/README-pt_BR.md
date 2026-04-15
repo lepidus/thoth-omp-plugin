@@ -19,7 +19,7 @@ Este plugin é compatível com as seguintes aplicações PKP:
 
 A instância do OMP deve ter o `api_key_secret` configurado. Você pode entrar em contato com o administrador do sistema para configurar isso (consulte [este post](https://forum.pkp.sfu.ca/t/how-to-generate-a-api-key-secret-code-in-ojs-3/72008)).
 
-Isso é necessário para usar as credenciais da API fornecidas, que são armazenadas criptografadas no banco de dados do OMP.
+Isso é necessário para armazenar o token de acesso pessoal do Thoth de forma criptografada no banco de dados do OMP.
 
 ## Instalação
 
@@ -41,7 +41,7 @@ Isso é necessário para usar as credenciais da API fornecidas, que são armazen
 
 Para configurar o plugin:
 
-- **E-mail** e **Senha**: Insira as credenciais de uma conta do Thoth para conectar com a API.
+- **Token de acesso pessoal**: Insira um token de acesso pessoal válido do Thoth para autenticar as requisições da API.
 - **Ambiente de Teste**: Marque esta opção se você estiver usando uma instância local da API do Thoth para fins de teste.
 
 ![settings](/images/settings.png)
