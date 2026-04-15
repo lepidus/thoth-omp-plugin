@@ -17,7 +17,9 @@
 use PKP\db\DAORegistry;
 use ThothApi\GraphQL\Models\Work as ThothWork;
 
+import('plugins.generic.thoth.classes.facades.ThothRepository');
 import('plugins.generic.thoth.classes.facades.ThothService');
+import('plugins.generic.thoth.classes.formatters.HtmlStripper');
 import('lib.pkp.classes.services.PKPSchemaService');
 
 class ThothBookService
@@ -67,6 +69,7 @@ class ThothBookService
         $thothBookId = $this->repository->add($thothBook);
         $publication->setData('thothBookId', $thothBookId);
         $this->setRegisteredEntryId($thothBookId);
+        $this->syncMetadata($publication, $thothBookId);
 
         ThothService::contribution()->registerByPublication($publication);
         ThothService::publication()->registerByPublication($publication);
@@ -89,6 +92,7 @@ class ThothBookService
         ));
 
         $this->repository->edit($thothBook);
+        $this->syncMetadata($publication, $thothBookId, $oldThothBook);
     }
 
     public function validate($publication)
@@ -151,5 +155,116 @@ class ThothBookService
         $thothBook->setWorkId($this->getRegisteredEntryId());
         $thothBook->setWorkStatus(ThothWork::WORK_STATUS_ACTIVE);
         $this->repository->edit($thothBook);
+    }
+
+    private function syncMetadata($publication, $thothBookId, $oldThothBook = null)
+    {
+        $this->syncTitle($publication, $thothBookId, $oldThothBook);
+        $this->syncAbstract($publication, $thothBookId, $oldThothBook);
+    }
+
+    private function syncTitle($publication, $thothBookId, $oldThothBook = null)
+    {
+        $existingTitle = $this->findCanonicalEntry($oldThothBook ? $oldThothBook->getData('titles') ?? [] : [], 'titleId');
+        $titleData = [
+            'workId' => $thothBookId,
+            'localeCode' => $this->getLocaleCode($publication->getData('locale')),
+            'fullTitle' => $publication->getLocalizedFullTitle(),
+            'title' => $publication->getLocalizedTitle(),
+            'subtitle' => $publication->getLocalizedData('subtitle'),
+            'canonical' => true,
+        ];
+
+        if ($existingTitle !== null) {
+            $titleData['titleId'] = $existingTitle['titleId'];
+        }
+
+        $thothTitle = ThothRepository::title()->new($titleData);
+
+        if ($existingTitle !== null) {
+            ThothRepository::title()->edit($thothTitle);
+            return;
+        }
+
+        ThothRepository::title()->add($thothTitle);
+    }
+
+    private function syncAbstract($publication, $thothBookId, $oldThothBook = null)
+    {
+        $existingAbstract = $this->findCanonicalEntry(
+            $oldThothBook ? $oldThothBook->getData('abstracts') ?? [] : [],
+            'abstractId',
+            'abstractType',
+            'LONG'
+        );
+
+        $content = HtmlStripper::stripTags($publication->getLocalizedData('abstract'));
+        if ($content === '') {
+            if ($existingAbstract !== null) {
+                ThothRepository::abstract()->delete($existingAbstract['abstractId']);
+            }
+            return;
+        }
+
+        $abstractData = [
+            'workId' => $thothBookId,
+            'localeCode' => $this->getLocaleCode($publication->getData('locale')),
+            'content' => $content,
+            'canonical' => true,
+            'abstractType' => 'LONG',
+        ];
+
+        if ($existingAbstract !== null) {
+            $abstractData['abstractId'] = $existingAbstract['abstractId'];
+        }
+
+        $thothAbstract = ThothRepository::abstract()->new($abstractData);
+
+        if ($existingAbstract !== null) {
+            ThothRepository::abstract()->edit($thothAbstract);
+            return;
+        }
+
+        ThothRepository::abstract()->add($thothAbstract);
+    }
+
+    private function findCanonicalEntry($entries, $idKey, $typeKey = null, $typeValue = null)
+    {
+        foreach ($entries as $entry) {
+            if (!isset($entry[$idKey])) {
+                continue;
+            }
+
+            if ($typeKey !== null && ($entry[$typeKey] ?? null) !== $typeValue) {
+                continue;
+            }
+
+            if ($entry['canonical'] ?? false) {
+                return $entry;
+            }
+        }
+
+        foreach ($entries as $entry) {
+            if (!isset($entry[$idKey])) {
+                continue;
+            }
+
+            if ($typeKey !== null && ($entry[$typeKey] ?? null) !== $typeValue) {
+                continue;
+            }
+
+            return $entry;
+        }
+
+        return null;
+    }
+
+    private function getLocaleCode($locale)
+    {
+        if (!$locale) {
+            return null;
+        }
+
+        return strtoupper(strtok(str_replace('-', '_', $locale), '_'));
     }
 }
