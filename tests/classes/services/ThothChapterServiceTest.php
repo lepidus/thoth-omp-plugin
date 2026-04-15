@@ -20,7 +20,9 @@ namespace APP\plugins\generic\thoth\tests\classes\services;
 
 use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\factories\ThothChapterFactory;
+use APP\plugins\generic\thoth\classes\repositories\ThothAbstractRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothChapterRepository;
+use APP\plugins\generic\thoth\classes\repositories\ThothTitleRepository;
 use APP\plugins\generic\thoth\classes\services\ThothChapterService;
 use APP\plugins\generic\thoth\classes\services\ThothContributionService;
 use APP\plugins\generic\thoth\classes\services\ThothPublicationService;
@@ -40,8 +42,10 @@ class ThothChapterServiceTest extends PKPTestCase
         $container = ThothContainer::getInstance();
         $this->backups = [
             'client' => $container->backup('client'),
+            'abstractRepository' => $container->backup('abstractRepository'),
             'contributionService' => $container->backup('contributionService'),
             'publicationService' => $container->backup('publicationService'),
+            'titleRepository' => $container->backup('titleRepository'),
         ];
     }
 
@@ -67,6 +71,14 @@ class ThothChapterServiceTest extends PKPTestCase
             return $this->getMockBuilder(ThothClient::class)->getMock();
         });
 
+        $mockAbstractRepository = $this->getMockBuilder(ThothAbstractRepository::class)
+            ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
+            ->onlyMethods(['new', 'add'])
+            ->getMock();
+        $mockAbstractRepository->method('new')->willReturnSelf();
+        $mockAbstractRepository->expects($this->once())->method('add');
+        $container->set('abstractRepository', fn () => $mockAbstractRepository);
+
         $mockContributionService = $this->createMock(ThothContributionService::class);
         $mockContributionService->method('registerByChapter');
         $container->set('contributionService', fn () => $mockContributionService);
@@ -84,10 +96,21 @@ class ThothChapterServiceTest extends PKPTestCase
                     ->shouldReceive('getData')
                     ->with('submissionId')
                     ->andReturn(99)
+                    ->shouldReceive('getData')
+                    ->with('locale')
+                    ->andReturn('en_US')
                     ->getMock()
             )
             ->getMock();
         app()->instance(PublicationRepository::class, $publicationRepoMock);
+
+        $mockTitleRepository = $this->getMockBuilder(ThothTitleRepository::class)
+            ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
+            ->onlyMethods(['new', 'add'])
+            ->getMock();
+        $mockTitleRepository->method('new')->willReturnSelf();
+        $mockTitleRepository->expects($this->once())->method('add');
+        $container->set('titleRepository', fn () => $mockTitleRepository);
 
         $mockFactory = $this->getMockBuilder(ThothChapterFactory::class)
             ->onlyMethods(['createFromChapter'])
@@ -105,7 +128,7 @@ class ThothChapterServiceTest extends PKPTestCase
             ->willReturn('fed8b9ee-2537-4a66-a1a1-eeadf4001c59');
 
         $mockChapter = $this->getMockBuilder(\APP\monograph\Chapter::class)
-            ->onlyMethods(['getAuthors', 'getData'])
+            ->onlyMethods(['getAuthors', 'getData', 'getLocalizedFullTitle', 'getLocalizedTitle', 'getLocalizedData'])
             ->getMock();
         $mockChapter->expects($this->any())
             ->method('getAuthors')
@@ -116,6 +139,16 @@ class ThothChapterServiceTest extends PKPTestCase
                 ['publicationId', null, 99],
                 ['thothChapterId', null, 'a518bebb-4a2c-48bb-8781-071ece2f2745']
             ]);
+        $mockChapter->method('getLocalizedFullTitle')->willReturn('My chapter title: My chapter subtitle');
+        $mockChapter->method('getLocalizedTitle')->willReturn('My chapter title');
+        $mockChapter->method('getLocalizedData')->willReturnCallback(function ($key) {
+            $values = [
+                'subtitle' => 'My chapter subtitle',
+                'abstract' => 'This is my chapter abstract',
+            ];
+
+            return $values[$key] ?? null;
+        });
 
         $thothImprintId = 'd7991bfa-0ed3-432f-b9bd-0c7d0a4a1dec';
 
