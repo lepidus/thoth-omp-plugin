@@ -198,7 +198,7 @@ class ThothEndpoint
                 $request,
                 $submission,
                 $success ? 'plugins.generic.thoth.register.success.log' : 'plugins.generic.thoth.register.error.log',
-                ThothNotification::getDisplayErrorMessage($errorMessage)
+                $errorMessage
             );
             return;
         }
