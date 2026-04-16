@@ -22,6 +22,7 @@ use ThothApi\GraphQL\Models\Contribution as ThothContribution;
 use ThothApi\GraphQL\Models\Contributor as ThothContributor;
 
 import('plugins.generic.thoth.classes.factories.ThothContributionFactory');
+import('plugins.generic.thoth.classes.repositories.ThothBiographyRepository');
 import('plugins.generic.thoth.classes.services.ThothContributionService');
 import('plugins.generic.thoth.classes.repositories.ThothContributionRepository');
 
@@ -29,6 +30,15 @@ class ThothContributionServiceTest extends PKPTestCase
 {
     public function testRegisterContribution()
     {
+        $mockBiographyRepository = $this->getMockBuilder(ThothBiographyRepository::class)
+            ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
+            ->setMethods(['new', 'add'])
+            ->getMock();
+        $mockBiographyRepository->method('new')->willReturnSelf();
+        $mockBiographyRepository->expects($this->exactly(2))
+            ->method('add');
+        ThothContainer::getInstance()->set('biographyRepository', fn () => $mockBiographyRepository);
+
         ThothContainer::getInstance()->set('contributorRepository', function () {
             $mockRepository = $this->getMockBuilder(ThothContributorRepository::class)
                 ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
@@ -56,7 +66,30 @@ class ThothContributionServiceTest extends PKPTestCase
             ->method('add')
             ->will($this->returnValue('e2d8dc3b-a5d9-4941-8ebd-52f0a70515bd'));
 
-        $mockAuthor = $this->getMockBuilder(\APP\author\Author::class)->getMock();
+        $mockAuthor = new class {
+            public function getData($key)
+            {
+                $values = [
+                    'locale' => 'en_US',
+                    'biography' => [
+                        'en_US' => 'English biography',
+                        'pt_BR' => 'Biografia em portugues',
+                    ],
+                ];
+
+                return $values[$key] ?? null;
+            }
+
+            public function getOrcid()
+            {
+                return null;
+            }
+
+            public function getFullName($usePrefix = false)
+            {
+                return 'John Doe';
+            }
+        };
         $thothWorkId = '97fcc25c-361b-46f9-8c4b-016bfa36fb6d';
 
         $service = new ThothContributionService($mockFactory, $mockRepository);

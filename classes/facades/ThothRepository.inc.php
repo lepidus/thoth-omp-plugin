@@ -28,6 +28,11 @@ class ThothRepository
         return ThothContainer::getInstance()->get('abstractRepository');
     }
 
+    public static function biography()
+    {
+        return ThothContainer::getInstance()->get('biographyRepository');
+    }
+
     public static function affiliation()
     {
         return ThothContainer::getInstance()->get('affiliationRepository');

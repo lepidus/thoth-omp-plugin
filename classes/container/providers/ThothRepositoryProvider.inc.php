@@ -31,6 +31,7 @@ import('plugins.generic.thoth.classes.factories.ThothPublicationFactory');
 import('plugins.generic.thoth.classes.repositories.ThothAccountRepository');
 import('plugins.generic.thoth.classes.repositories.ThothAbstractRepository');
 import('plugins.generic.thoth.classes.repositories.ThothAffiliationRepository');
+import('plugins.generic.thoth.classes.repositories.ThothBiographyRepository');
 import('plugins.generic.thoth.classes.repositories.ThothBookRepository');
 import('plugins.generic.thoth.classes.repositories.ThothChapterRepository');
 import('plugins.generic.thoth.classes.repositories.ThothContributionRepository');
@@ -101,6 +102,10 @@ class ThothRepositoryProvider implements ContainerProvider
 
         $container->set('bookRepository', function ($container) {
             return new ThothBookRepository($container->get('client'));
+        });
+
+        $container->set('biographyRepository', function ($container) {
+            return new ThothBiographyRepository($container->get('client'));
         });
 
         $container->set('chapterRepository', function ($container) {
