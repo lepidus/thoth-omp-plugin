@@ -17,7 +17,6 @@ use ThothApi\GraphQL\Models\Work as ThothWork;
 
 import('plugins.generic.thoth.classes.facades.ThothRepo');
 import('plugins.generic.thoth.classes.facades.ThothService');
-import('plugins.generic.thoth.classes.formatters.HtmlStripper');
 import('lib.pkp.classes.services.PKPSchemaService');
 
 class ThothBookService
@@ -164,84 +163,66 @@ class ThothBookService
 
     private function syncTitle($publication, $thothBookId, $oldThothBook = null)
     {
-        $existingTitle = $this->findCanonicalEntry($oldThothBook ? $oldThothBook->getData('titles') ?? [] : [], 'titleId');
-        $titleData = [
-            'workId' => $thothBookId,
-            'localeCode' => $this->getLocaleCode($publication->getData('locale') ?? AppLocale::getLocale()),
-            'fullTitle' => $publication->getLocalizedFullTitle(),
-            'title' => $publication->getLocalizedTitle(),
-            'subtitle' => $publication->getLocalizedData('subtitle'),
-            'canonical' => true,
-        ];
+        $canonicalLocale = $this->getCanonicalLocale($publication);
+        $existingTitles = $this->indexEntriesByLocale($oldThothBook ? $oldThothBook->getData('titles') ?? [] : [], 'titleId');
 
-        if ($existingTitle !== null) {
-            $titleData['titleId'] = $existingTitle['titleId'];
+        foreach ($this->getLocalizedTitles($publication, $thothBookId, $canonicalLocale) as $locale => $titleData) {
+            $existingTitle = $existingTitles[$this->getLocaleCode($locale)] ?? null;
+            if ($existingTitle !== null) {
+                $titleData['titleId'] = $existingTitle['titleId'];
+            }
+
+            $thothTitle = ThothRepo::title()->new($titleData);
+
+            if ($existingTitle !== null) {
+                ThothRepo::title()->edit($thothTitle);
+                unset($existingTitles[$this->getLocaleCode($locale)]);
+                continue;
+            }
+
+            ThothRepo::title()->add($thothTitle);
         }
 
-        $thothTitle = ThothRepo::title()->new($titleData);
-
-        if ($existingTitle !== null) {
-            ThothRepo::title()->edit($thothTitle);
-            return;
+        foreach ($existingTitles as $existingTitle) {
+            ThothRepo::title()->delete($existingTitle['titleId']);
         }
-
-        ThothRepo::title()->add($thothTitle);
     }
 
     private function syncAbstract($publication, $thothBookId, $oldThothBook = null)
     {
-        $existingAbstract = $this->findCanonicalEntry(
+        $canonicalLocale = $this->getCanonicalLocale($publication);
+        $existingAbstracts = $this->indexEntriesByLocale(
             $oldThothBook ? $oldThothBook->getData('abstracts') ?? [] : [],
             'abstractId',
             'abstractType',
             'LONG'
         );
 
-        $content = HtmlStripper::stripTags($publication->getLocalizedData('abstract'));
-        if ($content === '') {
+        foreach ($this->getLocalizedAbstracts($publication, $thothBookId, $canonicalLocale) as $locale => $abstractData) {
+            $existingAbstract = $existingAbstracts[$this->getLocaleCode($locale)] ?? null;
             if ($existingAbstract !== null) {
-                ThothRepo::abstract()->delete($existingAbstract['abstractId']);
+                $abstractData['abstractId'] = $existingAbstract['abstractId'];
             }
-            return;
+
+            $thothAbstract = ThothRepo::abstract()->new($abstractData);
+
+            if ($existingAbstract !== null) {
+                ThothRepo::abstract()->edit($thothAbstract);
+                unset($existingAbstracts[$this->getLocaleCode($locale)]);
+                continue;
+            }
+
+            ThothRepo::abstract()->add($thothAbstract);
         }
 
-        $abstractData = [
-            'workId' => $thothBookId,
-            'localeCode' => $this->getLocaleCode($publication->getData('locale') ?? AppLocale::getLocale()),
-            'content' => $content,
-            'canonical' => true,
-            'abstractType' => 'LONG',
-        ];
-
-        if ($existingAbstract !== null) {
-            $abstractData['abstractId'] = $existingAbstract['abstractId'];
+        foreach ($existingAbstracts as $existingAbstract) {
+            ThothRepo::abstract()->delete($existingAbstract['abstractId']);
         }
-
-        $thothAbstract = ThothRepo::abstract()->new($abstractData);
-
-        if ($existingAbstract !== null) {
-            ThothRepo::abstract()->edit($thothAbstract);
-            return;
-        }
-
-        ThothRepo::abstract()->add($thothAbstract);
     }
 
-    private function findCanonicalEntry($entries, $idKey, $typeKey = null, $typeValue = null)
+    private function indexEntriesByLocale($entries, $idKey, $typeKey = null, $typeValue = null)
     {
-        foreach ($entries as $entry) {
-            if (!isset($entry[$idKey])) {
-                continue;
-            }
-
-            if ($typeKey !== null && ($entry[$typeKey] ?? null) !== $typeValue) {
-                continue;
-            }
-
-            if ($entry['canonical'] ?? false) {
-                return $entry;
-            }
-        }
+        $indexedEntries = [];
 
         foreach ($entries as $entry) {
             if (!isset($entry[$idKey])) {
@@ -252,10 +233,17 @@ class ThothBookService
                 continue;
             }
 
-            return $entry;
+            $localeCode = $entry['localeCode'] ?? null;
+            if ($localeCode === null) {
+                continue;
+            }
+
+            if (!isset($indexedEntries[$localeCode]) || ($entry['canonical'] ?? false)) {
+                $indexedEntries[$localeCode] = $entry;
+            }
         }
 
-        return null;
+        return $indexedEntries;
     }
 
     private function getLocaleCode($locale)
@@ -265,5 +253,87 @@ class ThothBookService
         }
 
         return strtoupper(strtok(str_replace('-', '_', $locale), '_'));
+    }
+
+    private function getLocalizedTitles($publication, $workId, $canonicalLocale)
+    {
+        $titles = $this->getLocalizedValues($publication, 'title', $canonicalLocale);
+        $subtitles = $this->getLocalizedValues($publication, 'subtitle');
+        $payloads = [];
+
+        foreach ($titles as $locale => $title) {
+            $payloads[$locale] = [
+                'workId' => $workId,
+                'localeCode' => $this->getLocaleCode($locale),
+                'fullTitle' => $this->composeFullTitle($title, $subtitles[$locale] ?? null),
+                'title' => $title,
+                'subtitle' => $subtitles[$locale] ?? null,
+                'canonical' => $locale === $canonicalLocale,
+            ];
+        }
+
+        return $payloads;
+    }
+
+    private function getLocalizedAbstracts($publication, $workId, $canonicalLocale)
+    {
+        $abstracts = $this->getLocalizedValues($publication, 'abstract', $canonicalLocale);
+        $payloads = [];
+
+        foreach ($abstracts as $locale => $abstract) {
+            if ($abstract === '') {
+                continue;
+            }
+
+            $payloads[$locale] = [
+                'workId' => $workId,
+                'localeCode' => $this->getLocaleCode($locale),
+                'content' => $abstract,
+                'canonical' => $locale === $canonicalLocale,
+                'abstractType' => 'LONG',
+            ];
+        }
+
+        return $payloads;
+    }
+
+    private function getLocalizedValues($entity, $key, $fallbackLocale = null)
+    {
+        $values = $entity->getData($key);
+        if (is_array($values)) {
+            return array_filter($values, function ($value) {
+                return $value !== null && $value !== '';
+            });
+        }
+
+        if ($values !== null && $values !== '') {
+            return [($fallbackLocale ?: 'und') => $values];
+        }
+
+        return [];
+    }
+
+    private function getCanonicalLocale($publication)
+    {
+        $preferredLocale = $publication->getData('locale') ?? AppLocale::getLocale();
+        $locales = array_keys($this->getLocalizedValues($publication, 'title', $preferredLocale));
+        if (empty($locales)) {
+            $locales = array_keys($this->getLocalizedValues($publication, 'abstract', $preferredLocale));
+        }
+
+        if ($preferredLocale && in_array($preferredLocale, $locales)) {
+            return $preferredLocale;
+        }
+
+        return $locales[0] ?? $preferredLocale;
+    }
+
+    private function composeFullTitle($title, $subtitle = null)
+    {
+        if (!$subtitle) {
+            return $title;
+        }
+
+        return "{$title}: {$subtitle}";
     }
 }

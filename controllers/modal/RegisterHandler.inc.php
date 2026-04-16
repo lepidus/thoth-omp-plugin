@@ -92,7 +92,7 @@ class RegisterHandler extends Handler
                 $imprints = ThothRepo::imprint()->getMany(array_column($publishers, 'publisherId'));
             }
         } catch (Exception $e) {
-            error_log($e->getMessage());
+            error_log(ThothNotification::getLoggableErrorMessage($e));
             $errors = [__('plugins.generic.thoth.connectionError')];
         }
 

@@ -98,7 +98,7 @@ class ThothEndpoint
             $this->handleNotification($request, $submission, true, $disableNotification);
         } catch (QueryException $e) {
             $thothBookService->deleteRegisteredEntry();
-            $this->handleNotification($request, $submission, false, $disableNotification, $e->getMessage());
+            $this->handleNotification($request, $submission, false, $disableNotification, $e);
             $failure['errors'][] = __('plugins.generic.thoth.register.error.log', ['reason' => $e->getMessage()]);
             return $response->withStatus(403)->withJson($failure);
         }
@@ -124,7 +124,7 @@ class ThothEndpoint
                 $request,
                 $submission,
                 $success ? 'plugins.generic.thoth.register.success.log' : 'plugins.generic.thoth.register.error.log',
-                $errorMessage
+                ThothNotification::getDisplayErrorMessage($errorMessage)
             );
             return;
         }

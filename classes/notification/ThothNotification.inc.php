@@ -15,6 +15,28 @@
 
 class ThothNotification
 {
+    public static function getLoggableErrorMessage($error)
+    {
+        if (is_object($error) && method_exists($error, 'getLogMessage')) {
+            return $error->getLogMessage();
+        }
+
+        if ($error instanceof Throwable) {
+            return $error->getMessage();
+        }
+
+        return (string) $error;
+    }
+
+    public static function getDisplayErrorMessage($error)
+    {
+        if ($error instanceof Throwable) {
+            return $error->getMessage();
+        }
+
+        return (string) $error;
+    }
+
     public function notifySuccess($request, $submission)
     {
         $this->notify($request, $submission, NOTIFICATION_TYPE_SUCCESS, 'plugins.generic.thoth.register.success');
@@ -22,8 +44,14 @@ class ThothNotification
 
     public function notifyError($request, $submission, $error)
     {
-        error_log("Failed to send the request to Thoth: $error");
-        $this->notify($request, $submission, NOTIFICATION_TYPE_ERROR, 'plugins.generic.thoth.register.error', $error);
+        error_log('Failed to send the request to Thoth: ' . self::getLoggableErrorMessage($error));
+        $this->notify(
+            $request,
+            $submission,
+            NOTIFICATION_TYPE_ERROR,
+            'plugins.generic.thoth.register.error',
+            self::getDisplayErrorMessage($error)
+        );
     }
 
     public function notify($request, $submission, $notificationType, $messageKey, $error = null)

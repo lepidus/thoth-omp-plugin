@@ -59,7 +59,7 @@ class ThothBookServiceTest extends PKPTestCase
             ->setMethods(['new', 'add'])
             ->getMock();
         $mockAbstractRepository->method('new')->willReturnSelf();
-        $mockAbstractRepository->expects($this->once())->method('add');
+        $mockAbstractRepository->expects($this->exactly(2))->method('add');
         ThothContainer::getInstance()->set('abstractRepository', fn () => $mockAbstractRepository);
 
         $mockFactory = $this->getMockBuilder(ThothBookFactory::class)
@@ -82,20 +82,26 @@ class ThothBookServiceTest extends PKPTestCase
             ->setMethods(['new', 'add'])
             ->getMock();
         $mockTitleRepository->method('new')->willReturnSelf();
-        $mockTitleRepository->expects($this->once())->method('add');
+        $mockTitleRepository->expects($this->exactly(2))->method('add');
         ThothContainer::getInstance()->set('titleRepository', fn () => $mockTitleRepository);
 
         $mockPublication = $this->getMockBuilder(Publication::class)
-            ->setMethods(['getData', 'getLocalizedFullTitle', 'getLocalizedTitle', 'getLocalizedData'])
+            ->setMethods(['getData'])
             ->getMock();
         $mockPublication->method('getData')->will($this->returnValueMap([
             ['locale', null, 'en_US'],
-        ]));
-        $mockPublication->method('getLocalizedFullTitle')->will($this->returnValue('My book title: My book subtitle'));
-        $mockPublication->method('getLocalizedTitle')->will($this->returnValue('My book title'));
-        $mockPublication->method('getLocalizedData')->will($this->returnValueMap([
-            ['subtitle', null, null, 'My book subtitle'],
-            ['abstract', null, null, 'This is my book abstract'],
+            ['title', null, [
+                'en_US' => 'My book title',
+                'pt_BR' => 'Meu titulo',
+            ]],
+            ['subtitle', null, [
+                'en_US' => 'My book subtitle',
+                'pt_BR' => 'Meu subtitulo',
+            ]],
+            ['abstract', null, [
+                'en_US' => 'This is my book abstract',
+                'pt_BR' => 'Este e meu resumo',
+            ]],
         ]));
 
         $thothImprintId = 'f740cf4e-16d1-487c-9a92-615882a591e9';
