@@ -14,7 +14,6 @@
  */
 
 use ThothApi\GraphQL\Models\WorkRelation as ThothWorkRelation;
-
 use APP\facades\Repo;
 
 import('plugins.generic.thoth.classes.facades.ThothService');

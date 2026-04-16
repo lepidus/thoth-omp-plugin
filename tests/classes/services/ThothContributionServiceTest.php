@@ -66,7 +66,7 @@ class ThothContributionServiceTest extends PKPTestCase
             ->method('add')
             ->will($this->returnValue('e2d8dc3b-a5d9-4941-8ebd-52f0a70515bd'));
 
-        $mockAuthor = new class {
+        $mockAuthor = new class () {
             public function getData($key)
             {
                 $values = [
