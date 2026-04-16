@@ -47,7 +47,7 @@ class ThothHandler extends Handler
             $publishers = ThothRepo::account()->getLinkedPublishers();
             $imprints = ThothRepo::imprint()->getMany(array_column($publishers, 'publisherId'));
         } catch (\Exception $e) {
-            error_log(ThothNotification::getLoggableErrorMessage($e));
+            error_log($e->getMessage());
             $connectionError = true;
         }
 
