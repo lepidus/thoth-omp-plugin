@@ -22,6 +22,7 @@ use APP\core\Application;
 use APP\plugins\generic\thoth\classes\repositories\ThothAccountRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothAbstractRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothAffiliationRepository;
+use APP\plugins\generic\thoth\classes\repositories\ThothBiographyRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothBookRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothChapterRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothContributionRepository;
@@ -95,6 +96,10 @@ class ThothRepositoryProvider implements ContainerProvider
 
         $container->set('bookRepository', function ($container) {
             return new ThothBookRepository($container->get('client'));
+        });
+
+        $container->set('biographyRepository', function ($container) {
+            return new ThothBiographyRepository($container->get('client'));
         });
 
         $container->set('chapterRepository', function ($container) {

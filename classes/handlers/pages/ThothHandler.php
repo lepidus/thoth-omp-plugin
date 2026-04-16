@@ -24,6 +24,7 @@ use APP\handler\Handler;
 use APP\i18n\AppLocale;
 use APP\plugins\generic\thoth\classes\components\listPanels\ThothListPanel;
 use APP\plugins\generic\thoth\classes\facades\ThothRepository;
+use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use APP\template\TemplateManager;
 use PKP\db\DAORegistry;
 use PKP\plugins\PluginRegistry;
@@ -71,7 +72,7 @@ class ThothHandler extends Handler
             $publishers = ThothRepository::account()->getLinkedPublishers();
             $imprints = ThothRepository::imprint()->getMany(array_column($publishers, 'publisherId'));
         } catch (\Exception $e) {
-            error_log($e->getMessage());
+            error_log(ThothNotification::getLoggableErrorMessage($e));
             $connectionError = true;
         }
 

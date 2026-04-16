@@ -19,6 +19,7 @@ namespace APP\plugins\generic\thoth\classes\components\forms\config;
 use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\facades\ThothRepository;
 use APP\plugins\generic\thoth\classes\facades\ThothService;
+use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use APP\submission\Submission;
 use ThothApi\GraphQL\Models\Work as ThothWork;
 
@@ -45,7 +46,7 @@ class PublishFormConfig
                 $imprints = ThothRepository::imprint()->getMany(array_column($publishers, 'publisherId'));
             }
         } catch (Exception $e) {
-            error_log($e->getMessage());
+            error_log(ThothNotification::getLoggableErrorMessage($e));
             $errors = [__('plugins.generic.thoth.connectionError')];
         }
 

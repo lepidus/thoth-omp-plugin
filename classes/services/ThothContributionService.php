@@ -48,6 +48,7 @@ class ThothContributionService
         }
 
         $thothContributionId = $this->repository->add($thothContribution);
+        $this->syncBiographies($author, $thothContributionId);
 
         $affiliationOrdinal = 1;
         foreach ($author->getAffiliations() as $affiliation) {
@@ -100,5 +101,62 @@ class ThothContributionService
             $this->register($author, $seq, $thothChapterId);
             $seq++;
         }
+    }
+
+    private function syncBiographies($author, string $thothContributionId): void
+    {
+        $localizedBiographies = $this->getLocalizedValues($author, 'biography', $author->getData('locale'));
+        if (empty($localizedBiographies)) {
+            return;
+        }
+
+        $canonicalLocale = $this->getCanonicalLocale(array_keys($localizedBiographies), $author->getData('locale'));
+
+        foreach ($localizedBiographies as $locale => $biography) {
+            if ($biography === '') {
+                continue;
+            }
+
+            $thothBiography = ThothRepository::biography()->new([
+                'contributionId' => $thothContributionId,
+                'localeCode' => $this->getLocaleCode($locale),
+                'content' => $biography,
+                'canonical' => $locale === $canonicalLocale,
+            ]);
+
+            ThothRepository::biography()->add($thothBiography);
+        }
+    }
+
+    private function getLocalizedValues($entity, string $key, ?string $fallbackLocale = null): array
+    {
+        $values = $entity->getData($key);
+        if (is_array($values)) {
+            return array_filter($values, fn ($value) => $value !== null && $value !== '');
+        }
+
+        if ($values !== null && $values !== '') {
+            return [($fallbackLocale ?: 'und') => $values];
+        }
+
+        return [];
+    }
+
+    private function getCanonicalLocale(array $locales, ?string $preferredLocale = null): ?string
+    {
+        if ($preferredLocale && in_array($preferredLocale, $locales, true)) {
+            return $preferredLocale;
+        }
+
+        return $locales[0] ?? null;
+    }
+
+    private function getLocaleCode(?string $locale): ?string
+    {
+        if (!$locale || $locale === 'und') {
+            return null;
+        }
+
+        return strtoupper(strtok(str_replace('-', '_', $locale), '_'));
     }
 }

@@ -76,7 +76,7 @@ class ThothBookServiceTest extends PKPTestCase
             ->onlyMethods(['new', 'add'])
             ->getMock();
         $mockAbstractRepository->method('new')->willReturnSelf();
-        $mockAbstractRepository->expects($this->once())->method('add');
+        $mockAbstractRepository->expects($this->exactly(2))->method('add');
         $container->set('abstractRepository', fn () => $mockAbstractRepository);
 
         $mockContributionService = $this->createMock(ThothContributionService::class);
@@ -104,7 +104,7 @@ class ThothBookServiceTest extends PKPTestCase
             ->onlyMethods(['new', 'add'])
             ->getMock();
         $mockTitleRepository->method('new')->willReturnSelf();
-        $mockTitleRepository->expects($this->once())->method('add');
+        $mockTitleRepository->expects($this->exactly(2))->method('add');
         $container->set('titleRepository', fn () => $mockTitleRepository);
 
         $mockWorkRelationService = $this->createMock(ThothWorkRelationService::class);
@@ -127,27 +127,29 @@ class ThothBookServiceTest extends PKPTestCase
             ->willReturn('d8fa2e63-5513-45e5-84c1-e9c2d89f99d3');
 
         $mockPublication = $this->getMockBuilder(\APP\publication\Publication::class)
-            ->onlyMethods(['getData', 'getLocalizedFullTitle', 'getLocalizedTitle', 'getLocalizedData'])
+            ->onlyMethods(['getData'])
             ->getMock();
         $mockPublication->expects($this->any())
             ->method('getData')
             ->willReturnCallback(function ($key) {
                 $values = [
                     'locale' => 'en_US',
+                    'title' => [
+                        'en_US' => 'My book title',
+                        'pt_BR' => 'Meu titulo',
+                    ],
+                    'subtitle' => [
+                        'en_US' => 'My book subtitle',
+                        'pt_BR' => 'Meu subtitulo',
+                    ],
+                    'abstract' => [
+                        'en_US' => 'This is my book abstract',
+                        'pt_BR' => 'Este e meu resumo',
+                    ],
                 ];
 
                 return $values[$key] ?? null;
             });
-        $mockPublication->method('getLocalizedFullTitle')->willReturn('My book title: My book subtitle');
-        $mockPublication->method('getLocalizedTitle')->willReturn('My book title');
-        $mockPublication->method('getLocalizedData')->willReturnCallback(function ($key) {
-            $values = [
-                'subtitle' => 'My book subtitle',
-                'abstract' => 'This is my book abstract',
-            ];
-
-            return $values[$key] ?? null;
-        });
 
         $thothImprintId = 'f740cf4e-16d1-487c-9a92-615882a591e9';
 

@@ -35,9 +35,9 @@ class ThothPublicationService
         $this->repository = $repository;
     }
 
-    public function register($publicationFormat, $thothWorkId, $chapterId = null)
+    public function register($publicationFormat, $thothWorkId, $chapterId = null, $submissionFile = null)
     {
-        $thothPublication = $this->factory->createFromPublicationFormat($publicationFormat);
+        $thothPublication = $this->factory->createFromPublicationFormat($publicationFormat, $submissionFile);
         $thothPublication->setWorkId($thothWorkId);
 
         if ($chapterId !== null) {
@@ -63,6 +63,18 @@ class ThothPublicationService
     public function registerByPublication($publication)
     {
         $thothBookId = $publication->getData('thothBookId');
+        $submissionFiles = array_filter(
+            iterator_to_array(Repo::submissionFile()
+                ->getCollector()
+                ->filterBySubmissionIds([$publication->getData('submissionId')])
+                ->filterByAssoc(Application::ASSOC_TYPE_PUBLICATION_FORMAT)
+                ->getMany()),
+            function ($submissionFile) {
+                return $submissionFile->getData('chapterId') == null;
+            }
+        );
+        $submissionFilesByPublicationFormat = $this->getSubmissionFilesByPublicationFormat($submissionFiles);
+
         $publicationFormats = DAORegistry::getDAO('PublicationFormatDAO')
             ->getByPublicationId($publication->getId());
         foreach ($publicationFormats as $publicationFormat) {
@@ -70,7 +82,12 @@ class ThothPublicationService
                 continue;
             }
 
-            $this->register($publicationFormat, $thothBookId);
+            $this->register(
+                $publicationFormat,
+                $thothBookId,
+                null,
+                $submissionFilesByPublicationFormat[$publicationFormat->getId()] ?? null
+            );
         }
     }
 
@@ -87,6 +104,7 @@ class ThothPublicationService
         $chapterSubmissionFiles = array_filter($submissionFiles, function ($submissionFile) use ($chapter) {
             return $submissionFile->getData('chapterId') == $chapter->getId();
         });
+        $submissionFilesByPublicationFormat = $this->getSubmissionFilesByPublicationFormat($chapterSubmissionFiles);
 
         $publicationFormatIds = array_map(function ($file) {
             return $file->getData('assocId');
@@ -104,7 +122,12 @@ class ThothPublicationService
         }
 
         foreach ($publicationFormats as $publicationFormat) {
-            $this->register($publicationFormat, $thothChapterId, $chapter->getId());
+            $this->register(
+                $publicationFormat,
+                $thothChapterId,
+                $chapter->getId(),
+                $submissionFilesByPublicationFormat[$publicationFormat->getId()] ?? null
+            );
         }
     }
 
@@ -158,5 +181,18 @@ class ThothPublicationService
         );
 
         return count($submissionFiles) > 0 || !empty($publicationFormat->getData('urlRemote'));
+    }
+
+    private function getSubmissionFilesByPublicationFormat(array $submissionFiles): array
+    {
+        $submissionFilesByPublicationFormat = [];
+        foreach ($submissionFiles as $submissionFile) {
+            $publicationFormatId = $submissionFile->getData('assocId');
+            if (!isset($submissionFilesByPublicationFormat[$publicationFormatId])) {
+                $submissionFilesByPublicationFormat[$publicationFormatId] = $submissionFile;
+            }
+        }
+
+        return $submissionFilesByPublicationFormat;
     }
 }

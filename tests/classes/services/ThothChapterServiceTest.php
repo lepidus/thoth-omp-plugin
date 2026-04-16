@@ -76,7 +76,7 @@ class ThothChapterServiceTest extends PKPTestCase
             ->onlyMethods(['new', 'add'])
             ->getMock();
         $mockAbstractRepository->method('new')->willReturnSelf();
-        $mockAbstractRepository->expects($this->once())->method('add');
+        $mockAbstractRepository->expects($this->exactly(2))->method('add');
         $container->set('abstractRepository', fn () => $mockAbstractRepository);
 
         $mockContributionService = $this->createMock(ThothContributionService::class);
@@ -109,7 +109,7 @@ class ThothChapterServiceTest extends PKPTestCase
             ->onlyMethods(['new', 'add'])
             ->getMock();
         $mockTitleRepository->method('new')->willReturnSelf();
-        $mockTitleRepository->expects($this->once())->method('add');
+        $mockTitleRepository->expects($this->exactly(2))->method('add');
         $container->set('titleRepository', fn () => $mockTitleRepository);
 
         $mockFactory = $this->getMockBuilder(ThothChapterFactory::class)
@@ -128,7 +128,7 @@ class ThothChapterServiceTest extends PKPTestCase
             ->willReturn('fed8b9ee-2537-4a66-a1a1-eeadf4001c59');
 
         $mockChapter = $this->getMockBuilder(\APP\monograph\Chapter::class)
-            ->onlyMethods(['getAuthors', 'getData', 'getLocalizedFullTitle', 'getLocalizedTitle', 'getLocalizedData'])
+            ->onlyMethods(['getAuthors', 'getData'])
             ->getMock();
         $mockChapter->expects($this->any())
             ->method('getAuthors')
@@ -137,18 +137,20 @@ class ThothChapterServiceTest extends PKPTestCase
             ->method('getData')
             ->willReturnMap([
                 ['publicationId', null, 99],
-                ['thothChapterId', null, 'a518bebb-4a2c-48bb-8781-071ece2f2745']
+                ['thothChapterId', null, 'a518bebb-4a2c-48bb-8781-071ece2f2745'],
+                ['title', null, [
+                    'en_US' => 'My chapter title',
+                    'pt_BR' => 'Meu titulo de capitulo',
+                ]],
+                ['subtitle', null, [
+                    'en_US' => 'My chapter subtitle',
+                    'pt_BR' => 'Meu subtitulo de capitulo',
+                ]],
+                ['abstract', null, [
+                    'en_US' => 'This is my chapter abstract',
+                    'pt_BR' => 'Este e meu resumo de capitulo',
+                ]],
             ]);
-        $mockChapter->method('getLocalizedFullTitle')->willReturn('My chapter title: My chapter subtitle');
-        $mockChapter->method('getLocalizedTitle')->willReturn('My chapter title');
-        $mockChapter->method('getLocalizedData')->willReturnCallback(function ($key) {
-            $values = [
-                'subtitle' => 'My chapter subtitle',
-                'abstract' => 'This is my chapter abstract',
-            ];
-
-            return $values[$key] ?? null;
-        });
 
         $thothImprintId = 'd7991bfa-0ed3-432f-b9bd-0c7d0a4a1dec';
 

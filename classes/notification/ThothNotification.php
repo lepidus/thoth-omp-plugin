@@ -25,6 +25,28 @@ use PKP\notification\Notification;
 
 class ThothNotification
 {
+    public static function getLoggableErrorMessage($error): string
+    {
+        if (is_object($error) && method_exists($error, 'getLogMessage')) {
+            return $error->getLogMessage();
+        }
+
+        if ($error instanceof \Throwable) {
+            return $error->getMessage();
+        }
+
+        return (string) $error;
+    }
+
+    public static function getDisplayErrorMessage($error): string
+    {
+        if ($error instanceof \Throwable) {
+            return $error->getMessage();
+        }
+
+        return (string) $error;
+    }
+
     public function notifySuccess($request, $submission)
     {
         $this->notify(
@@ -37,13 +59,13 @@ class ThothNotification
 
     public function notifyError($request, $submission, $error)
     {
-        error_log("Failed to send the request to Thoth: {$error}");
+        error_log('Failed to send the request to Thoth: ' . self::getLoggableErrorMessage($error));
         $this->notify(
             $request,
             $submission,
             Notification::NOTIFICATION_TYPE_ERROR,
             'plugins.generic.thoth.register.error',
-            $error
+            self::getDisplayErrorMessage($error)
         );
     }
 
