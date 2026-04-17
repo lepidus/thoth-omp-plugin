@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3b142c602d91db3234698ecd8d4585ac",
+    "content-hash": "19d78865003741fcf73a54570509c41f",
     "packages": [
         {
             "name": "biblys/isbn",
@@ -500,16 +500,16 @@
         },
         {
             "name": "psr/http-message",
-            "version": "2.0",
+            "version": "1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/http-message.git",
-                "reference": "402d35bcb92c70c026d1a6a9883f06b2ead23d71"
+                "reference": "cb6ce4845ce34a8ad9e68117c10ee90a29919eba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/http-message/zipball/402d35bcb92c70c026d1a6a9883f06b2ead23d71",
-                "reference": "402d35bcb92c70c026d1a6a9883f06b2ead23d71",
+                "url": "https://api.github.com/repos/php-fig/http-message/zipball/cb6ce4845ce34a8ad9e68117c10ee90a29919eba",
+                "reference": "cb6ce4845ce34a8ad9e68117c10ee90a29919eba",
                 "shasum": ""
             },
             "require": {
@@ -518,7 +518,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.0.x-dev"
+                    "dev-master": "1.1.x-dev"
                 }
             },
             "autoload": {
@@ -533,7 +533,7 @@
             "authors": [
                 {
                     "name": "PHP-FIG",
-                    "homepage": "https://www.php-fig.org/"
+                    "homepage": "http://www.php-fig.org/"
                 }
             ],
             "description": "Common interface for HTTP messages",
@@ -547,9 +547,9 @@
                 "response"
             ],
             "support": {
-                "source": "https://github.com/php-fig/http-message/tree/2.0"
+                "source": "https://github.com/php-fig/http-message/tree/1.1"
             },
-            "time": "2023-04-04T09:54:51+00:00"
+            "time": "2023-04-04T09:50:52+00:00"
         },
         {
             "name": "ralouphie/getallheaders",
@@ -664,16 +664,16 @@
         },
         {
             "name": "thoth-pub/thoth-client-php",
-            "version": "1.4.0",
+            "version": "1.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thoth-pub/thoth-client-php.git",
-                "reference": "cb2dbc70296c4bee9741ac49e64cc302e899bab8"
+                "reference": "b19f8e808c1f734106362965b6e505acc2f2c60e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thoth-pub/thoth-client-php/zipball/cb2dbc70296c4bee9741ac49e64cc302e899bab8",
-                "reference": "cb2dbc70296c4bee9741ac49e64cc302e899bab8",
+                "url": "https://api.github.com/repos/thoth-pub/thoth-client-php/zipball/b19f8e808c1f734106362965b6e505acc2f2c60e",
+                "reference": "b19f8e808c1f734106362965b6e505acc2f2c60e",
                 "shasum": ""
             },
             "require": {
@@ -697,9 +697,9 @@
             "description": "PHP client for Thoth's GraphQL and REST APIs.",
             "support": {
                 "issues": "https://github.com/thoth-pub/thoth-client-php/issues",
-                "source": "https://github.com/thoth-pub/thoth-client-php/tree/1.4.0"
+                "source": "https://github.com/thoth-pub/thoth-client-php/tree/1.4.1"
             },
-            "time": "2026-04-13T15:13:53+00:00"
+            "time": "2026-04-15T21:46:39+00:00"
         }
     ],
     "packages-dev": [],

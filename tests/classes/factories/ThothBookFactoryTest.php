@@ -163,9 +163,6 @@ class ThothBookFactoryTest extends PKPTestCase
         $this->assertEquals(new ThothWork([
             'workType' => ThothWork::WORK_TYPE_MONOGRAPH,
             'workStatus' => ThothWork::WORK_STATUS_ACTIVE,
-            'fullTitle' => 'My book title: My book subtitle',
-            'title' => 'My book title',
-            'subtitle' => 'My book subtitle',
             'edition' => 1,
             'publicationDate' => '2020-01-01',
             'place' => 'Salvador, BR',
@@ -176,7 +173,6 @@ class ThothBookFactoryTest extends PKPTestCase
             'copyrightHolder' => 'Public Knowledge Press',
             'landingPage' => 'https://omp.publicknowledgeproject.org/index.php/press/catalog/book/3',
             'coverUrl' => 'https://omp.publicknowledgeproject.org/templates/images/book-default.png',
-            'longAbstract' => 'This is my book abstract',
         ]), $thothWork);
     }
 
