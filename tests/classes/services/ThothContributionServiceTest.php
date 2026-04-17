@@ -22,22 +22,18 @@ use ThothApi\GraphQL\Models\Contribution as ThothContribution;
 use ThothApi\GraphQL\Models\Contributor as ThothContributor;
 
 import('plugins.generic.thoth.classes.factories.ThothContributionFactory');
-import('plugins.generic.thoth.classes.repositories.ThothBiographyRepository');
-import('plugins.generic.thoth.classes.services.ThothContributionService');
 import('plugins.generic.thoth.classes.repositories.ThothContributionRepository');
+import('plugins.generic.thoth.classes.repositories.ThothContributorRepository');
+import('plugins.generic.thoth.classes.services.ThothBiographyService');
+import('plugins.generic.thoth.classes.services.ThothContributionService');
 
 class ThothContributionServiceTest extends PKPTestCase
 {
     public function testRegisterContribution()
     {
-        $mockBiographyRepository = $this->getMockBuilder(ThothBiographyRepository::class)
-            ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
-            ->setMethods(['new', 'add'])
-            ->getMock();
-        $mockBiographyRepository->method('new')->willReturnSelf();
-        $mockBiographyRepository->expects($this->exactly(2))
-            ->method('add');
-        ThothContainer::getInstance()->set('biographyRepository', fn () => $mockBiographyRepository);
+        $mockBiographyService = $this->createMock(ThothBiographyService::class);
+        $mockBiographyService->expects($this->once())->method('registerByAuthor');
+        ThothContainer::getInstance()->set('biographyService', fn () => $mockBiographyService);
 
         ThothContainer::getInstance()->set('contributorRepository', function () {
             $mockRepository = $this->getMockBuilder(ThothContributorRepository::class)

@@ -118,9 +118,15 @@ class ThothSettingsForm extends Form
         foreach (self::SETTINGS as $setting) {
             if ($setting == 'token') {
                 $token = $this->plugin->getSetting($this->contextId, $setting);
-                $this->_data[$setting] = ($this->encryption->secretConfigExists() && $token) ?
-                    $this->encryption->decryptString($token) :
-                    null;
+                if ($this->encryption->secretConfigExists() && $token) {
+                    try {
+                        $this->_data[$setting] = $this->encryption->decryptString($token);
+                    } catch (Exception $e) {
+                        $this->_data[$setting] = '';
+                    }
+                } else {
+                    $this->_data[$setting] = null;
+                }
                 continue;
             }
             $this->_data[$setting] = $this->plugin->getSetting($this->contextId, $setting);
