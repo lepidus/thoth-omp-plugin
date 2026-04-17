@@ -66,7 +66,7 @@ class ThothBookFactory
             WORK_TYPE_AUTHORED_WORK => ThothWork::WORK_TYPE_MONOGRAPH
         ];
 
-        return $workTypeMapping[$submissionWorkType];
+        return $workTypeMapping[$submissionWorkType] ?? ThothWork::WORK_TYPE_MONOGRAPH;
     }
 
     public function getWorkStatusByDatePublished($datePublished)

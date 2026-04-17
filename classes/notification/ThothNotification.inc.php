@@ -22,6 +22,7 @@ class ThothNotification
 
     public function notifyError($request, $submission, $error)
     {
+        $error = $this->normalizeError($error);
         error_log("Failed to send the request to Thoth: {$error}");
         $this->notify(
             $request,
@@ -47,6 +48,7 @@ class ThothNotification
 
     public function logInfo($request, $submission, $messageKey, $error = null)
     {
+        $error = $this->normalizeError($error);
         import('lib.pkp.classes.log.SubmissionLog');
         import('classes.log.SubmissionEventLogEntry');
         SubmissionLog::logEvent(
@@ -56,6 +58,23 @@ class ThothNotification
             $messageKey,
             ['reason' => $error]
         );
+    }
+
+    protected function normalizeError($error)
+    {
+        if ($error === null || is_scalar($error)) {
+            return $error;
+        }
+
+        if ($error instanceof Throwable) {
+            return $error->getMessage();
+        }
+
+        if (is_object($error) && method_exists($error, 'getMessage')) {
+            return $error->getMessage();
+        }
+
+        return json_encode($error);
     }
 
     public function addJavaScriptData($request, $templateMgr)

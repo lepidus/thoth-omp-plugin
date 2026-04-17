@@ -46,7 +46,7 @@ class ThothAbstractFactory
             $thothAbstracts[$this->getLocaleKey($localeCode)] = new ThothAbstract([
                 'workId' => $workId,
                 'localeCode' => $localeCode,
-                'content' => $abstract,
+                'content' => $this->wrapInParagraph($abstract),
                 'canonical' => $locale === $canonicalLocale,
                 'abstractType' => 'LONG',
             ]);
@@ -107,5 +107,15 @@ class ThothAbstractFactory
             $locale ?? 'NULL',
             $normalizedLocaleCode
         ));
+    }
+
+    private function wrapInParagraph($content)
+    {
+        $content = trim($content);
+        if (preg_match('/^<p\b[^>]*>.*<\/p>$/is', $content) === 1) {
+            return $content;
+        }
+
+        return sprintf('<p>%s</p>', $content);
     }
 }
