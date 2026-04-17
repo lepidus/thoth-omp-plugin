@@ -16,7 +16,6 @@
 
 namespace APP\plugins\generic\thoth\classes\services;
 
-use APP\plugins\generic\thoth\classes\facades\ThothRepository;
 use APP\plugins\generic\thoth\classes\facades\ThothService;
 use PKP\db\DAORegistry;
 use ThothApi\GraphQL\Models\Work as ThothWork;
@@ -68,7 +67,7 @@ class ThothBookService
         $thothBookId = $this->repository->add($thothBook);
         $publication->setData('thothBookId', $thothBookId);
         $this->setRegisteredEntryId($thothBookId);
-        $this->syncMetadata($publication, $thothBookId);
+        $this->registerMetadata($publication, $thothBookId);
 
         ThothService::contribution()->registerByPublication($publication);
         ThothService::publication()->registerByPublication($publication);
@@ -91,7 +90,7 @@ class ThothBookService
         ));
 
         $this->repository->edit($thothBook);
-        $this->syncMetadata($publication, $thothBookId, $oldThothBook);
+        $this->updateMetadata($publication, $thothBookId, $oldThothBook);
     }
 
     public function validate($publication)
@@ -156,187 +155,33 @@ class ThothBookService
         $this->repository->edit($thothBook);
     }
 
-    private function syncMetadata($publication, string $thothBookId, $oldThothBook = null): void
+    private function registerMetadata($publication, string $thothBookId): void
     {
-        $this->syncTitle($publication, $thothBookId, $oldThothBook);
-        $this->syncAbstract($publication, $thothBookId, $oldThothBook);
-    }
-
-    private function syncTitle($publication, string $thothBookId, $oldThothBook = null): void
-    {
-        $canonicalLocale = $this->getCanonicalLocale($publication);
-        $existingTitles = $this->indexEntriesByLocale($oldThothBook?->getData('titles') ?? [], 'titleId');
-
-        foreach ($this->getLocalizedTitles($publication, $thothBookId, $canonicalLocale) as $locale => $titleData) {
-            $existingTitle = $existingTitles[$this->getLocaleCode($locale)] ?? null;
-            if ($existingTitle !== null) {
-                $titleData['titleId'] = $existingTitle['titleId'];
-            }
-
-            $thothTitle = ThothRepository::title()->new($titleData);
-
-            if ($existingTitle !== null) {
-                ThothRepository::title()->edit($thothTitle);
-                unset($existingTitles[$this->getLocaleCode($locale)]);
-                continue;
-            }
-
-            ThothRepository::title()->add($thothTitle);
-        }
-
-        foreach ($existingTitles as $existingTitle) {
-            ThothRepository::title()->delete($existingTitle['titleId']);
-        }
-    }
-
-    private function syncAbstract($publication, string $thothBookId, $oldThothBook = null): void
-    {
-        $canonicalLocale = $this->getCanonicalLocale($publication);
-        $existingAbstracts = $this->indexEntriesByLocale(
-            $oldThothBook?->getData('abstracts') ?? [],
-            'abstractId',
-            'abstractType',
-            'LONG'
+        ThothService::title()->registerByPublication(
+            $publication,
+            $thothBookId,
+            $publication->getData('locale')
         );
-
-        foreach ($this->getLocalizedAbstracts($publication, $thothBookId, $canonicalLocale) as $locale => $abstractData) {
-            $existingAbstract = $existingAbstracts[$this->getLocaleCode($locale)] ?? null;
-            if ($existingAbstract !== null) {
-                $abstractData['abstractId'] = $existingAbstract['abstractId'];
-            }
-
-            $thothAbstract = ThothRepository::abstract()->new($abstractData);
-
-            if ($existingAbstract !== null) {
-                ThothRepository::abstract()->edit($thothAbstract);
-                unset($existingAbstracts[$this->getLocaleCode($locale)]);
-                continue;
-            }
-
-            ThothRepository::abstract()->add($thothAbstract);
-        }
-
-        foreach ($existingAbstracts as $existingAbstract) {
-            ThothRepository::abstract()->delete($existingAbstract['abstractId']);
-        }
+        ThothService::abstract()->registerByPublication(
+            $publication,
+            $thothBookId,
+            $publication->getData('locale')
+        );
     }
 
-    private function indexEntriesByLocale(
-        array $entries,
-        string $idKey,
-        ?string $typeKey = null,
-        ?string $typeValue = null
-    ): array {
-        $indexedEntries = [];
-
-        foreach ($entries as $entry) {
-            if (!isset($entry[$idKey])) {
-                continue;
-            }
-
-            if ($typeKey !== null && ($entry[$typeKey] ?? null) !== $typeValue) {
-                continue;
-            }
-
-            $localeCode = $entry['localeCode'] ?? null;
-            if ($localeCode === null) {
-                continue;
-            }
-
-            if (!isset($indexedEntries[$localeCode]) || ($entry['canonical'] ?? false)) {
-                $indexedEntries[$localeCode] = $entry;
-            }
-        }
-
-        return $indexedEntries;
-    }
-
-    private function getLocaleCode(?string $locale): ?string
+    private function updateMetadata($publication, string $thothBookId, $oldThothBook): void
     {
-        if (!$locale) {
-            return null;
-        }
-
-        return strtoupper(strtok(str_replace('-', '_', $locale), '_'));
-    }
-
-    private function getLocalizedTitles($publication, string $workId, ?string $canonicalLocale): array
-    {
-        $titles = $this->getLocalizedValues($publication, 'title', $canonicalLocale);
-        $subtitles = $this->getLocalizedValues($publication, 'subtitle');
-        $payloads = [];
-
-        foreach ($titles as $locale => $title) {
-            $payloads[$locale] = [
-                'workId' => $workId,
-                'localeCode' => $this->getLocaleCode($locale),
-                'fullTitle' => $this->composeFullTitle($title, $subtitles[$locale] ?? null),
-                'title' => $title,
-                'subtitle' => $subtitles[$locale] ?? null,
-                'canonical' => $locale === $canonicalLocale,
-            ];
-        }
-
-        return $payloads;
-    }
-
-    private function getLocalizedAbstracts($publication, string $workId, ?string $canonicalLocale): array
-    {
-        $abstracts = $this->getLocalizedValues($publication, 'abstract', $canonicalLocale);
-        $payloads = [];
-
-        foreach ($abstracts as $locale => $abstract) {
-            if ($abstract === '') {
-                continue;
-            }
-
-            $payloads[$locale] = [
-                'workId' => $workId,
-                'localeCode' => $this->getLocaleCode($locale),
-                'content' => $abstract,
-                'canonical' => $locale === $canonicalLocale,
-                'abstractType' => 'LONG',
-            ];
-        }
-
-        return $payloads;
-    }
-
-    private function getLocalizedValues($entity, string $key, ?string $fallbackLocale = null): array
-    {
-        $values = $entity->getData($key);
-        if (is_array($values)) {
-            return array_filter($values, fn ($value) => $value !== null && $value !== '');
-        }
-
-        if ($values !== null && $values !== '') {
-            return [($fallbackLocale ?: 'und') => $values];
-        }
-
-        return [];
-    }
-
-    private function getCanonicalLocale($publication): ?string
-    {
-        $preferredLocale = $publication->getData('locale');
-        $locales = array_keys($this->getLocalizedValues($publication, 'title', $preferredLocale));
-        if (empty($locales)) {
-            $locales = array_keys($this->getLocalizedValues($publication, 'abstract', $preferredLocale));
-        }
-
-        if ($preferredLocale && in_array($preferredLocale, $locales, true)) {
-            return $preferredLocale;
-        }
-
-        return $locales[0] ?? $preferredLocale;
-    }
-
-    private function composeFullTitle(string $title, ?string $subtitle): string
-    {
-        if (!$subtitle) {
-            return $title;
-        }
-
-        return "{$title}: {$subtitle}";
+        ThothService::title()->updateByPublication(
+            $publication,
+            $thothBookId,
+            $oldThothBook->getData('titles') ?? [],
+            $publication->getData('locale')
+        );
+        ThothService::abstract()->updateByPublication(
+            $publication,
+            $thothBookId,
+            $oldThothBook->getData('abstracts') ?? [],
+            $publication->getData('locale')
+        );
     }
 }

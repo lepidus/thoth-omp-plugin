@@ -20,9 +20,19 @@ use APP\plugins\generic\thoth\classes\container\ThothContainer;
 
 class ThothService
 {
+    public static function abstract()
+    {
+        return ThothContainer::getInstance()->get('abstractService');
+    }
+
     public static function affiliation()
     {
         return ThothContainer::getInstance()->get('affiliationService');
+    }
+
+    public static function biography()
+    {
+        return ThothContainer::getInstance()->get('biographyService');
     }
 
     public static function book()
@@ -73,6 +83,11 @@ class ThothService
     public static function subject()
     {
         return ThothContainer::getInstance()->get('subjectService');
+    }
+
+    public static function title()
+    {
+        return ThothContainer::getInstance()->get('titleService');
     }
 
     public static function workRelation()

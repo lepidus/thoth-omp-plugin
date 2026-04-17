@@ -20,12 +20,12 @@ namespace APP\plugins\generic\thoth\tests\classes\services;
 
 use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\factories\ThothChapterFactory;
-use APP\plugins\generic\thoth\classes\repositories\ThothAbstractRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothChapterRepository;
-use APP\plugins\generic\thoth\classes\repositories\ThothTitleRepository;
+use APP\plugins\generic\thoth\classes\services\ThothAbstractService;
 use APP\plugins\generic\thoth\classes\services\ThothChapterService;
 use APP\plugins\generic\thoth\classes\services\ThothContributionService;
 use APP\plugins\generic\thoth\classes\services\ThothPublicationService;
+use APP\plugins\generic\thoth\classes\services\ThothTitleService;
 use APP\publication\Repository as PublicationRepository;
 use Illuminate\Support\LazyCollection;
 use Mockery;
@@ -42,10 +42,10 @@ class ThothChapterServiceTest extends PKPTestCase
         $container = ThothContainer::getInstance();
         $this->backups = [
             'client' => $container->backup('client'),
-            'abstractRepository' => $container->backup('abstractRepository'),
+            'abstractService' => $container->backup('abstractService'),
             'contributionService' => $container->backup('contributionService'),
             'publicationService' => $container->backup('publicationService'),
-            'titleRepository' => $container->backup('titleRepository'),
+            'titleService' => $container->backup('titleService'),
         ];
     }
 
@@ -71,13 +71,9 @@ class ThothChapterServiceTest extends PKPTestCase
             return $this->getMockBuilder(ThothClient::class)->getMock();
         });
 
-        $mockAbstractRepository = $this->getMockBuilder(ThothAbstractRepository::class)
-            ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
-            ->onlyMethods(['new', 'add'])
-            ->getMock();
-        $mockAbstractRepository->method('new')->willReturnSelf();
-        $mockAbstractRepository->expects($this->exactly(2))->method('add');
-        $container->set('abstractRepository', fn () => $mockAbstractRepository);
+        $mockAbstractService = $this->createMock(ThothAbstractService::class);
+        $mockAbstractService->expects($this->once())->method('registerByChapter');
+        $container->set('abstractService', fn () => $mockAbstractService);
 
         $mockContributionService = $this->createMock(ThothContributionService::class);
         $mockContributionService->method('registerByChapter');
@@ -104,13 +100,9 @@ class ThothChapterServiceTest extends PKPTestCase
             ->getMock();
         app()->instance(PublicationRepository::class, $publicationRepoMock);
 
-        $mockTitleRepository = $this->getMockBuilder(ThothTitleRepository::class)
-            ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
-            ->onlyMethods(['new', 'add'])
-            ->getMock();
-        $mockTitleRepository->method('new')->willReturnSelf();
-        $mockTitleRepository->expects($this->exactly(2))->method('add');
-        $container->set('titleRepository', fn () => $mockTitleRepository);
+        $mockTitleService = $this->createMock(ThothTitleService::class);
+        $mockTitleService->expects($this->once())->method('registerByChapter');
+        $container->set('titleService', fn () => $mockTitleService);
 
         $mockFactory = $this->getMockBuilder(ThothChapterFactory::class)
             ->onlyMethods(['createFromChapter'])
