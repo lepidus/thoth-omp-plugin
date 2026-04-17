@@ -26,7 +26,9 @@ import('plugins.generic.thoth.classes.factories.ThothContributorFactory');
 import('plugins.generic.thoth.classes.factories.ThothLocationFactory');
 import('plugins.generic.thoth.classes.factories.ThothPublicationFactory');
 import('plugins.generic.thoth.classes.repositories.ThothAccountRepository');
+import('plugins.generic.thoth.classes.repositories.ThothAbstractRepository');
 import('plugins.generic.thoth.classes.repositories.ThothAffiliationRepository');
+import('plugins.generic.thoth.classes.repositories.ThothBiographyRepository');
 import('plugins.generic.thoth.classes.repositories.ThothBookRepository');
 import('plugins.generic.thoth.classes.repositories.ThothChapterRepository');
 import('plugins.generic.thoth.classes.repositories.ThothContributionRepository');
@@ -38,6 +40,7 @@ import('plugins.generic.thoth.classes.repositories.ThothLocationRepository');
 import('plugins.generic.thoth.classes.repositories.ThothPublicationRepository');
 import('plugins.generic.thoth.classes.repositories.ThothReferenceRepository');
 import('plugins.generic.thoth.classes.repositories.ThothSubjectRepository');
+import('plugins.generic.thoth.classes.repositories.ThothTitleRepository');
 import('plugins.generic.thoth.classes.repositories.ThothWorkRelationRepository');
 import('plugins.generic.thoth.classes.repositories.ThothWorkRepository');
 
@@ -50,12 +53,23 @@ class ThothRepositoryProvider implements ContainerProvider
             $pluginSettingsDao = & DAORegistry::getDAO('PluginSettingsDAO');
             $contextId = Application::get()->getRequest()->getContext()->getId();
 
-            $testEnvironment = $pluginSettingsDao->getSetting($contextId, 'ThothPlugin', 'testEnvironment');
+            $customThothApi = $pluginSettingsDao->getSetting($contextId, 'ThothPlugin', 'customThothApi');
+            $customThothApiUrl = $pluginSettingsDao->getSetting($contextId, 'ThothPlugin', 'customThothApiUrl');
             $token = $pluginSettingsDao->getSetting($contextId, 'ThothPlugin', 'token') ?? '';
+            $decryptedToken = '';
+
+            if ($token) {
+                try {
+                    $decryptedToken = $encryption->decryptString($token);
+                } catch (Exception $e) {
+                    $decryptedToken = '';
+                }
+            }
 
             return [
-                'testEnvironment' => $testEnvironment,
-                'token' => $token ? $encryption->decryptString($token) : ''
+                'customThothApi' => $customThothApi,
+                'customThothApiUrl' => $customThothApiUrl,
+                'token' => $decryptedToken
             ];
         });
 
@@ -63,8 +77,8 @@ class ThothRepositoryProvider implements ContainerProvider
             $config = $container->get('config');
 
             $httpConfig = [];
-            if ($config['testEnvironment']) {
-                $httpConfig['base_uri'] = 'http://localhost:8000/';
+            if ($config['customThothApi'] && $config['customThothApiUrl']) {
+                $httpConfig['base_uri'] = trim($config['customThothApiUrl']);
             }
 
             $client = new Client($httpConfig);
@@ -75,12 +89,20 @@ class ThothRepositoryProvider implements ContainerProvider
             return new ThothAccountRepository($container->get('client'));
         });
 
+        $container->set('abstractRepository', function ($container) {
+            return new ThothAbstractRepository($container->get('client'));
+        });
+
         $container->set('affiliationRepository', function ($container) {
             return new ThothAffiliationRepository($container->get('client'));
         });
 
         $container->set('bookRepository', function ($container) {
             return new ThothBookRepository($container->get('client'));
+        });
+
+        $container->set('biographyRepository', function ($container) {
+            return new ThothBiographyRepository($container->get('client'));
         });
 
         $container->set('chapterRepository', function ($container) {
@@ -121,6 +143,10 @@ class ThothRepositoryProvider implements ContainerProvider
 
         $container->set('subjectRepository', function ($container) {
             return new ThothSubjectRepository($container->get('client'));
+        });
+
+        $container->set('titleRepository', function ($container) {
+            return new ThothTitleRepository($container->get('client'));
         });
 
         $container->set('workRelationRepository', function ($container) {
