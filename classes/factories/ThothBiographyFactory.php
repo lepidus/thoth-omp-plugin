@@ -37,7 +37,7 @@ class ThothBiographyFactory
             $thothBiographies[$this->getLocaleKey($localeCode)] = new ThothBiography([
                 'contributionId' => $contributionId,
                 'localeCode' => $localeCode,
-                'content' => $biography,
+                'content' => $this->wrapInParagraph($biography),
                 'canonical' => $locale === $canonicalLocale,
             ]);
         }
@@ -97,5 +97,15 @@ class ThothBiographyFactory
             $locale ?? 'NULL',
             $normalizedLocaleCode
         ));
+    }
+
+    private function wrapInParagraph(string $content): string
+    {
+        $content = trim($content);
+        if (preg_match('/^<p\b[^>]*>.*<\/p>$/is', $content) === 1) {
+            return $content;
+        }
+
+        return sprintf('<p>%s</p>', $content);
     }
 }
