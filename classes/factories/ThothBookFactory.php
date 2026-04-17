@@ -18,7 +18,6 @@ namespace APP\plugins\generic\thoth\classes\factories;
 
 use APP\core\Application;
 use APP\facades\Repo;
-use APP\plugins\generic\thoth\classes\formatters\HtmlStripper;
 use APP\submission\Submission;
 use PKP\core\Core;
 use PKP\db\DAORegistry;
@@ -38,10 +37,6 @@ class ThothBookFactory
         return new ThothWork([
             'workType' => $thothWorkType ?? $this->getWorkTypeBySubmissionWorkType($submission->getData('workType')),
             'workStatus' => $this->getWorkStatusByDatePublished($publication->getData('datePublished')),
-            'fullTitle' => $publication->getLocalizedFullTitle(),
-            'title' => $publication->getLocalizedTitle(),
-            'subtitle' => $publication->getLocalizedData('subtitle'),
-            'longAbstract' => HtmlStripper::stripTags($publication->getLocalizedData('abstract')),
             'edition' => $publication->getData('version'),
             'doi' => $this->getDoi($publication),
             'publicationDate' => $publication->getData('datePublished'),
@@ -79,7 +74,7 @@ class ThothBookFactory
             Submission::WORK_TYPE_AUTHORED_WORK => ThothWork::WORK_TYPE_MONOGRAPH
         ];
 
-        return $workTypeMapping[$submissionWorkType];
+        return $workTypeMapping[$submissionWorkType] ?? ThothWork::WORK_TYPE_MONOGRAPH;
     }
 
     public function getWorkStatusByDatePublished($datePublished)

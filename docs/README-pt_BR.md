@@ -30,11 +30,11 @@ Este plugin é compatível com as seguintes aplicações PKP:
 
 Após habilitar o plugin, vá nas configurações do plugin e preencha:
 
-- **E-mail** e **Senha**: Credenciais de uma conta do Thoth para conectar com a API.
+- **Token de acesso pessoal**: Um token de acesso pessoal válido do Thoth para autenticar as requisições da API.
 - **API Thoth personalizada**: Marque esta opção para usar uma API Thoth personalizada em vez da oficial.
 - **URL da API Thoth**: A URL da API Thoth personalizada (necessária apenas quando a opção de API personalizada está habilitada).
 
-<img src="/docs/images/plugin_settings.png" alt="Formulário de configuração do plugin com campos de e-mail, senha, API personalizada e URL" width="700">
+<img src="/docs/images/plugin_settings.png" alt="Formulário de configuração do plugin com token de acesso pessoal, API personalizada e URL" width="700">
 
 ### Registro de Monografias
 
@@ -164,4 +164,4 @@ Este plugin está licenciado sob a Licença Pública Geral GNU v3.0 - [Veja o ar
 
 Copyright (c) 2024-2026 Lepidus Tecnologia
 
-Copyright (c) 2024-2026 Thoth
+Copyright (c) 2024-2026 Thoth Open Metadata

@@ -48,6 +48,11 @@ class ThothContributionService
         }
 
         $thothContributionId = $this->repository->add($thothContribution);
+        ThothService::biography()->registerByAuthor(
+            $author,
+            $thothContributionId,
+            $author->getData('locale')
+        );
 
         $affiliationOrdinal = 1;
         foreach ($author->getAffiliations() as $affiliation) {

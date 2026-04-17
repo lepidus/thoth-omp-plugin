@@ -67,6 +67,7 @@ class ThothBookService
         $thothBookId = $this->repository->add($thothBook);
         $publication->setData('thothBookId', $thothBookId);
         $this->setRegisteredEntryId($thothBookId);
+        $this->registerMetadata($publication, $thothBookId);
 
         ThothService::contribution()->registerByPublication($publication);
         ThothService::publication()->registerByPublication($publication);
@@ -89,6 +90,7 @@ class ThothBookService
         ));
 
         $this->repository->edit($thothBook);
+        $this->updateMetadata($publication, $thothBookId, $oldThothBook);
     }
 
     public function validate($publication)
@@ -151,5 +153,35 @@ class ThothBookService
         $thothBook->setWorkId($this->getRegisteredEntryId());
         $thothBook->setWorkStatus(ThothWork::WORK_STATUS_ACTIVE);
         $this->repository->edit($thothBook);
+    }
+
+    private function registerMetadata($publication, string $thothBookId): void
+    {
+        ThothService::title()->registerByPublication(
+            $publication,
+            $thothBookId,
+            $publication->getData('locale')
+        );
+        ThothService::abstract()->registerByPublication(
+            $publication,
+            $thothBookId,
+            $publication->getData('locale')
+        );
+    }
+
+    private function updateMetadata($publication, string $thothBookId, $oldThothBook): void
+    {
+        ThothService::title()->updateByPublication(
+            $publication,
+            $thothBookId,
+            $oldThothBook->getData('titles') ?? [],
+            $publication->getData('locale')
+        );
+        ThothService::abstract()->updateByPublication(
+            $publication,
+            $thothBookId,
+            $oldThothBook->getData('abstracts') ?? [],
+            $publication->getData('locale')
+        );
     }
 }
