@@ -1,13 +1,14 @@
 <?php
 
 /**
- * @file plugins/generic/thoth/classes/services/ThothContributionService.php
+ * @file plugins/generic/thoth/classes/services/ThothContributionService.inc.php
  *
- * Copyright (c) 2024-2025 Lepidus Tecnologia
- * Copyright (c) 2024-2025 Thoth
+ * Copyright (c) 2024-2026 Lepidus Tecnologia
+ * Copyright (c) 2024-2026 Thoth
  * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
  *
  * @class ThothContributionService
+ *
  * @ingroup plugins_generic_thoth
  *
  * @brief Helper class that encapsulates business logic for Thoth contributions
@@ -43,7 +44,7 @@ class ThothContributionService
         }
 
         $thothContributionId = $this->repository->add($thothContribution);
-        $this->syncBiographies($author, $thothContributionId);
+        ThothService::biography()->registerByAuthor($author, $thothContributionId, $author->getData('locale'));
 
         if ($rorId = $author->getData('rorId')) {
             ThothService::affiliation()->register($rorId, $thothContributionId);
@@ -82,64 +83,5 @@ class ThothContributionService
             $this->register($author, $seq, $thothChapterId);
             $seq++;
         }
-    }
-
-    private function syncBiographies($author, $thothContributionId)
-    {
-        $localizedBiographies = $this->getLocalizedValues($author, 'biography', $author->getData('locale'));
-        if (empty($localizedBiographies)) {
-            return;
-        }
-
-        $canonicalLocale = $this->getCanonicalLocale(array_keys($localizedBiographies), $author->getData('locale'));
-
-        foreach ($localizedBiographies as $locale => $biography) {
-            if ($biography === '') {
-                continue;
-            }
-
-            $thothBiography = ThothRepo::biography()->new([
-                'contributionId' => $thothContributionId,
-                'localeCode' => $this->getLocaleCode($locale),
-                'content' => $biography,
-                'canonical' => $locale === $canonicalLocale,
-            ]);
-
-            ThothRepo::biography()->add($thothBiography);
-        }
-    }
-
-    private function getLocalizedValues($entity, $key, $fallbackLocale = null)
-    {
-        $values = $entity->getData($key);
-        if (is_array($values)) {
-            return array_filter($values, function ($value) {
-                return $value !== null && $value !== '';
-            });
-        }
-
-        if ($values !== null && $values !== '') {
-            return [($fallbackLocale ?: 'und') => $values];
-        }
-
-        return [];
-    }
-
-    private function getCanonicalLocale($locales, $preferredLocale = null)
-    {
-        if ($preferredLocale && in_array($preferredLocale, $locales)) {
-            return $preferredLocale;
-        }
-
-        return $locales[0] ?? null;
-    }
-
-    private function getLocaleCode($locale)
-    {
-        if (!$locale || $locale === 'und') {
-            return null;
-        }
-
-        return strtoupper(strtok(str_replace('-', '_', $locale), '_'));
     }
 }

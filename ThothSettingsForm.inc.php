@@ -110,13 +110,20 @@ class ThothSettingsForm extends Form
 
     public function initData()
     {
+        $encryption = new DataEncryption();
+
         foreach (self::SETTINGS as $setting) {
             if ($setting == 'token') {
-                $encryption = new DataEncryption();
                 $token = $this->plugin->getSetting($this->contextId, $setting);
-                $this->_data[$setting] = ($encryption->secretConfigExists() && $token) ?
-                    $encryption->decryptString($token) :
-                    null;
+                if ($encryption->secretConfigExists() && $token) {
+                    try {
+                        $this->_data[$setting] = $encryption->decryptString($token);
+                    } catch (Exception $e) {
+                        $this->_data[$setting] = '';
+                    }
+                } else {
+                    $this->_data[$setting] = null;
+                }
                 continue;
             }
             $this->_data[$setting] = $this->plugin->getSetting($this->contextId, $setting);

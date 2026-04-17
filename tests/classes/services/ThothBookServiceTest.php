@@ -21,10 +21,16 @@ import('classes.publication.Publication');
 import('lib.pkp.classes.core.PKPRequest');
 import('lib.pkp.tests.PKPTestCase');
 import('plugins.generic.thoth.classes.factories.ThothBookFactory');
-import('plugins.generic.thoth.classes.repositories.ThothAbstractRepository');
 import('plugins.generic.thoth.classes.repositories.ThothBookRepository');
-import('plugins.generic.thoth.classes.repositories.ThothTitleRepository');
+import('plugins.generic.thoth.classes.services.ThothAbstractService');
 import('plugins.generic.thoth.classes.services.ThothBookService');
+import('plugins.generic.thoth.classes.services.ThothContributionService');
+import('plugins.generic.thoth.classes.services.ThothLanguageService');
+import('plugins.generic.thoth.classes.services.ThothPublicationService');
+import('plugins.generic.thoth.classes.services.ThothReferenceService');
+import('plugins.generic.thoth.classes.services.ThothSubjectService');
+import('plugins.generic.thoth.classes.services.ThothTitleService');
+import('plugins.generic.thoth.classes.services.ThothWorkRelationService');
 
 class ThothBookServiceTest extends PKPTestCase
 {
@@ -34,8 +40,14 @@ class ThothBookServiceTest extends PKPTestCase
         $container = ThothContainer::getInstance();
         $this->backups = [
             'client' => $container->backup('client'),
-            'abstractRepository' => $container->backup('abstractRepository'),
-            'titleRepository' => $container->backup('titleRepository'),
+            'abstractService' => $container->backup('abstractService'),
+            'contributionService' => $container->backup('contributionService'),
+            'languageService' => $container->backup('languageService'),
+            'publicationService' => $container->backup('publicationService'),
+            'referenceService' => $container->backup('referenceService'),
+            'subjectService' => $container->backup('subjectService'),
+            'titleService' => $container->backup('titleService'),
+            'workRelationService' => $container->backup('workRelationService'),
         ];
     }
 
@@ -54,13 +66,29 @@ class ThothBookServiceTest extends PKPTestCase
             return $this->getMockBuilder(ThothClient::class)->getMock();
         });
 
-        $mockAbstractRepository = $this->getMockBuilder(ThothAbstractRepository::class)
-            ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
-            ->setMethods(['new', 'add'])
-            ->getMock();
-        $mockAbstractRepository->method('new')->willReturnSelf();
-        $mockAbstractRepository->expects($this->exactly(2))->method('add');
-        ThothContainer::getInstance()->set('abstractRepository', fn () => $mockAbstractRepository);
+        $mockAbstractService = $this->createMock(ThothAbstractService::class);
+        $mockAbstractService->expects($this->once())->method('registerByPublication');
+        ThothContainer::getInstance()->set('abstractService', fn () => $mockAbstractService);
+
+        $mockContributionService = $this->createMock(ThothContributionService::class);
+        $mockContributionService->method('registerByPublication');
+        ThothContainer::getInstance()->set('contributionService', fn () => $mockContributionService);
+
+        $mockPublicationService = $this->createMock(ThothPublicationService::class);
+        $mockPublicationService->method('registerByPublication');
+        ThothContainer::getInstance()->set('publicationService', fn () => $mockPublicationService);
+
+        $mockLanguageService = $this->createMock(ThothLanguageService::class);
+        $mockLanguageService->method('registerByPublication');
+        ThothContainer::getInstance()->set('languageService', fn () => $mockLanguageService);
+
+        $mockSubjectService = $this->createMock(ThothSubjectService::class);
+        $mockSubjectService->method('registerByPublication');
+        ThothContainer::getInstance()->set('subjectService', fn () => $mockSubjectService);
+
+        $mockReferenceService = $this->createMock(ThothReferenceService::class);
+        $mockReferenceService->method('registerByPublication');
+        ThothContainer::getInstance()->set('referenceService', fn () => $mockReferenceService);
 
         $mockFactory = $this->getMockBuilder(ThothBookFactory::class)
             ->setMethods(['createFromPublication'])
@@ -77,13 +105,13 @@ class ThothBookServiceTest extends PKPTestCase
             ->method('add')
             ->will($this->returnValue('d8fa2e63-5513-45e5-84c1-e9c2d89f99d3'));
 
-        $mockTitleRepository = $this->getMockBuilder(ThothTitleRepository::class)
-            ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
-            ->setMethods(['new', 'add'])
-            ->getMock();
-        $mockTitleRepository->method('new')->willReturnSelf();
-        $mockTitleRepository->expects($this->exactly(2))->method('add');
-        ThothContainer::getInstance()->set('titleRepository', fn () => $mockTitleRepository);
+        $mockTitleService = $this->createMock(ThothTitleService::class);
+        $mockTitleService->expects($this->once())->method('registerByPublication');
+        ThothContainer::getInstance()->set('titleService', fn () => $mockTitleService);
+
+        $mockWorkRelationService = $this->createMock(ThothWorkRelationService::class);
+        $mockWorkRelationService->method('registerByPublication');
+        ThothContainer::getInstance()->set('workRelationService', fn () => $mockWorkRelationService);
 
         $mockPublication = $this->getMockBuilder(Publication::class)
             ->setMethods(['getData'])
@@ -114,6 +142,16 @@ class ThothBookServiceTest extends PKPTestCase
 
     public function testDoiExistsBookValidationFails()
     {
+        $mockPublicationService = $this->createMock(ThothPublicationService::class);
+        $mockPublicationService->method('validate')->willReturn([]);
+        ThothContainer::getInstance()->set('publicationService', fn () => $mockPublicationService);
+
+        $mockPublicationFormatDao = $this->getMockBuilder(stdClass::class)
+            ->addMethods(['getByPublicationId'])
+            ->getMock();
+        $mockPublicationFormatDao->method('getByPublicationId')->willReturn([]);
+        DAORegistry::registerDAO('PublicationFormatDAO', $mockPublicationFormatDao);
+
         $mockFactory = $this->getMockBuilder(ThothBookFactory::class)
             ->setMethods(['createFromPublication'])
             ->getMock();
@@ -131,7 +169,10 @@ class ThothBookServiceTest extends PKPTestCase
             ->method('getByDoi')
             ->will($this->returnValue(new ThothWork()));
 
-        $mockPublication = $this->getMockBuilder(Publication::class)->getMock();
+        $mockPublication = $this->getMockBuilder(Publication::class)
+            ->setMethods(['getId'])
+            ->getMock();
+        $mockPublication->method('getId')->willReturn(1);
 
         $service = new ThothBookService($mockFactory, $mockRepository);
         $errors = $service->validate($mockPublication);
@@ -143,6 +184,16 @@ class ThothBookServiceTest extends PKPTestCase
 
     public function testLandingPageExistsBookValidationFails()
     {
+        $mockPublicationService = $this->createMock(ThothPublicationService::class);
+        $mockPublicationService->method('validate')->willReturn([]);
+        ThothContainer::getInstance()->set('publicationService', fn () => $mockPublicationService);
+
+        $mockPublicationFormatDao = $this->getMockBuilder(stdClass::class)
+            ->addMethods(['getByPublicationId'])
+            ->getMock();
+        $mockPublicationFormatDao->method('getByPublicationId')->willReturn([]);
+        DAORegistry::registerDAO('PublicationFormatDAO', $mockPublicationFormatDao);
+
         $mockFactory = $this->getMockBuilder(ThothBookFactory::class)
             ->setMethods(['createFromPublication'])
             ->getMock();
@@ -162,7 +213,10 @@ class ThothBookServiceTest extends PKPTestCase
                 'landingPage' => 'http://www.publicknowledge.omp/index.php/publicknowledge/catalog/book/14'
             ])));
 
-        $mockPublication = $this->getMockBuilder(Publication::class)->getMock();
+        $mockPublication = $this->getMockBuilder(Publication::class)
+            ->setMethods(['getId'])
+            ->getMock();
+        $mockPublication->method('getId')->willReturn(1);
 
         $service = new ThothBookService($mockFactory, $mockRepository);
         $errors = $service->validate($mockPublication);
@@ -170,5 +224,52 @@ class ThothBookServiceTest extends PKPTestCase
         $this->assertEquals([
             '##plugins.generic.thoth.validation.landingPageExists##',
         ], $errors);
+    }
+
+    public function testPublicationFormatsValidationUsesMaterializedResults()
+    {
+        $mockPublicationService = $this->createMock(ThothPublicationService::class);
+        $mockPublicationService->expects($this->once())
+            ->method('validate')
+            ->with($this->isInstanceOf(stdClass::class))
+            ->willReturn(['format-error']);
+        ThothContainer::getInstance()->set('publicationService', fn () => $mockPublicationService);
+
+        $mockPublicationFormats = new class () {
+            public function toArray()
+            {
+                return [(object) ['name' => 'PDF']];
+            }
+        };
+
+        $mockPublicationFormatDao = $this->getMockBuilder(stdClass::class)
+            ->addMethods(['getByPublicationId'])
+            ->getMock();
+        $mockPublicationFormatDao->expects($this->once())
+            ->method('getByPublicationId')
+            ->with(1)
+            ->willReturn($mockPublicationFormats);
+        DAORegistry::registerDAO('PublicationFormatDAO', $mockPublicationFormatDao);
+
+        $mockFactory = $this->getMockBuilder(ThothBookFactory::class)
+            ->setMethods(['createFromPublication'])
+            ->getMock();
+        $mockFactory->expects($this->once())
+            ->method('createFromPublication')
+            ->will($this->returnValue(new ThothWork()));
+
+        $mockRepository = $this->getMockBuilder(ThothBookRepository::class)
+            ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
+            ->getMock();
+
+        $mockPublication = $this->getMockBuilder(Publication::class)
+            ->setMethods(['getId'])
+            ->getMock();
+        $mockPublication->method('getId')->willReturn(1);
+
+        $service = new ThothBookService($mockFactory, $mockRepository);
+        $errors = $service->validate($mockPublication);
+
+        $this->assertEquals(['format-error'], $errors);
     }
 }

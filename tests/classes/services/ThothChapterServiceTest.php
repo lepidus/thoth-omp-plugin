@@ -22,10 +22,12 @@ import('classes.publication.Publication');
 import('classes.publication.PublicationDAO');
 import('lib.pkp.tests.PKPTestCase');
 import('plugins.generic.thoth.classes.factories.ThothChapterFactory');
-import('plugins.generic.thoth.classes.repositories.ThothAbstractRepository');
 import('plugins.generic.thoth.classes.repositories.ThothChapterRepository');
-import('plugins.generic.thoth.classes.repositories.ThothTitleRepository');
+import('plugins.generic.thoth.classes.services.ThothAbstractService');
 import('plugins.generic.thoth.classes.services.ThothChapterService');
+import('plugins.generic.thoth.classes.services.ThothContributionService');
+import('plugins.generic.thoth.classes.services.ThothPublicationService');
+import('plugins.generic.thoth.classes.services.ThothTitleService');
 
 class ThothChapterServiceTest extends PKPTestCase
 {
@@ -35,8 +37,10 @@ class ThothChapterServiceTest extends PKPTestCase
         $container = ThothContainer::getInstance();
         $this->backups = [
             'client' => $container->backup('client'),
-            'abstractRepository' => $container->backup('abstractRepository'),
-            'titleRepository' => $container->backup('titleRepository'),
+            'abstractService' => $container->backup('abstractService'),
+            'contributionService' => $container->backup('contributionService'),
+            'publicationService' => $container->backup('publicationService'),
+            'titleService' => $container->backup('titleService'),
         ];
     }
 
@@ -60,13 +64,17 @@ class ThothChapterServiceTest extends PKPTestCase
             return $this->getMockBuilder(ThothClient::class)->getMock();
         });
 
-        $mockAbstractRepository = $this->getMockBuilder(ThothAbstractRepository::class)
-            ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
-            ->setMethods(['new', 'add'])
-            ->getMock();
-        $mockAbstractRepository->method('new')->willReturnSelf();
-        $mockAbstractRepository->expects($this->exactly(2))->method('add');
-        ThothContainer::getInstance()->set('abstractRepository', fn () => $mockAbstractRepository);
+        $mockAbstractService = $this->createMock(ThothAbstractService::class);
+        $mockAbstractService->expects($this->once())->method('registerByChapter');
+        ThothContainer::getInstance()->set('abstractService', fn () => $mockAbstractService);
+
+        $mockContributionService = $this->createMock(ThothContributionService::class);
+        $mockContributionService->method('registerByChapter');
+        ThothContainer::getInstance()->set('contributionService', fn () => $mockContributionService);
+
+        $mockPublicationService = $this->createMock(ThothPublicationService::class);
+        $mockPublicationService->method('registerByChapter');
+        ThothContainer::getInstance()->set('publicationService', fn () => $mockPublicationService);
 
         $mockPublication = $this->getMockBuilder(Publication::class)
             ->setMethods(['getData'])
@@ -101,27 +109,21 @@ class ThothChapterServiceTest extends PKPTestCase
             ->method('add')
             ->will($this->returnValue('fed8b9ee-2537-4a66-a1a1-eeadf4001c59'));
 
-        $mockTitleRepository = $this->getMockBuilder(ThothTitleRepository::class)
-            ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
-            ->setMethods(['new', 'add'])
-            ->getMock();
-        $mockTitleRepository->method('new')->willReturnSelf();
-        $mockTitleRepository->expects($this->exactly(2))->method('add');
-        ThothContainer::getInstance()->set('titleRepository', fn () => $mockTitleRepository);
+        $mockTitleService = $this->createMock(ThothTitleService::class);
+        $mockTitleService->expects($this->once())->method('registerByChapter');
+        ThothContainer::getInstance()->set('titleService', fn () => $mockTitleService);
 
         $mockResult = $this->getMockBuilder(DAOResultFactory::class)
             ->setMethods(['toArray'])
             ->disableOriginalConstructor()
             ->getMock();
-        $mockResult->expects($this->once())
-            ->method('toArray')
+        $mockResult->method('toArray')
             ->will($this->returnValue([]));
 
         $mockChapter = $this->getMockBuilder(Chapter::class)
             ->setMethods(['getAuthors', 'getData'])
             ->getMock();
-        $mockChapter->expects($this->once())
-            ->method('getAuthors')
+        $mockChapter->method('getAuthors')
             ->will($this->returnValue($mockResult));
         $mockChapter->expects($this->any())
             ->method('getData')
