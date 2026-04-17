@@ -18,8 +18,6 @@ use APP\facades\Repo;
 use PKP\core\Core;
 use ThothApi\GraphQL\Models\Work as ThothWork;
 
-import('plugins.generic.thoth.classes.formatters.HtmlStripper');
-
 class ThothChapterFactory
 {
     public function createFromChapter($chapter)
@@ -34,10 +32,6 @@ class ThothChapterFactory
         return new ThothWork([
             'workType' => ThothWork::WORK_TYPE_BOOK_CHAPTER,
             'workStatus' => $this->getWorkStatusByDatePublished($chapter, $publication),
-            'fullTitle' => $chapter->getLocalizedFullTitle(),
-            'title' => $chapter->getLocalizedTitle(),
-            'subtitle' => $chapter->getLocalizedData('subtitle'),
-            'longAbstract' => HtmlStripper::stripTags($chapter->getLocalizedData('abstract')),
             'doi' => $chapter->getData('doiObject')?->getResolvingUrl(),
             'pageInterval' => $pages['pageInterval'] ?? null,
             'firstPage' => $pages['firstPage'] ?? null,
