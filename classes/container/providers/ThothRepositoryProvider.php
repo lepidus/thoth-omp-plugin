@@ -20,7 +20,9 @@ require_once(__DIR__ . '/../../../vendor/autoload.php');
 
 use APP\core\Application;
 use APP\plugins\generic\thoth\classes\repositories\ThothAccountRepository;
+use APP\plugins\generic\thoth\classes\repositories\ThothAbstractRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothAffiliationRepository;
+use APP\plugins\generic\thoth\classes\repositories\ThothBiographyRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothBookRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothChapterRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothContributionRepository;
@@ -32,8 +34,10 @@ use APP\plugins\generic\thoth\classes\repositories\ThothLocationRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothPublicationRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothReferenceRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothSubjectRepository;
+use APP\plugins\generic\thoth\classes\repositories\ThothTitleRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothWorkRelationRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothWorkRepository;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
 use PKP\db\DAORegistry;
 use ThothApi\GraphQL\Client;
@@ -49,11 +53,20 @@ class ThothRepositoryProvider implements ContainerProvider
             $customThothApi = $pluginSettingsDao->getSetting($contextId, 'ThothPlugin', 'customThothApi');
             $customThothApiUrl = $pluginSettingsDao->getSetting($contextId, 'ThothPlugin', 'customThothApiUrl');
             $token = $pluginSettingsDao->getSetting($contextId, 'ThothPlugin', 'token') ?? '';
+            $decryptedToken = '';
+
+            if ($token) {
+                try {
+                    $decryptedToken = Crypt::decrypt($token);
+                } catch (DecryptException $exception) {
+                    $decryptedToken = '';
+                }
+            }
 
             return [
                 'customThothApi' => $customThothApi,
                 'customThothApiUrl' => $customThothApiUrl,
-                'token' => $token ? Crypt::decrypt($token) : ''
+                'token' => $decryptedToken
             ];
         });
 
@@ -73,12 +86,20 @@ class ThothRepositoryProvider implements ContainerProvider
             return new ThothAccountRepository($container->get('client'));
         });
 
+        $container->set('abstractRepository', function ($container) {
+            return new ThothAbstractRepository($container->get('client'));
+        });
+
         $container->set('affiliationRepository', function ($container) {
             return new ThothAffiliationRepository($container->get('client'));
         });
 
         $container->set('bookRepository', function ($container) {
             return new ThothBookRepository($container->get('client'));
+        });
+
+        $container->set('biographyRepository', function ($container) {
+            return new ThothBiographyRepository($container->get('client'));
         });
 
         $container->set('chapterRepository', function ($container) {
@@ -119,6 +140,10 @@ class ThothRepositoryProvider implements ContainerProvider
 
         $container->set('subjectRepository', function ($container) {
             return new ThothSubjectRepository($container->get('client'));
+        });
+
+        $container->set('titleRepository', function ($container) {
+            return new ThothTitleRepository($container->get('client'));
         });
 
         $container->set('workRelationRepository', function ($container) {

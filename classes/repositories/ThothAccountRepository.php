@@ -27,23 +27,11 @@ class ThothAccountRepository
 
     public function getLinkedPublishers()
     {
-        $result = $this->thothClient->rawQuery(
-            <<<'GQL'
-            query {
-                me {
-                    publisherContexts {
-                        publisher {
-                            publisherId
-                        }
-                    }
-                }
-            }
-            GQL
-        );
+        $publisherContexts = $this->thothClient->me()->getPublisherContexts() ?? [];
 
-        return array_map(
+        return array_values(array_map(
             fn (array $publisherContext) => $publisherContext['publisher'],
-            $result['me']['publisherContexts'] ?? []
-        );
+            array_filter($publisherContexts, fn (array $publisherContext) => !empty($publisherContext['publisher']))
+        ));
     }
 }

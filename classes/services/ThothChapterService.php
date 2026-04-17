@@ -16,6 +16,7 @@
 
 namespace APP\plugins\generic\thoth\classes\services;
 
+use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\facades\ThothService;
 
 class ThothChapterService
@@ -36,10 +37,19 @@ class ThothChapterService
 
         $thothChapterId = $this->repository->add($thothChapter);
         $chapter->setData('thothChapterId', $thothChapterId);
+        $this->registerMetadata($chapter, $thothChapterId);
 
         ThothService::contribution()->registerByChapter($chapter);
         ThothService::publication()->registerByChapter($chapter);
 
         return $thothChapterId;
+    }
+
+    private function registerMetadata($chapter, string $thothChapterId): void
+    {
+        $publication = Repo::publication()->get($chapter->getData('publicationId'));
+
+        ThothService::title()->registerByChapter($chapter, $thothChapterId, $publication->getData('locale'));
+        ThothService::abstract()->registerByChapter($chapter, $thothChapterId, $publication->getData('locale'));
     }
 }

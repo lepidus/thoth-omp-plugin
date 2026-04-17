@@ -597,20 +597,20 @@
         },
         {
             "name": "symfony/deprecation-contracts",
-            "version": "v3.0.2",
+            "version": "v3.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/deprecation-contracts.git",
-                "reference": "26954b3d62a6c5fd0ea8a2a00c0353a14978d05c"
+                "reference": "63afe740e99a13ba87ec199bb07bbdee937a5b62"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/26954b3d62a6c5fd0ea8a2a00c0353a14978d05c",
-                "reference": "26954b3d62a6c5fd0ea8a2a00c0353a14978d05c",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/63afe740e99a13ba87ec199bb07bbdee937a5b62",
+                "reference": "63afe740e99a13ba87ec199bb07bbdee937a5b62",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.0.2"
+                "php": ">=8.1"
             },
             "type": "library",
             "extra": {
@@ -619,7 +619,7 @@
                     "name": "symfony/contracts"
                 },
                 "branch-alias": {
-                    "dev-main": "3.0-dev"
+                    "dev-main": "3.6-dev"
                 }
             },
             "autoload": {
@@ -644,7 +644,7 @@
             "description": "A generic function and convention to trigger deprecation notices",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.0.2"
+                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.6.0"
             },
             "funding": [
                 {
@@ -660,20 +660,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-01-02T09:55:41+00:00"
+            "time": "2024-09-25T14:21:43+00:00"
         },
         {
             "name": "thoth-pub/thoth-client-php",
-            "version": "1.4.0",
+            "version": "1.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thoth-pub/thoth-client-php.git",
-                "reference": "cb2dbc70296c4bee9741ac49e64cc302e899bab8"
+                "reference": "b19f8e808c1f734106362965b6e505acc2f2c60e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thoth-pub/thoth-client-php/zipball/cb2dbc70296c4bee9741ac49e64cc302e899bab8",
-                "reference": "cb2dbc70296c4bee9741ac49e64cc302e899bab8",
+                "url": "https://api.github.com/repos/thoth-pub/thoth-client-php/zipball/b19f8e808c1f734106362965b6e505acc2f2c60e",
+                "reference": "b19f8e808c1f734106362965b6e505acc2f2c60e",
                 "shasum": ""
             },
             "require": {
@@ -697,9 +697,9 @@
             "description": "PHP client for Thoth's GraphQL and REST APIs.",
             "support": {
                 "issues": "https://github.com/thoth-pub/thoth-client-php/issues",
-                "source": "https://github.com/thoth-pub/thoth-client-php/tree/1.4.0"
+                "source": "https://github.com/thoth-pub/thoth-client-php/tree/1.4.1"
             },
-            "time": "2026-04-13T15:13:53+00:00"
+            "time": "2026-04-15T21:46:39+00:00"
         }
     ],
     "packages-dev": [],

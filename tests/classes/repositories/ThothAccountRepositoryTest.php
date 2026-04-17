@@ -21,27 +21,33 @@ namespace APP\plugins\generic\thoth\tests\classes\repositories;
 use APP\plugins\generic\thoth\classes\repositories\ThothAccountRepository;
 use PKP\tests\PKPTestCase;
 use ThothApi\GraphQL\Client as ThothClient;
+use ThothApi\GraphQL\Models\Me;
 
 class ThothAccountRepositoryTest extends PKPTestCase
 {
     public function testGetLinkedPublishers()
     {
         $mockThothClient = $this->getMockBuilder(ThothClient::class)
-            ->onlyMethods(['rawQuery'])
+            ->onlyMethods(['me'])
             ->getMock();
         $mockThothClient->expects($this->any())
-            ->method('rawQuery')
-            ->willReturn([
-                'me' => [
+            ->method('me')
+            ->willReturn(
+                new Me([
                     'publisherContexts' => [
+                        [
+                            'permissions' => [
+                                'publisherAdmin' => true
+                            ]
+                        ],
                         [
                             'publisher' => [
                                 'publisherId' => 'c1db6141-7af1-4f6a-97c4-2dc1065281ef'
                             ]
                         ]
                     ]
-                ]
-            ]);
+                ])
+            );
 
         $repository = new ThothAccountRepository($mockThothClient);
 

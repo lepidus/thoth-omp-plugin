@@ -20,6 +20,7 @@ namespace APP\plugins\generic\thoth;
 
 use APP\template\TemplateManager;
 use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
 use PKP\form\Form;
 use PKP\form\validation\FormValidatorCSRF;
@@ -94,9 +95,16 @@ class ThothSettingsForm extends Form
     {
         foreach (self::SETTINGS as $setting) {
             $value = $this->plugin->getSetting($this->contextId, $setting);
+            if ($setting === 'token' && $value) {
+                try {
+                    $value = Crypt::decrypt($value);
+                } catch (DecryptException $exception) {
+                    $value = '';
+                }
+            }
             $this->setData(
                 $setting,
-                $setting === 'token' && $value ? Crypt::decrypt($value) : $value
+                $value
             );
         }
     }

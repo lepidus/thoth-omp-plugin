@@ -19,6 +19,7 @@ namespace APP\plugins\generic\thoth\classes\components\forms\config;
 use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\facades\ThothRepository;
 use APP\plugins\generic\thoth\classes\facades\ThothService;
+use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use APP\submission\Submission;
 use ThothApi\GraphQL\Models\Work as ThothWork;
 

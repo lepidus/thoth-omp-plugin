@@ -65,7 +65,7 @@ class PublicationPublishListener
             $thothNotification->notifySuccess($request, $submission);
         } catch (QueryException $e) {
             $thothBookService->deleteRegisteredEntry();
-            $thothNotification->notifyError($request, $submission, $e->getMessage());
+            $thothNotification->notifyError($request, $submission, $e);
         }
 
         return false;

@@ -164,4 +164,4 @@ Este plugin está licenciado sob a Licença Pública Geral GNU v3.0 - [Veja o ar
 
 Copyright (c) 2024-2026 Lepidus Tecnologia
 
-Copyright (c) 2024-2026 Thoth
+Copyright (c) 2024-2026 Thoth Open Metadata

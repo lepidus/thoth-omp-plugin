@@ -24,6 +24,7 @@ use APP\handler\Handler;
 use APP\i18n\AppLocale;
 use APP\plugins\generic\thoth\classes\components\listPanels\ThothListPanel;
 use APP\plugins\generic\thoth\classes\facades\ThothRepository;
+use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use APP\template\TemplateManager;
 use PKP\db\DAORegistry;
 use PKP\plugins\PluginRegistry;
@@ -62,6 +63,7 @@ class ThothHandler extends Handler
         AppLocale::requireComponents(LOCALE_COMPONENT_APP_SUBMISSION);
         $context = $request->getContext();
         $connectionError = false;
+        $imprints = [];
 
         $plugin = PluginRegistry::getPlugin('generic', 'thothplugin');
         $templateMgr = TemplateManager::getManager($request);
@@ -69,7 +71,7 @@ class ThothHandler extends Handler
         try {
             $publishers = ThothRepository::account()->getLinkedPublishers();
             $imprints = ThothRepository::imprint()->getMany(array_column($publishers, 'publisherId'));
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log($e->getMessage());
             $connectionError = true;
         }

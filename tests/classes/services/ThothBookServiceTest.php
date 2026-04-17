@@ -20,13 +20,17 @@ namespace APP\plugins\generic\thoth\tests\classes\services;
 
 use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\factories\ThothBookFactory;
+use APP\plugins\generic\thoth\classes\repositories\ThothAbstractRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothBookRepository;
+use APP\plugins\generic\thoth\classes\repositories\ThothTitleRepository;
+use APP\plugins\generic\thoth\classes\services\ThothAbstractService;
 use APP\plugins\generic\thoth\classes\services\ThothBookService;
 use APP\plugins\generic\thoth\classes\services\ThothContributionService;
 use APP\plugins\generic\thoth\classes\services\ThothLanguageService;
 use APP\plugins\generic\thoth\classes\services\ThothPublicationService;
 use APP\plugins\generic\thoth\classes\services\ThothReferenceService;
 use APP\plugins\generic\thoth\classes\services\ThothSubjectService;
+use APP\plugins\generic\thoth\classes\services\ThothTitleService;
 use APP\plugins\generic\thoth\classes\services\ThothWorkRelationService;
 use PKP\tests\PKPTestCase;
 use ThothApi\GraphQL\Client as ThothClient;
@@ -41,11 +45,13 @@ class ThothBookServiceTest extends PKPTestCase
         $container = ThothContainer::getInstance();
         $this->backups = [
             'client' => $container->backup('client'),
+            'abstractService' => $container->backup('abstractService'),
             'contributionService' => $container->backup('contributionService'),
             'publicationService' => $container->backup('publicationService'),
             'languageService' => $container->backup('languageService'),
             'subjectService' => $container->backup('subjectService'),
             'referenceService' => $container->backup('referenceService'),
+            'titleService' => $container->backup('titleService'),
             'workRelationService' => $container->backup('workRelationService'),
         ];
     }
@@ -67,6 +73,10 @@ class ThothBookServiceTest extends PKPTestCase
             return $this->getMockBuilder(ThothClient::class)->getMock();
         });
 
+        $mockAbstractService = $this->createMock(ThothAbstractService::class);
+        $mockAbstractService->expects($this->once())->method('registerByPublication');
+        $container->set('abstractService', fn () => $mockAbstractService);
+
         $mockContributionService = $this->createMock(ThothContributionService::class);
         $mockContributionService->method('registerByPublication');
         $container->set('contributionService', fn () => $mockContributionService);
@@ -86,6 +96,10 @@ class ThothBookServiceTest extends PKPTestCase
         $mockReferenceService = $this->createMock(ThothReferenceService::class);
         $mockReferenceService->method('registerByPublication');
         $container->set('referenceService', fn () => $mockReferenceService);
+
+        $mockTitleService = $this->createMock(ThothTitleService::class);
+        $mockTitleService->expects($this->once())->method('registerByPublication');
+        $container->set('titleService', fn () => $mockTitleService);
 
         $mockWorkRelationService = $this->createMock(ThothWorkRelationService::class);
         $mockWorkRelationService->method('registerByPublication');
@@ -111,9 +125,25 @@ class ThothBookServiceTest extends PKPTestCase
             ->getMock();
         $mockPublication->expects($this->any())
             ->method('getData')
-            ->willReturnMap([
-                ['locale', null, 'en_US']
-            ]);
+            ->willReturnCallback(function ($key) {
+                $values = [
+                    'locale' => 'en_US',
+                    'title' => [
+                        'en_US' => 'My book title',
+                        'pt_BR' => 'Meu titulo',
+                    ],
+                    'subtitle' => [
+                        'en_US' => 'My book subtitle',
+                        'pt_BR' => 'Meu subtitulo',
+                    ],
+                    'abstract' => [
+                        'en_US' => 'This is my book abstract',
+                        'pt_BR' => 'Este e meu resumo',
+                    ],
+                ];
+
+                return $values[$key] ?? null;
+            });
 
         $thothImprintId = 'f740cf4e-16d1-487c-9a92-615882a591e9';
 
