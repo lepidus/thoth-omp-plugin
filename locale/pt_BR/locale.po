@@ -119,6 +119,63 @@ msgstr ""
 "Houve um problema ao enviar os metadados da submissão para Thoth. Por favor, tente mais "
 "tarde, ou contate o administrador do sistema."
 
+msgid "plugins.generic.thoth.publicationFormat.accessibility"
+msgstr "Metadados de acessibilidade"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard"
+msgstr "Padrão de acessibilidade"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityAdditionalStandard"
+msgstr "Padrão adicional de acessibilidade"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityException"
+msgstr "Exceção de acessibilidade"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityReportUrl"
+msgstr "URL do relatório de acessibilidade"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityReportUrl.invalid"
+msgstr "A URL do relatório de acessibilidade fornecida não é uma URL válida."
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.wcag21aa"
+msgstr "WCAG 2.1 AA"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.wcag21aaa"
+msgstr "WCAG 2.1 AAA"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.wcag22aa"
+msgstr "WCAG 2.2 AA"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.wcag22aaa"
+msgstr "WCAG 2.2 AAA"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.epubA11y10aa"
+msgstr "Especificação de Acessibilidade EPUB 1.0 AA"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.epubA11y10aaa"
+msgstr "Especificação de Acessibilidade EPUB 1.0 AAA"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.epubA11y11aa"
+msgstr "Especificação de Acessibilidade EPUB 1.1 AA"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.epubA11y11aaa"
+msgstr "Especificação de Acessibilidade EPUB 1.1 AAA"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.pdfUa1"
+msgstr "PDF/UA-1"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.pdfUa2"
+msgstr "PDF/UA-2"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityException.microEnterprises"
+msgstr "A editora é uma microempresa"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityException.disproportionateBurden"
+msgstr "Ônus desproporcional"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityException.fundamentalAlteration"
+msgstr "Alteração fundamental"
+
 msgid "plugins.generic.thoth.register.error.log"
 msgstr "Erro ao registrar metadados no Thoth: {$reason}"
 
