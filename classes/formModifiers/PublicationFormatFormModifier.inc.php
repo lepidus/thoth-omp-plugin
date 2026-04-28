@@ -53,8 +53,9 @@ class PublicationFormatFormModifier
         return false;
     }
 
-    public function addAccessibilityFieldNames($hookName, $dao, &$fieldNames)
+    public function addAccessibilityFieldNames($hookName, $args)
     {
+        $fieldNames = & $args[1];
         $fieldNames = array_values(array_unique(array_merge($fieldNames, self::ACCESSIBILITY_FIELDS)));
 
         return false;

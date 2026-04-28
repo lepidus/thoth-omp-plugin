@@ -47,12 +47,12 @@ class PublicationFormatFormModifierTest extends PKPTestCase
     public function testAccessibilityFieldNamesAreRegisteredForPublicationFormatSettings()
     {
         $fieldNames = ['pub-id::publisher-id'];
+        $args = [new stdClass(), &$fieldNames];
         $modifier = new PublicationFormatFormModifier($this->createMock(GenericPlugin::class));
 
         $modifier->addAccessibilityFieldNames(
             'publicationformatdao::getAdditionalFieldNames',
-            new stdClass(),
-            $fieldNames
+            $args
         );
 
         $this->assertSame(
