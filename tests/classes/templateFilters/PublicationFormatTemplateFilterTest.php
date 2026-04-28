@@ -24,6 +24,18 @@ import('plugins.generic.thoth.classes.templateFilters.PublicationFormatTemplateF
 
 class PublicationFormatTemplateFilterTest extends PKPTestCase
 {
+    public function testAccessibilityHelpPopoverIsAvailableInPartial()
+    {
+        $template = file_get_contents(__DIR__ . '/../../../templates/publicationFormatAccessibilityFields.tpl');
+
+        $this->assertStringContainsString('thothAccessibilityHelpButton', $template);
+        $this->assertStringContainsString('tooltipButton thothAccessibilityHelp__button', $template);
+        $this->assertStringContainsString('fa fa-question-circle', $template);
+        $this->assertStringContainsString('-screenReader', $template);
+        $this->assertStringContainsString('aria-describedby="thothAccessibilityHelp"', $template);
+        $this->assertStringContainsString('plugins.generic.thoth.publicationFormat.accessibilityHelp.description', $template);
+    }
+
     public function testInjectAccessibilityFieldsBeforeRequiredFieldWhenIsbnSectionIsAbsent()
     {
         $filter = new PublicationFormatTemplateFilter(new class () {
