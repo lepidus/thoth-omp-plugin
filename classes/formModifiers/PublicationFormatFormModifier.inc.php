@@ -62,7 +62,7 @@ class PublicationFormatFormModifier
 
     public function handleFormReadUserVars($hookName, $args)
     {
-        $vars =& $args[1];
+        $vars = & $args[1];
         $vars = array_unique(array_merge($vars, self::ACCESSIBILITY_FIELDS));
 
         return false;
