@@ -43,17 +43,25 @@ class PublicationFormatTemplateFilter
             $this->plugin->getTemplateResource('publicationFormatAccessibilityFields.tpl')
         );
 
-        $isbnTitle = __('grid.catalogEntry.isbn');
-        $isbnTitlePosition = strpos($output, $isbnTitle);
-        if ($isbnTitlePosition === false) {
-            return $output;
-        }
-
-        $insertionPosition = strpos($output, '</fieldset>', $isbnTitlePosition);
+        $insertionPosition = $this->getInsertionPosition($output);
         if ($insertionPosition === false) {
             return $output;
         }
 
-        return substr_replace($output, $partial, $insertionPosition + strlen('</fieldset>'), 0);
+        return substr_replace($output, $partial, $insertionPosition, 0);
+    }
+
+    private function getInsertionPosition($output)
+    {
+        $isbnTitle = __('grid.catalogEntry.isbn');
+        $isbnTitlePosition = strpos($output, $isbnTitle);
+        if ($isbnTitlePosition !== false) {
+            $fieldsetEndPosition = strpos($output, '</fieldset>', $isbnTitlePosition);
+            if ($fieldsetEndPosition !== false) {
+                return $fieldsetEndPosition + strlen('</fieldset>');
+            }
+        }
+
+        return strpos($output, '<p><span class="formRequired">');
     }
 }
