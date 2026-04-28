@@ -150,6 +150,18 @@ msgstr "The submission is already registered in Thoth."
 msgid "plugins.generic.thoth.publicationFormat.accessibility"
 msgstr "Accessibility metadata"
 
+msgid "plugins.generic.thoth.publicationFormat.accessibilityHelp"
+msgstr "Show accessibility metadata guidance"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityHelp.description"
+msgstr ""
+"<p>Accessibility standards are only valid for compatible digital publication formats.</p>"
+"<p>For Paperback, Hardback, MP3, and WAV publications, leave all accessibility fields empty: accessibility standard, additional accessibility standard, and accessibility exception.</p>"
+"<p>For PDF publications, the main accessibility standard must be a WCAG standard, and the additional standard, when provided, must be PDF/UA.</p>"
+"<p>For EPUB publications, the main accessibility standard must be a WCAG standard, and the additional standard, when provided, must be an EPUB Accessibility standard.</p>"
+"<p>For other digital formats, only WCAG standards are accepted, and no additional accessibility standard should be provided.</p>"
+"<p>If the publication does not claim an accessibility standard, leave the accessibility fields empty, or use an accessibility exception only when applicable.</p>"
+
 msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard"
 msgstr "Accessibility standard"
 

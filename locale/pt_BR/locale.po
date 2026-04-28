@@ -150,6 +150,18 @@ msgstr "A submissão já foi registrada na Thoth."
 msgid "plugins.generic.thoth.publicationFormat.accessibility"
 msgstr "Metadados de acessibilidade"
 
+msgid "plugins.generic.thoth.publicationFormat.accessibilityHelp"
+msgstr "Exibir orientação sobre metadados de acessibilidade"
+
+msgid "plugins.generic.thoth.publicationFormat.accessibilityHelp.description"
+msgstr ""
+"<p>Os padrões de acessibilidade são válidos apenas para formatos de publicação digital compatíveis.</p>"
+"<p>Para publicações Paperback, Hardback, MP3 e WAV, deixe todos os campos de acessibilidade vazios: padrão de acessibilidade, padrão adicional de acessibilidade e exceção de acessibilidade.</p>"
+"<p>Para publicações em PDF, o padrão principal de acessibilidade deve ser um padrão WCAG, e o padrão adicional, quando informado, deve ser PDF/UA.</p>"
+"<p>Para publicações em EPUB, o padrão principal de acessibilidade deve ser um padrão WCAG, e o padrão adicional, quando informado, deve ser um padrão EPUB Accessibility.</p>"
+"<p>Para outros formatos digitais, apenas padrões WCAG são aceitos, e nenhum padrão adicional de acessibilidade deve ser informado.</p>"
+"<p>Se a publicação não reivindica um padrão de acessibilidade, deixe os campos de acessibilidade vazios, ou use uma exceção de acessibilidade apenas quando aplicável.</p>"
+
 msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard"
 msgstr "Padrão de acessibilidade"
 
