@@ -1,153 +1,153 @@
 msgid "plugins.generic.thoth.name"
-msgstr "Plugin Thoth"
+msgstr "Thoth Plugin"
 
 msgid "plugins.generic.thoth.description"
-msgstr "Integra o OMP com o Thoth para comunicação e sincronização de dados de livros entre as duas plataformas."
+msgstr "Integra OMP con Thoth per la comunicazione e la sincronizzazione dei dati dei libri tra le due piattaforme."
 
 msgid "plugins.generic.thoth.navigation.thoth"
 msgstr "Thoth"
 
 msgid "plugins.generic.thoth.settings.title"
-msgstr "Configurações da API Thoth"
+msgstr "Impostazioni API Thoth"
 
 msgid "plugins.generic.thoth.settings.customThothApi"
-msgstr "URL personalizada da API Thoth"
+msgstr "API Thoth personalizzata"
 
 msgid "plugins.generic.thoth.settings.customThothApi.description"
-msgstr "Usar uma API Thoth personalizada em vez da API oficial da Thoth."
+msgstr "Usa un'API Thoth personalizzata invece dell'API Thoth ufficiale."
 
 msgid "plugins.generic.thoth.settings.customThothApiUrl"
-msgstr "URL da API Thoth"
+msgstr "URL dell'API Thoth"
 
 msgid "plugins.generic.thoth.settings.customThothApiUrl.required"
-msgstr "A URL personalizada da API Thoth é obrigatória quando a opção de API personalizada está habilitada."
+msgstr "L'URL dell'API Thoth personalizzata è obbligatorio quando l'opzione API personalizzata è abilitata."
 
 msgid "plugins.generic.thoth.settings.customThothApiUrl.invalid"
-msgstr "A URL personalizada da API Thoth fornecida não é uma URL válida."
+msgstr "L'URL dell'API Thoth personalizzata fornito non è un URL valido."
 
 msgid "plugins.generic.thoth.settings.customThothApiUrl.unreachable"
-msgstr "Não foi possível conectar à URL personalizada da API Thoth. Verifique se a URL está correta e se o serviço está disponível."
+msgstr "Impossibile connettersi all'URL dell'API Thoth personalizzata. Verifica che l'URL sia corretto e che il servizio sia disponibile."
 
 msgid "plugins.generic.thoth.settings.token"
-msgstr "Token de acesso pessoal"
+msgstr "Token di accesso personale"
 
 msgid "plugins.generic.thoth.settings.invalidCredentials"
-msgstr "Token de acesso pessoal inválido"
+msgstr "Token di accesso personale non valido"
 
 msgid "plugins.generic.thoth.settings.secretKeyEmpty"
-msgstr "O administrador do seu site deve definir um segredo no arquivo de configuração ('api_key_secret')."
+msgstr "L'amministratore del sito deve impostare una chiave segreta nel file di configurazione ('api_key_secret')."
 
 msgid "plugins.generic.thoth.credentialsMissing"
-msgstr "Token de acesso pessoal do Thoth não configurado."
+msgstr "Token di accesso personale Thoth non configurato."
 
 msgid "plugins.generic.thoth.field.place.label"
-msgstr "Local de Publicação"
+msgstr "Luogo di pubblicazione"
 
 msgid "plugins.generic.thoth.field.pageCount.label"
-msgstr "Número de Páginas"
+msgstr "Numero di pagine"
 
 msgid "plugins.generic.thoth.field.imageCount.label"
-msgstr "Número de Imagens"
+msgstr "Numero di immagini"
 
 msgid "plugins.generic.thoth.field.mainContribution"
-msgstr "Contribuição Principal do Thoth"
+msgstr "Contributo principale Thoth"
 
 msgid "plugins.generic.thoth.field.mainContribution.label"
-msgstr "Identificar este contribuidor como contribuição principal em Thoth."
+msgstr "Identifica questo collaboratore come contributo principale in Thoth."
 
 msgid "plugins.generic.thoth.workType"
-msgstr "Tipo de Trabalho"
+msgstr "Tipo di opera"
 
 msgid "plugins.generic.thoth.workType.monograph"
 msgstr "Monografia"
 
 msgid "plugins.generic.thoth.workType.textbook"
-msgstr "Livro de Texto"
+msgstr "Manuale"
 
 msgid "plugins.generic.thoth.thothBook"
-msgstr "Livro Thoth: "
+msgstr "Libro Thoth: "
 
 msgid "plugins.generic.thoth.imprint"
-msgstr "Impressão"
+msgstr "Imprint"
 
 msgid "plugins.generic.thoth.imprint.required"
-msgstr "Selecione uma impressão."
+msgstr "Seleziona un imprint."
 
 msgid "plugins.generic.thoth.connectionError"
 msgstr ""
-"Houve um problema ao conectar-se com Thoth. Por favor, tente mais "
-"tarde, ou contate o administrador do sistema."
+"Si è verificato un problema durante la connessione a Thoth. Riprova più tardi o "
+"contatta l'amministratore di sistema."
 
 msgid "plugins.generic.thoth.status.registered"
-msgstr "Registrado"
+msgstr "Registrato"
 
 msgid "plugins.generic.thoth.status.unregistered"
-msgstr "Não Registrado"
+msgstr "Non registrato"
 
 msgid "plugins.generic.thoth.register"
-msgstr "Registrar"
+msgstr "Registra"
 
 msgid "plugins.generic.thoth.register.label"
-msgstr "Registro em Thoth"
+msgstr "Registrazione in Thoth"
 
 msgid "plugins.generic.thoth.register.warning"
-msgstr "Os metadados da submissão não podem ser enviados para Thoth devido aos seguintes erros:"
+msgstr "I metadati della proposta non possono essere inviati a Thoth a causa dei seguenti errori:"
 
 msgid "plugins.generic.thoth.validation.isbn"
-msgstr "\"{$isbn}\" do formato de publicação \"{$formatName}\" não é um ISBN-13 válido."
+msgstr "\"{$isbn}\" del formato di pubblicazione \"{$formatName}\" non è un ISBN-13 valido."
 
 msgid "plugins.generic.thoth.validation.doiExists"
-msgstr "Um trabalho com o DOI \"{$doi}\" já existe."
+msgstr "Esiste già un'opera con DOI \"{$doi}\"."
 
 msgid "plugins.generic.thoth.validation.landingPageExists"
-msgstr "Um trabalho com a página de destino \"{$landingPage}\" já existe."
+msgstr "Esiste già un'opera con la pagina di destinazione \"{$landingPage}\"."
 
 msgid "plugins.generic.thoth.validation.isbnExists"
-msgstr "Uma publicação com o ISBN \"{$isbn}\" já existe."
+msgstr "Esiste già una pubblicazione con ISBN \"{$isbn}\"."
 
 msgid "plugins.generic.thoth.register.confirmation"
-msgstr "Deseja realmente registrar na Thoth os metadados relacionados a essa submissão?"
+msgstr "Vuoi registrare in Thoth i metadati relativi a questa proposta?"
 
 msgid "plugins.generic.thoth.register.success"
-msgstr "Metadados da submissão enviados para Thoth com sucesso."
+msgstr "Metadati della proposta inviati con successo a Thoth."
 
 msgid "plugins.generic.thoth.register.success.log"
-msgstr "Metadados da submissão registrados no Thoth."
+msgstr "Metadati della proposta registrati in Thoth."
 
 msgid "plugins.generic.thoth.register.error"
 msgstr ""
-"Houve um problema ao enviar os metadados da submissão para Thoth. Por favor, tente mais "
-"tarde, ou contate o administrador do sistema."
+"Si è verificato un problema durante l'invio dei metadati della proposta a Thoth. Riprova più tardi o "
+"contatta l'amministratore di sistema."
 
 msgid "plugins.generic.thoth.publicationFormat.accessibility"
-msgstr "Metadados de acessibilidade"
+msgstr "Metadati di accessibilità"
 
 msgid "plugins.generic.thoth.publicationFormat.accessibilityHelp"
-msgstr "Exibir orientação sobre metadados de acessibilidade"
+msgstr "Mostra indicazioni sui metadati di accessibilità"
 
 msgid "plugins.generic.thoth.publicationFormat.accessibilityHelp.description"
 msgstr ""
-"<p>Os padrões de acessibilidade são válidos apenas para formatos de publicação digital compatíveis.</p>"
-"<p>Para publicações Paperback, Hardback, MP3 e WAV, deixe todos os campos de acessibilidade vazios: padrão de acessibilidade, padrão adicional de acessibilidade e exceção de acessibilidade.</p>"
-"<p>Para publicações em PDF, o padrão principal de acessibilidade deve ser um padrão WCAG, e o padrão adicional, quando informado, deve ser PDF/UA.</p>"
-"<p>Para publicações em EPUB, o padrão principal de acessibilidade deve ser um padrão WCAG, e o padrão adicional, quando informado, deve ser um padrão EPUB Accessibility.</p>"
-"<p>Para outros formatos digitais, apenas padrões WCAG são aceitos, e nenhum padrão adicional de acessibilidade deve ser informado.</p>"
-"<p>Se a publicação não reivindica um padrão de acessibilidade, deixe os campos de acessibilidade vazios, ou use uma exceção de acessibilidade apenas quando aplicável.</p>"
+"<p>Gli standard di accessibilità sono validi solo per formati di pubblicazione digitale compatibili.</p>"
+"<p>Per pubblicazioni Paperback, Hardback, MP3 e WAV, lascia vuoti tutti i campi di accessibilità: standard di accessibilità, standard di accessibilità aggiuntivo ed eccezione di accessibilità.</p>"
+"<p>Per pubblicazioni PDF, lo standard principale di accessibilità deve essere uno standard WCAG e lo standard aggiuntivo, se fornito, deve essere PDF/UA.</p>"
+"<p>Per pubblicazioni EPUB, lo standard principale di accessibilità deve essere uno standard WCAG e lo standard aggiuntivo, se fornito, deve essere uno standard EPUB Accessibility.</p>"
+"<p>Per altri formati digitali, sono accettati solo standard WCAG e non deve essere fornito alcuno standard di accessibilità aggiuntivo.</p>"
+"<p>Se la pubblicazione non dichiara uno standard di accessibilità, lascia vuoti i campi di accessibilità, oppure usa un'eccezione di accessibilità solo quando applicabile.</p>"
 
 msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard"
-msgstr "Padrão de acessibilidade"
+msgstr "Standard di accessibilità"
 
 msgid "plugins.generic.thoth.publicationFormat.accessibilityAdditionalStandard"
-msgstr "Padrão adicional de acessibilidade"
+msgstr "Standard di accessibilità aggiuntivo"
 
 msgid "plugins.generic.thoth.publicationFormat.accessibilityException"
-msgstr "Exceção de acessibilidade"
+msgstr "Eccezione di accessibilità"
 
 msgid "plugins.generic.thoth.publicationFormat.accessibilityReportUrl"
-msgstr "URL do relatório de acessibilidade"
+msgstr "URL del rapporto di accessibilità"
 
 msgid "plugins.generic.thoth.publicationFormat.accessibilityReportUrl.invalid"
-msgstr "A URL do relatório de acessibilidade fornecida não é uma URL válida."
+msgstr "L'URL del rapporto di accessibilità fornito non è un URL valido."
 
 msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.wcag21aa"
 msgstr "WCAG 2.1 AA"
@@ -162,16 +162,16 @@ msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.wcag22aaa"
 msgstr "WCAG 2.2 AAA"
 
 msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.epubA11y10aa"
-msgstr "Especificação de Acessibilidade EPUB 1.0 AA"
+msgstr "Specifica EPUB Accessibility 1.0 AA"
 
 msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.epubA11y10aaa"
-msgstr "Especificação de Acessibilidade EPUB 1.0 AAA"
+msgstr "Specifica EPUB Accessibility 1.0 AAA"
 
 msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.epubA11y11aa"
-msgstr "Especificação de Acessibilidade EPUB 1.1 AA"
+msgstr "Specifica EPUB Accessibility 1.1 AA"
 
 msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.epubA11y11aaa"
-msgstr "Especificação de Acessibilidade EPUB 1.1 AAA"
+msgstr "Specifica EPUB Accessibility 1.1 AAA"
 
 msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.pdfUa1"
 msgstr "PDF/UA-1"
@@ -180,62 +180,62 @@ msgid "plugins.generic.thoth.publicationFormat.accessibilityStandard.pdfUa2"
 msgstr "PDF/UA-2"
 
 msgid "plugins.generic.thoth.publicationFormat.accessibilityException.microEnterprises"
-msgstr "A editora é uma microempresa"
+msgstr "L'editore è una microimpresa"
 
 msgid "plugins.generic.thoth.publicationFormat.accessibilityException.disproportionateBurden"
-msgstr "Ônus desproporcional"
+msgstr "Onere sproporzionato"
 
 msgid "plugins.generic.thoth.publicationFormat.accessibilityException.fundamentalAlteration"
-msgstr "Alteração fundamental"
+msgstr "Alterazione fondamentale"
 
 msgid "plugins.generic.thoth.register.error.log"
-msgstr "Erro ao registrar metadados no Thoth: {$reason}"
+msgstr "Errore durante la registrazione dei metadati in Thoth: {$reason}"
 
 msgid "plugins.generic.thoth.update"
-msgstr "Atualizar Metadados"
+msgstr "Aggiorna metadati"
 
 msgid "plugins.generic.thoth.update.success"
-msgstr "Metadados atualizados com sucesso em Thoth."
+msgstr "Metadati aggiornati con successo in Thoth."
 
 msgid "plugins.generic.thoth.update.success.log"
-msgstr "Metadados da submissão atualizados no Thoth."
+msgstr "Metadati della proposta aggiornati in Thoth."
 
 msgid "plugins.generic.thoth.update.error"
 msgstr ""
-"Houve um problema ao atualizar os metadados em Thoth. Por favor, tente mais "
-"tarde, ou contate o administrador do sistema."
+"Si è verificato un problema durante l'aggiornamento dei metadati in Thoth. Riprova più tardi o "
+"contatta l'amministratore di sistema."
 
 msgid "plugins.generic.thoth.update.error.log"
-msgstr "Erro ao atualizar metadados no Thoth: {$reason}"
+msgstr "Errore durante l'aggiornamento dei metadati in Thoth: {$reason}"
 
 msgid "plugins.generic.thoth.actions.register.label"
-msgstr "Registrar Submissões"
+msgstr "Registra proposte"
 
 msgid "plugins.generic.thoth.actions.register.prompt"
 msgstr ""
-"Você está prestes a enviar metadados de submissão de {$count} item(s) para "
-"Thoth. Tem certeza de que deseja registrar esses registros?"
+"Stai per inviare i metadati della proposta per {$count} elementi a "
+"Thoth. Sei sicuro di voler registrare questi record?"
 
 msgid "plugins.generic.thoth.api.403.alreadyRegistered"
-msgstr "A submissão já foi registrada na Thoth."
+msgstr "La proposta è già registrata in Thoth."
 
 msgid "plugins.generic.thoth.workStatus"
-msgstr "Status na Thoth"
+msgstr "Stato Thoth"
 
 msgid "plugins.generic.thoth.workStatus.active"
-msgstr "Ativo"
+msgstr "Attivo"
 
 msgid "plugins.generic.thoth.workStatus.forthcoming"
-msgstr "Em breve"
+msgstr "In uscita"
 
 msgid "plugins.generic.thoth.workStatus.withdrawn"
-msgstr "Retirado"
+msgstr "Ritirato"
 
 msgid "plugins.generic.thoth.workStatus.superseded"
-msgstr "Substituído"
+msgstr "Sostituito"
 
 msgid "plugins.generic.thoth.workStatus.postponedIndefinitely"
-msgstr "Adiado Indefinidamente"
+msgstr "Rinviato a tempo indeterminato"
 
 msgid "plugins.generic.thoth.workStatus.cancelled"
-msgstr "Cancelado"
+msgstr "Annullato"
