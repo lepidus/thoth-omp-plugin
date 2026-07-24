@@ -323,3 +323,24 @@ msgstr "Metapodatkov ni bilo mogoče sinhronizirati, ker se ujemajo z več kot e
 
 msgid "plugins.generic.thoth.synchronize.activeWorkPublicationDeletionsSkipped"
 msgstr "Nekatere publikacije obstajajo samo v Thothu in so bile ohranjene, ker jih ni mogoče izbrisati iz aktivnega dela."
+
+msgid "plugins.generic.thoth.workStatus"
+msgstr "Stanje v Thothu"
+
+msgid "plugins.generic.thoth.workStatus.active"
+msgstr "Aktivno"
+
+msgid "plugins.generic.thoth.workStatus.forthcoming"
+msgstr "Prihajajoče"
+
+msgid "plugins.generic.thoth.workStatus.withdrawn"
+msgstr "Umaknjeno"
+
+msgid "plugins.generic.thoth.workStatus.superseded"
+msgstr "Nadomeščeno"
+
+msgid "plugins.generic.thoth.workStatus.postponedIndefinitely"
+msgstr "Odloženo za nedoločen čas"
+
+msgid "plugins.generic.thoth.workStatus.cancelled"
+msgstr "Preklicano"

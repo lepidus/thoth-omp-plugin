@@ -321,3 +321,24 @@ msgstr "The metadata could not be synchronized because more than one Thoth recor
 
 msgid "plugins.generic.thoth.synchronize.activeWorkPublicationDeletionsSkipped"
 msgstr "Some publications exist only in Thoth and were kept because publications cannot be deleted from an active work."
+
+msgid "plugins.generic.thoth.workStatus"
+msgstr "Thoth Status"
+
+msgid "plugins.generic.thoth.workStatus.active"
+msgstr "Active"
+
+msgid "plugins.generic.thoth.workStatus.forthcoming"
+msgstr "Forthcoming"
+
+msgid "plugins.generic.thoth.workStatus.withdrawn"
+msgstr "Withdrawn"
+
+msgid "plugins.generic.thoth.workStatus.superseded"
+msgstr "Superseded"
+
+msgid "plugins.generic.thoth.workStatus.postponedIndefinitely"
+msgstr "Postponed Indefinitely"
+
+msgid "plugins.generic.thoth.workStatus.cancelled"
+msgstr "Cancelled"

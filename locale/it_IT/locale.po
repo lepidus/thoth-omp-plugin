@@ -321,3 +321,24 @@ msgstr "I metadati non possono essere sincronizzati perché corrispondono a più
 
 msgid "plugins.generic.thoth.synchronize.activeWorkPublicationDeletionsSkipped"
 msgstr "Alcune pubblicazioni esistono solo in Thoth e sono state mantenute perché non è possibile eliminarle da un'opera attiva."
+
+msgid "plugins.generic.thoth.workStatus"
+msgstr "Stato Thoth"
+
+msgid "plugins.generic.thoth.workStatus.active"
+msgstr "Attivo"
+
+msgid "plugins.generic.thoth.workStatus.forthcoming"
+msgstr "In uscita"
+
+msgid "plugins.generic.thoth.workStatus.withdrawn"
+msgstr "Ritirato"
+
+msgid "plugins.generic.thoth.workStatus.superseded"
+msgstr "Sostituito"
+
+msgid "plugins.generic.thoth.workStatus.postponedIndefinitely"
+msgstr "Rinviato a tempo indeterminato"
+
+msgid "plugins.generic.thoth.workStatus.cancelled"
+msgstr "Annullato"

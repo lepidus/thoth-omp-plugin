@@ -38,6 +38,10 @@ class ThothSectionTemplateFilterTest extends PKPTestCase
         $this->assertStringContainsString('"unlinkConfirm":', $templateManager->script);
         $this->assertStringContainsString('"unlinkTitle":', $templateManager->script);
         $this->assertStringContainsString('"unlinkCancel":', $templateManager->script);
+        $this->assertStringContainsString('"hasLinkedWork":true', $templateManager->script);
+        $this->assertStringContainsString('"workStatusLabels":{"ACTIVE":', $templateManager->script);
+        $this->assertStringContainsString('"workStatusNotFound":', $templateManager->script);
+        $this->assertStringContainsString('"workStatusError":', $templateManager->script);
     }
 }
 
@@ -61,6 +65,11 @@ class ThothSectionSubmissionStub
     public function getId()
     {
         return 13;
+    }
+
+    public function getData($name)
+    {
+        return $name === 'thothWorkId' ? 'work-id' : null;
     }
 }
 
