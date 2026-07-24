@@ -50,7 +50,7 @@ msgid "plugins.generic.thoth.field.imageCount.label"
 msgstr "Numero di immagini"
 
 msgid "plugins.generic.thoth.field.mainContribution.label"
-msgstr "Identifica questo collaboratore come contributo principale in Thoth."
+msgstr "Identifica questo collaboratore come contributo principale in Thoth. I contributi principali vengono visualizzati nel campo “Contributor” del riepilogo dei metadati di Thoth."
 
 msgid "plugins.generic.thoth.workType"
 msgstr "Tipo di opera"

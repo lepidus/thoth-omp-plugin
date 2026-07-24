@@ -61,7 +61,7 @@ msgid "plugins.generic.thoth.field.imageCount.label"
 msgstr "Število slik"
 
 msgid "plugins.generic.thoth.field.mainContribution.label"
-msgstr "Označite tega sodelavca kot glavnega sodelavca v Thothu."
+msgstr "Označite tega sodelavca kot glavnega sodelavca v Thothu. Glavni prispevki so prikazani v polju »Contributor« v povzetku metapodatkov v Thothu."
 
 msgid "plugins.generic.thoth.workType"
 msgstr "Vrsta dela"
