@@ -2,12 +2,13 @@
     margin: 0 1.5rem;
 }
 
-.pkpPublication__thoth a {
-    text-decoration: none;
+.pkpPublication__thoth a,
+.pkpPublication__thoth button {
+    padding: 0.5rem;
 }
 
-.thothWorkStatus {
-    margin-left: 0.5rem;
+.pkpPublication__thoth a {
+    text-decoration: none;
 }
 
 .thothWorkStatus__indicator {
