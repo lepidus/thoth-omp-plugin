@@ -96,6 +96,9 @@ msgstr "Delo ni bilo najdeno v Thoth"
 msgid "plugins.generic.thoth.unlink"
 msgstr "Prekini povezavo"
 
+msgid "plugins.generic.thoth.unlink.confirm"
+msgstr "Ali ste prepričani, da želite prekiniti povezavo tega dela z oddajo?"
+
 msgid "plugins.generic.thoth.unlink.existingWork"
 msgstr "Povezave z delom ni mogoče prekiniti, ker delo še vedno obstaja v Thoth."
 
