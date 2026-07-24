@@ -88,7 +88,7 @@ msgid "plugins.generic.thoth.unlink"
 msgstr "Unlink"
 
 msgid "plugins.generic.thoth.unlink.confirm"
-msgstr "Are you sure you want to unlink this Work from the submission?"
+msgstr "Are you sure you want to continue? This submission will be unlinked from Thoth."
 
 msgid "plugins.generic.thoth.unlink.existingWork"
 msgstr "The Work can not be unlinked because it still exists in Thoth."
