@@ -18,6 +18,7 @@
   "plugins.generic.thoth.status.notFound",
   "plugins.generic.thoth.status.unregistered",
   "plugins.generic.thoth.unlink",
+  "plugins.generic.thoth.unlink.confirm",
   "plugins.generic.thoth.update",
   "plugins.generic.thoth.workStatus",
   "plugins.generic.thoth.workStatus.active",

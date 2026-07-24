@@ -23,7 +23,7 @@
 			v-if="workNotFound"
 			:disabled="isLoading"
 			is-link
-			@click="unlinkWork"
+			@click="confirmUnlinkWork"
 		>
 			{{ t('plugins.generic.thoth.unlink') }}
 			<PkpSpinner v-if="isLoading" class="ms-1" />
@@ -49,6 +49,7 @@
 
 <script setup>
 import {ref, computed, onMounted} from 'vue';
+import {openUnlinkWorkConfirmation} from '../unlinkWorkConfirmation.mjs';
 
 const {useLocalize} = pkp.modules.useLocalize;
 const {useModal} = pkp.modules.useModal;
@@ -158,6 +159,17 @@ function fetchWorkStatus() {
 				response.responseJSON?.workNotFound === true;
 			fetchError.value = !workNotFound.value;
 		},
+	});
+}
+
+function confirmUnlinkWork() {
+	const {openDialog} = useModal();
+	openUnlinkWorkConfirmation({
+		openDialog,
+		title: t('plugins.generic.thoth.unlink'),
+		message: t('plugins.generic.thoth.unlink.confirm'),
+		cancelLabel: t('common.cancel'),
+		onConfirm: unlinkWork,
 	});
 }
 
