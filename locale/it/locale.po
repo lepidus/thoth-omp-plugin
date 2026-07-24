@@ -91,7 +91,7 @@ msgid "plugins.generic.thoth.unlink"
 msgstr "Scollega"
 
 msgid "plugins.generic.thoth.unlink.confirm"
-msgstr "Vuoi davvero scollegare quest'opera dalla proposta?"
+msgstr "Vuoi davvero continuare? Questa proposta verrà scollegata da Thoth."
 
 msgid "plugins.generic.thoth.unlink.existingWork"
 msgstr "L'opera non può essere scollegata perché esiste ancora in Thoth."

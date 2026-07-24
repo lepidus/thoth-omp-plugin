@@ -91,7 +91,7 @@ msgid "plugins.generic.thoth.unlink"
 msgstr "Desvincular"
 
 msgid "plugins.generic.thoth.unlink.confirm"
-msgstr "Tem certeza de que deseja desvincular esta obra da submissão?"
+msgstr "Tem certeza de que deseja continuar? Esta submissão será desvinculada da Thoth."
 
 msgid "plugins.generic.thoth.unlink.existingWork"
 msgstr "A obra não pode ser desvinculada porque ainda existe na Thoth."
