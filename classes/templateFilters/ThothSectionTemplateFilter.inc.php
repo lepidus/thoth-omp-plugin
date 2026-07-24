@@ -70,11 +70,26 @@ class ThothSectionTemplateFilter
             $request->getContext()->getData('urlPath'),
             '_submissions/' . $submission->getId() . '/publications/__publicationId__/synchronize'
         );
+        $workStatusUrl = $request->getDispatcher()->url(
+            $request,
+            ROUTE_API,
+            $request->getContext()->getData('urlPath'),
+            '_submissions/' . $submission->getId() . '/thothWorkStatus'
+        );
+        $unlinkUrl = $request->getDispatcher()->url(
+            $request,
+            ROUTE_API,
+            $request->getContext()->getData('urlPath'),
+            '_submissions/' . $submission->getId() . '/thothWork'
+        );
 
         $data = [
             'registerTitle' => $registerTitle,
+            'unlinkError' => __('plugins.generic.thoth.connectionError'),
             'registerUrl' => $registerUrl,
-            'synchronizeUrl' => $synchronizeUrl
+            'synchronizeUrl' => $synchronizeUrl,
+            'workStatusUrl' => $workStatusUrl,
+            'unlinkUrl' => $unlinkUrl,
         ];
 
         $output = '$.pkp.plugins.generic = $.pkp.plugins.generic || {};';

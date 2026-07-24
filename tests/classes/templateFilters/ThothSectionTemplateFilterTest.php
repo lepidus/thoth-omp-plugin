@@ -20,6 +20,23 @@ class ThothSectionTemplateFilterTest extends PKPTestCase
             $templateManager->script
         );
     }
+
+    public function testProvidesWorkLinkUrlsToWorkflow(): void
+    {
+        $templateManager = new ThothSectionTemplateManagerStub();
+        $filter = new ThothSectionTemplateFilter();
+
+        $filter->addJavaScriptData(new ThothSectionRequestStub(), $templateManager, 'workflow/workflow.tpl');
+
+        $this->assertStringContainsString(
+            '"workStatusUrl":"api\/_submissions\/13\/thothWorkStatus"',
+            $templateManager->script
+        );
+        $this->assertStringContainsString(
+            '"unlinkUrl":"api\/_submissions\/13\/thothWork"',
+            $templateManager->script
+        );
+    }
 }
 
 class ThothSectionTemplateManagerStub
