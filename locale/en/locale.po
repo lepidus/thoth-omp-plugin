@@ -84,6 +84,18 @@ msgstr "Registered"
 msgid "plugins.generic.thoth.status.unregistered"
 msgstr "Unregistered"
 
+msgid "plugins.generic.thoth.status.notFound"
+msgstr "Not found"
+
+msgid "plugins.generic.thoth.unlink"
+msgstr "Unlink"
+
+msgid "plugins.generic.thoth.unlink.confirm"
+msgstr "Are you sure you want to continue? This submission will be unlinked from Thoth."
+
+msgid "plugins.generic.thoth.unlink.existingWork"
+msgstr "The Work can not be unlinked because it still exists in Thoth."
+
 msgid "plugins.generic.thoth.register"
 msgstr "Register"
 
