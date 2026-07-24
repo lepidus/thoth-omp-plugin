@@ -16,15 +16,28 @@
         {translate key="plugins.generic.thoth.thothBook"}
     </strong>
     <span v-if="submission.thothWorkId">
-        <a class="pkpButton" target="_blank" rel="noopener noreferrer" :href="'https://thoth.pub/books/' + submission.thothWorkId">
-            {translate key="common.view"}
-        </a>
         <pkp-button
-            v-if="submission.status !== getConstant('STATUS_PUBLISHED')"
-            @click="$.pkp.plugins.generic.thothplugin.workflow.updateMetadata(workingPublication.id)"
+            v-if="$.pkp.plugins.generic.thothplugin.workflow.workNotFound"
+            @click="$.pkp.plugins.generic.thothplugin.workflow.unlinkWork()"
         >
-            {translate key="plugins.generic.thoth.update"}
+            {translate key="plugins.generic.thoth.unlink"}
         </pkp-button>
+        <template v-else>
+            <a
+                class="pkpButton"
+                target="_blank"
+                rel="noopener noreferrer"
+                :href="'https://thoth.pub/books/' + submission.thothWorkId"
+            >
+                {translate key="common.view"}
+            </a>
+            <pkp-button
+                v-if="submission.status !== getConstant('STATUS_PUBLISHED')"
+                @click="$.pkp.plugins.generic.thothplugin.workflow.updateMetadata(workingPublication.id)"
+            >
+                {translate key="plugins.generic.thoth.update"}
+            </pkp-button>
+        </template>
         <spinner v-if="$.pkp.plugins.generic.thothplugin.workflow.loading" />
     </span>
     <span v-else>

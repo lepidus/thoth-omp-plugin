@@ -21,6 +21,69 @@
     }
 
     $.pkp.plugins.generic.thothplugin.workflow.loading = false;
+    $.pkp.plugins.generic.thothplugin.workflow.workNotFound = false;
+
+    $.pkp.plugins.generic.thothplugin.workflow.refreshSection = function () {
+        const app = pkp.registry && pkp.registry._instances
+            ? pkp.registry._instances.app
+            : null;
+        if (app && typeof app.$forceUpdate === 'function') {
+            app.$forceUpdate();
+        }
+    }
+
+    $.pkp.plugins.generic.thothplugin.workflow.setWorkNotFound = function (workNotFound) {
+        $.pkp.plugins.generic.thothplugin.workflow.workNotFound = workNotFound;
+        $.pkp.plugins.generic.thothplugin.workflow.refreshSection();
+    }
+
+    $.pkp.plugins.generic.thothplugin.workflow.fetchWorkStatus = function () {
+        $.pkp.plugins.generic.thothplugin.workflow.setWorkNotFound(false);
+
+        $.ajax({
+            method: 'GET',
+            url: $.pkp.plugins.generic.thothplugin.workflow.workStatusUrl,
+            headers: {
+                'X-Csrf-Token': pkp.currentUser.csrfToken
+            },
+            error(response) {
+                $.pkp.plugins.generic.thothplugin.workflow.setWorkNotFound(
+                    response.status === 404
+                    && response.responseJSON
+                    && response.responseJSON.workNotFound === true
+                );
+            }
+        });
+    }
+
+    $.pkp.plugins.generic.thothplugin.workflow.unlinkWork = function () {
+        $.pkp.plugins.generic.thothplugin.workflow.loading = true;
+        $.pkp.plugins.generic.thothplugin.workflow.refreshSection();
+
+        $.ajax({
+            method: 'POST',
+            url: $.pkp.plugins.generic.thothplugin.workflow.unlinkUrl,
+            headers: {
+                'X-Csrf-Token': pkp.currentUser.csrfToken,
+                'X-Http-Method-Override': 'DELETE'
+            },
+            success() {
+                $.pkp.plugins.generic.thothplugin.workflow.setWorkNotFound(false);
+                pkp.registry._instances.app.refreshSubmission();
+            },
+            error(response) {
+                const responseData = response.responseJSON || {};
+                const message = responseData.errorMessage
+                    || responseData.error
+                    || $.pkp.plugins.generic.thothplugin.workflow.unlinkError;
+                pkp.eventBus.$emit('notify', message, 'warning');
+            },
+            complete() {
+                $.pkp.plugins.generic.thothplugin.workflow.loading = false;
+                $.pkp.plugins.generic.thothplugin.workflow.refreshSection();
+            }
+        });
+    }
 
     $.pkp.plugins.generic.thothplugin.workflow.openRegister = function (publicationId) {
         const focusEl = document.activeElement;
@@ -83,4 +146,6 @@
             pkp.registry._instances.app.refreshSubmission();
         }
     });
+
+    $.pkp.plugins.generic.thothplugin.workflow.fetchWorkStatus();
 }());
