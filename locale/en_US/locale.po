@@ -82,7 +82,7 @@ msgid "plugins.generic.thoth.status.unregistered"
 msgstr "Unregistered"
 
 msgid "plugins.generic.thoth.status.notFound"
-msgstr "Work not found in Thoth"
+msgstr "Not found"
 
 msgid "plugins.generic.thoth.unlink"
 msgstr "Unlink"

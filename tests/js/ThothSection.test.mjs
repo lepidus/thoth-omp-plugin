@@ -7,6 +7,22 @@ const source = fs.readFileSync(
 	new URL('../../js/ThothSection.js', import.meta.url),
 	'utf8',
 );
+const templateSource = fs.readFileSync(
+	new URL('../../templates/thothSection.tpl', import.meta.url),
+	'utf8',
+);
+const styleSource = fs.readFileSync(
+	new URL('../../styles/thothSection.css', import.meta.url),
+	'utf8',
+);
+const enLocaleSource = fs.readFileSync(
+	new URL('../../locale/en_US/locale.po', import.meta.url),
+	'utf8',
+);
+const ptBRLocaleSource = fs.readFileSync(
+	new URL('../../locale/pt_BR/locale.po', import.meta.url),
+	'utf8',
+);
 
 function loadWorkflow(overrides = {}) {
 	const ajaxCalls = [];
@@ -100,6 +116,54 @@ test('loads the Work status before making linked Work actions available', () => 
 	assert.equal(workflow.workStatus, 'ACTIVE');
 	assert.equal(workflow.getWorkStatusLabel(), 'Active');
 	assert.equal(workflow.canShowLinkedWorkActions(), true);
+});
+
+test('uses DOM-safe spinner tags around the Work status result', () => {
+	assert.doesNotMatch(templateSource, /<spinner\b[^>]*\/>/);
+});
+
+test('keeps the Thoth Status heading visible while loading the Work status', () => {
+	const headingIndex = templateSource.indexOf('<strong>Thoth Status:</strong>');
+	const linkedWorkIndex = templateSource.indexOf(
+		'<span v-if="submission.thothWorkId">',
+	);
+
+	assert.notEqual(headingIndex, -1);
+	assert.ok(headingIndex < linkedWorkIndex);
+	assert.match(
+		templateSource,
+		/\{\{\s+\$\.pkp\.plugins\.generic\.thothplugin\.workflow\.getWorkStatusLabel\(\)\s+\}\}/,
+	);
+});
+
+test('uses the short missing Work labels in English and Portuguese', () => {
+	assert.match(
+		enLocaleSource,
+		/msgid "plugins\.generic\.thoth\.status\.notFound"\nmsgstr "Not found"/,
+	);
+	assert.match(
+		ptBRLocaleSource,
+		/msgid "plugins\.generic\.thoth\.status\.notFound"\nmsgstr "Não encontrado"/,
+	);
+});
+
+test('uses links for every Thoth action', () => {
+	const actionTags = templateSource.match(/<a\b[\s\S]*?>/g) || [];
+	const localActionTags = actionTags.filter((actionTag) =>
+		actionTag.includes('@click.prevent'),
+	);
+
+	assert.doesNotMatch(templateSource, /class="pkpButton"/);
+	assert.doesNotMatch(templateSource, /<pkp-button\b/);
+	assert.equal(actionTags.length, 4);
+	assert.equal(localActionTags.length, 3);
+	localActionTags.forEach((actionTag) =>
+		assert.match(actionTag, /\bhref="#"/),
+	);
+	assert.match(
+		styleSource,
+		/\.pkpPublication__thoth a,\n\.pkpPublication__thoth button \{\n\s+padding: 0\.5rem;/,
+	);
 });
 
 test('shows only the unlink action when the linked Work was not found', () => {
