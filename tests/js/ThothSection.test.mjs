@@ -8,16 +8,25 @@ const source = fs.readFileSync(
 	'utf8',
 );
 
-function loadWorkflow() {
+function loadWorkflow(overrides = {}) {
 	const ajaxCalls = [];
+	const eventHandlers = {};
 	const modalCalls = [];
+	const refreshSubmissionCalls = [];
 	const workflow = {
+		hasLinkedWork: true,
 		unlinkCancel: 'Cancel',
 		unlinkConfirm: 'Confirm unlink',
 		unlinkError: 'Unable to unlink',
 		unlinkTitle: 'Unlink',
 		unlinkUrl: 'api/_submissions/13/thothWork',
+		workStatusError: 'Error',
+		workStatusLabels: {
+			ACTIVE: 'Active',
+		},
+		workStatusNotFound: 'Work not found in Thoth',
 		workStatusUrl: 'api/_submissions/13/thothWorkStatus',
+		...overrides,
 	};
 	const $ = function () {
 		return {
@@ -43,13 +52,17 @@ function loadWorkflow() {
 		currentUser: {csrfToken: 'csrf-token'},
 		eventBus: {
 			$emit() {},
-			$on() {},
+			$on(event, handler) {
+				eventHandlers[event] = handler;
+			},
 		},
 		registry: {
 			_instances: {
 				app: {
 					$forceUpdate() {},
-					refreshSubmission() {},
+					refreshSubmission() {
+						refreshSubmissionCalls.push(true);
+					},
 				},
 			},
 		},
@@ -60,10 +73,82 @@ function loadWorkflow() {
 		document: {activeElement: {focus() {}}},
 		pkp,
 	});
+	const statusRequest = ajaxCalls[0];
 	ajaxCalls.length = 0;
 
-	return {ajaxCalls, modalCalls, workflow};
+	return {
+		ajaxCalls,
+		eventHandlers,
+		modalCalls,
+		refreshSubmissionCalls,
+		statusRequest,
+		workflow,
+	};
 }
+
+test('loads the Work status before making linked Work actions available', () => {
+	const {statusRequest, workflow} = loadWorkflow();
+
+	assert.equal(statusRequest.method, 'GET');
+	assert.equal(statusRequest.url, 'api/_submissions/13/thothWorkStatus');
+	assert.equal(workflow.workStatusLoaded, false);
+
+	statusRequest.success({workStatus: 'ACTIVE'});
+	statusRequest.complete();
+
+	assert.equal(workflow.workStatusLoaded, true);
+	assert.equal(workflow.workStatus, 'ACTIVE');
+	assert.equal(workflow.getWorkStatusLabel(), 'Active');
+	assert.equal(workflow.canShowLinkedWorkActions(), true);
+});
+
+test('shows only the unlink action when the linked Work was not found', () => {
+	const {statusRequest, workflow} = loadWorkflow();
+
+	statusRequest.error({
+		status: 404,
+		responseJSON: {workNotFound: true},
+	});
+	statusRequest.complete();
+
+	assert.equal(workflow.workStatusLoaded, true);
+	assert.equal(workflow.workNotFound, true);
+	assert.equal(workflow.getWorkStatusLabel(), 'Work not found in Thoth');
+	assert.equal(workflow.canShowLinkedWorkActions(), false);
+});
+
+test('keeps linked Work actions hidden when the status request fails', () => {
+	const {statusRequest, workflow} = loadWorkflow();
+
+	statusRequest.error({status: 500, responseJSON: {}});
+	statusRequest.complete();
+
+	assert.equal(workflow.workStatusLoaded, true);
+	assert.equal(workflow.fetchError, true);
+	assert.equal(workflow.getWorkStatusLabel(), 'Error');
+	assert.equal(workflow.canShowLinkedWorkActions(), false);
+});
+
+test('does not request a Work status when the submission is not linked', () => {
+	const {statusRequest, workflow} = loadWorkflow({hasLinkedWork: false});
+
+	assert.equal(statusRequest, undefined);
+	assert.equal(workflow.workStatusLoaded, true);
+});
+
+test('requests the Work status after registration succeeds', () => {
+	const {
+		ajaxCalls,
+		eventHandlers,
+		refreshSubmissionCalls,
+	} = loadWorkflow({hasLinkedWork: false});
+
+	eventHandlers['form-success']('register');
+
+	assert.equal(refreshSubmissionCalls.length, 1);
+	assert.equal(ajaxCalls.length, 1);
+	assert.equal(ajaxCalls[0].url, 'api/_submissions/13/thothWorkStatus');
+});
 
 test('opens an OMP confirmation modal before unlinking the Work', () => {
 	const {ajaxCalls, modalCalls, workflow} = loadWorkflow();

@@ -21,6 +21,10 @@
     }
 
     $.pkp.plugins.generic.thothplugin.workflow.loading = false;
+    $.pkp.plugins.generic.thothplugin.workflow.fetchError = false;
+    $.pkp.plugins.generic.thothplugin.workflow.workStatus = null;
+    $.pkp.plugins.generic.thothplugin.workflow.workStatusLoaded =
+        !$.pkp.plugins.generic.thothplugin.workflow.hasLinkedWork;
     $.pkp.plugins.generic.thothplugin.workflow.workNotFound = false;
 
     $.pkp.plugins.generic.thothplugin.workflow.refreshSection = function () {
@@ -37,21 +41,65 @@
         $.pkp.plugins.generic.thothplugin.workflow.refreshSection();
     }
 
+    $.pkp.plugins.generic.thothplugin.workflow.getWorkStatusLabel = function () {
+        const workflow = $.pkp.plugins.generic.thothplugin.workflow;
+        if (workflow.workNotFound) {
+            return workflow.workStatusNotFound;
+        }
+        if (workflow.fetchError) {
+            return workflow.workStatusError;
+        }
+        return workflow.workStatusLabels[workflow.workStatus] || workflow.workStatus;
+    }
+
+    $.pkp.plugins.generic.thothplugin.workflow.getWorkStatusClass = function () {
+        const workflow = $.pkp.plugins.generic.thothplugin.workflow;
+        const classes = {
+            ACTIVE: 'thothWorkStatus__indicator--active',
+            FORTHCOMING: 'thothWorkStatus__indicator--forthcoming',
+            WITHDRAWN: 'thothWorkStatus__indicator--declined',
+            SUPERSEDED: 'thothWorkStatus__indicator--superseded',
+            POSTPONED_INDEFINITELY: 'thothWorkStatus__indicator--postponed',
+            CANCELLED: 'thothWorkStatus__indicator--declined'
+        };
+        if (workflow.workNotFound || workflow.fetchError) {
+            return 'thothWorkStatus__indicator--declined';
+        }
+        return classes[workflow.workStatus] || 'thothWorkStatus__indicator--superseded';
+    }
+
+    $.pkp.plugins.generic.thothplugin.workflow.canShowLinkedWorkActions = function () {
+        const workflow = $.pkp.plugins.generic.thothplugin.workflow;
+        return workflow.workStatusLoaded && !workflow.workNotFound && !workflow.fetchError;
+    }
+
     $.pkp.plugins.generic.thothplugin.workflow.fetchWorkStatus = function () {
-        $.pkp.plugins.generic.thothplugin.workflow.setWorkNotFound(false);
+        const workflow = $.pkp.plugins.generic.thothplugin.workflow;
+        workflow.fetchError = false;
+        workflow.workNotFound = false;
+        workflow.workStatus = null;
+        workflow.workStatusLoaded = false;
+        workflow.refreshSection();
 
         $.ajax({
             method: 'GET',
-            url: $.pkp.plugins.generic.thothplugin.workflow.workStatusUrl,
+            url: workflow.workStatusUrl,
             headers: {
                 'X-Csrf-Token': pkp.currentUser.csrfToken
             },
+            success(response) {
+                workflow.workStatus = response.workStatus;
+            },
             error(response) {
-                $.pkp.plugins.generic.thothplugin.workflow.setWorkNotFound(
+                workflow.workNotFound =
                     response.status === 404
                     && response.responseJSON
-                    && response.responseJSON.workNotFound === true
-                );
+                    && response.responseJSON.workNotFound === true;
+                workflow.fetchError = !workflow.workNotFound;
+            },
+            complete() {
+                workflow.workStatusLoaded = true;
+                workflow.refreshSection();
             }
         });
     }
@@ -165,8 +213,11 @@
     pkp.eventBus.$on('form-success', (formId) => {
         if (formId == 'register') {
             pkp.registry._instances.app.refreshSubmission();
+            $.pkp.plugins.generic.thothplugin.workflow.fetchWorkStatus();
         }
     });
 
-    $.pkp.plugins.generic.thothplugin.workflow.fetchWorkStatus();
+    if ($.pkp.plugins.generic.thothplugin.workflow.hasLinkedWork) {
+        $.pkp.plugins.generic.thothplugin.workflow.fetchWorkStatus();
+    }
 }());
