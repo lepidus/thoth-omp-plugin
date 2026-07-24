@@ -10,17 +10,14 @@
 		/>
 		<span class="ms-1 text-lg-normal">{{ statusLabel }}</span>
 		<PkpButton
-			v-if="submission.thothWorkId && !workNotFound"
+			v-if="actionVisibility.view"
 			is-link
-			element="a"
-			target="_blank"
-			rel="noopener noreferrer"
-			:href="thothWorkUrl"
+			@click="viewWork"
 		>
 			{{ t('common.view') }}
 		</PkpButton>
 		<PkpButton
-			v-if="workNotFound"
+			v-if="actionVisibility.unlink"
 			:disabled="isLoading"
 			is-link
 			@click="confirmUnlinkWork"
@@ -29,7 +26,7 @@
 			<PkpSpinner v-if="isLoading" class="ms-1" />
 		</PkpButton>
 		<PkpButton
-			v-else-if="submission.thothWorkId && !isPublished"
+			v-if="actionVisibility.update"
 			:disabled="isLoading"
 			is-link
 			@click="updateMetadata"
@@ -38,7 +35,7 @@
 			<PkpSpinner v-if="isLoading" class="ms-1" />
 		</PkpButton>
 		<PkpButton
-			v-else-if="!submission.thothWorkId"
+			v-if="actionVisibility.register"
 			is-link
 			@click="openRegister"
 		>
@@ -49,6 +46,7 @@
 
 <script setup>
 import {ref, computed, onMounted} from 'vue';
+import {getThothActionVisibility} from '../thothActionVisibility.mjs';
 import {openUnlinkWorkConfirmation} from '../unlinkWorkConfirmation.mjs';
 
 const {useLocalize} = pkp.modules.useLocalize;
@@ -68,12 +66,24 @@ const props = defineProps({
 });
 
 const workStatus = ref(null);
+const statusRequestCompleted = ref(false);
 const fetchError = ref(false);
 const workNotFound = ref(false);
 const isLoading = ref(false);
 
 const isPublished = computed(
 	() => props.submission.status === pkp.const.STATUS_PUBLISHED,
+);
+
+const actionVisibility = computed(() =>
+	getThothActionVisibility({
+		hasWorkLink: Boolean(props.submission.thothWorkId),
+		workStatus: workStatus.value,
+		statusRequestCompleted: statusRequestCompleted.value,
+		workNotFound: workNotFound.value,
+		fetchError: fetchError.value,
+		isPublished: isPublished.value,
+	}),
 );
 
 const thothWorkUrl = computed(() => {
@@ -141,6 +151,7 @@ function fetchWorkStatus() {
 		return;
 	}
 
+	statusRequestCompleted.value = false;
 	fetchError.value = false;
 	workNotFound.value = false;
 
@@ -159,7 +170,14 @@ function fetchWorkStatus() {
 				response.responseJSON?.workNotFound === true;
 			fetchError.value = !workNotFound.value;
 		},
+		complete() {
+			statusRequestCompleted.value = true;
+		},
 	});
+}
+
+function viewWork() {
+	window.open(thothWorkUrl.value, '_blank', 'noopener,noreferrer');
 }
 
 function confirmUnlinkWork() {
