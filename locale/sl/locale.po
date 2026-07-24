@@ -100,7 +100,7 @@ msgid "plugins.generic.thoth.unlink"
 msgstr "Prekini povezavo"
 
 msgid "plugins.generic.thoth.unlink.confirm"
-msgstr "Ali ste prepričani, da želite prekiniti povezavo tega dela z oddajo?"
+msgstr "Ali ste prepričani, da želite nadaljevati? Povezava te oddaje s Thoth bo prekinjena."
 
 msgid "plugins.generic.thoth.unlink.existingWork"
 msgstr "Povezave z delom ni mogoče prekiniti, ker delo še vedno obstaja v Thoth."
