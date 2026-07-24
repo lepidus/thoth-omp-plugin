@@ -10,7 +10,7 @@
 		/>
 		<span class="ms-1 text-lg-normal">{{ statusLabel }}</span>
 		<PkpButton
-			v-if="submission.thothWorkId"
+			v-if="submission.thothWorkId && !workNotFound"
 			is-link
 			element="a"
 			target="_blank"
@@ -20,7 +20,16 @@
 			{{ t('common.view') }}
 		</PkpButton>
 		<PkpButton
-			v-if="submission.thothWorkId && !isPublished"
+			v-if="workNotFound"
+			:disabled="isLoading"
+			is-link
+			@click="unlinkWork"
+		>
+			{{ t('plugins.generic.thoth.unlink') }}
+			<PkpSpinner v-if="isLoading" class="ms-1" />
+		</PkpButton>
+		<PkpButton
+			v-else-if="submission.thothWorkId && !isPublished"
 			:disabled="isLoading"
 			is-link
 			@click="updateMetadata"
@@ -51,6 +60,7 @@ const props = defineProps({
 	submission: {type: Object, required: true},
 	selectedPublicationId: {type: Number, required: true},
 	workStatusUrl: {type: String, required: true},
+	unlinkUrl: {type: String, required: true},
 	registerUrl: {type: String, required: true},
 	synchronizeUrl: {type: String, required: true},
 	registerTitle: {type: String, required: true},
@@ -58,6 +68,7 @@ const props = defineProps({
 
 const workStatus = ref(null);
 const fetchError = ref(false);
+const workNotFound = ref(false);
 const isLoading = ref(false);
 
 const isPublished = computed(
@@ -84,6 +95,9 @@ const workStatusLocaleMap = {
 const statusLabel = computed(() => {
 	if (!props.submission.thothWorkId) {
 		return t('plugins.generic.thoth.status.unregistered');
+	}
+	if (workNotFound.value) {
+		return t('plugins.generic.thoth.status.notFound');
 	}
 	if (fetchError.value) {
 		return t('common.error');
@@ -127,6 +141,7 @@ function fetchWorkStatus() {
 	}
 
 	fetchError.value = false;
+	workNotFound.value = false;
 
 	$.ajax({
 		method: 'GET',
@@ -137,8 +152,36 @@ function fetchWorkStatus() {
 		success(response) {
 			workStatus.value = response.workStatus;
 		},
-		error() {
-			fetchError.value = true;
+		error(response) {
+			workNotFound.value =
+				response.status === 404 &&
+				response.responseJSON?.workNotFound === true;
+			fetchError.value = !workNotFound.value;
+		},
+	});
+}
+
+function unlinkWork() {
+	isLoading.value = true;
+
+	$.ajax({
+		method: 'POST',
+		url: props.unlinkUrl,
+		headers: {
+			'X-Csrf-Token': pkp.currentUser.csrfToken,
+			'X-Http-Method-Override': 'DELETE',
+		},
+		success: async function () {
+			await triggerDataChange();
+			isLoading.value = false;
+		},
+		error: function (response) {
+			const message =
+				response.responseJSON?.error ||
+				response.responseJSON?.errorMessage ||
+				t('plugins.generic.thoth.connectionError');
+			pkp.eventBus.$emit('notify', message, 'warning');
+			isLoading.value = false;
 		},
 	});
 }

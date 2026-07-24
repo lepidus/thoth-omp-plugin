@@ -84,6 +84,15 @@ msgstr "Registrado"
 msgid "plugins.generic.thoth.status.unregistered"
 msgstr "Não Registrado"
 
+msgid "plugins.generic.thoth.status.notFound"
+msgstr "Obra não encontrada na Thoth"
+
+msgid "plugins.generic.thoth.unlink"
+msgstr "Desvincular"
+
+msgid "plugins.generic.thoth.unlink.existingWork"
+msgstr "A obra não pode ser desvinculada porque ainda existe na Thoth."
+
 msgid "plugins.generic.thoth.register"
 msgstr "Registrar"
 
