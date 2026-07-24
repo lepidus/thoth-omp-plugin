@@ -410,15 +410,23 @@ class ThothEndpoint implements HasAuthorizationPolicy
             $context->getData('urlPath'),
             'temporaryFiles'
         );
-        $existingVideo = $submission->getData('thothWorkId')
-            ? ThothRepository::work()->getFeatureVideo($submission->getData('thothWorkId'))
-            : null;
-        $form = new FeatureVideoForm(
-            $featureVideoUrl,
-            $temporaryFilesUrl,
-            ThothService::me()->hasCdnWritePermission(),
-            (bool) $existingVideo
-        );
+        try {
+            $existingVideo = $submission->getData('thothWorkId')
+                ? ThothRepository::work()->getFeatureVideo($submission->getData('thothWorkId'))
+                : null;
+            $form = new FeatureVideoForm(
+                $featureVideoUrl,
+                $temporaryFilesUrl,
+                ThothService::me()->hasCdnWritePermission(),
+                (bool) $existingVideo
+            );
+        } catch (\Throwable $exception) {
+            error_log($exception->getMessage());
+            return response()->json(
+                ['error' => __('plugins.generic.thoth.connectionError')],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
 
         return response()->json($form->getConfig(), Response::HTTP_OK);
     }
