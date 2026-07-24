@@ -8,18 +8,31 @@ const source = fs.readFileSync(
 	'utf8',
 );
 
-function loadWorkflow(confirmResult) {
+function loadWorkflow() {
 	const ajaxCalls = [];
-	const confirmMessages = [];
+	const modalCalls = [];
 	const workflow = {
+		unlinkCancel: 'Cancel',
 		unlinkConfirm: 'Confirm unlink',
 		unlinkError: 'Unable to unlink',
+		unlinkTitle: 'Unlink',
 		unlinkUrl: 'api/submissions/13/thothWork',
 		workStatusUrl: 'api/submissions/13/thothWorkStatus',
 	};
-	const $ = function () {};
+	const $ = function () {
+		return {
+			pkpHandler(handler, options) {
+				modalCalls.push({handler, options});
+			},
+		};
+	};
 	$.ajax = (options) => ajaxCalls.push(options);
 	$.pkp = {
+		classes: {
+			Helper: {
+				uuid: () => 'modal-id',
+			},
+		},
 		plugins: {
 			generic: {
 				thothplugin: {workflow},
@@ -44,32 +57,34 @@ function loadWorkflow(confirmResult) {
 
 	vm.runInNewContext(source, {
 		$,
-		confirm(message) {
-			confirmMessages.push(message);
-			return confirmResult;
-		},
 		document: {activeElement: {focus() {}}},
 		pkp,
 	});
 	ajaxCalls.length = 0;
 
-	return {ajaxCalls, confirmMessages, workflow};
+	return {ajaxCalls, modalCalls, workflow};
 }
 
-test('does not unlink the Work when confirmation is cancelled', () => {
-	const {ajaxCalls, confirmMessages, workflow} = loadWorkflow(false);
+test('opens an OMP confirmation modal before unlinking the Work', () => {
+	const {ajaxCalls, modalCalls, workflow} = loadWorkflow();
 
 	workflow.unlinkWork();
 
-	assert.deepEqual(confirmMessages, ['Confirm unlink']);
 	assert.equal(ajaxCalls.length, 0);
-	assert.equal(workflow.loading, false);
+	assert.equal(modalCalls.length, 1);
+	assert.equal(
+		modalCalls[0].handler,
+		'$.pkp.controllers.modal.ConfirmationModalHandler',
+	);
+	assert.equal(modalCalls[0].options.dialogText, 'Confirm unlink');
+	assert.equal(modalCalls[0].options.cancelButton, 'Cancel');
 });
 
-test('unlinks the Work after confirmation', () => {
-	const {ajaxCalls, workflow} = loadWorkflow(true);
+test('unlinks the Work only after modal confirmation', () => {
+	const {ajaxCalls, modalCalls, workflow} = loadWorkflow();
 
 	workflow.unlinkWork();
+	modalCalls[0].options.callback();
 
 	assert.equal(ajaxCalls.length, 1);
 	assert.equal(ajaxCalls[0].url, 'api/submissions/13/thothWork');

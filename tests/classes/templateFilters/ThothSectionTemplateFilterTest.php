@@ -36,6 +36,8 @@ class ThothSectionTemplateFilterTest extends PKPTestCase
             $templateManager->script
         );
         $this->assertStringContainsString('"unlinkConfirm":', $templateManager->script);
+        $this->assertStringContainsString('"unlinkTitle":', $templateManager->script);
+        $this->assertStringContainsString('"unlinkCancel":', $templateManager->script);
     }
 }
 
