@@ -90,6 +90,9 @@ msgstr "Work not found in Thoth"
 msgid "plugins.generic.thoth.unlink"
 msgstr "Unlink"
 
+msgid "plugins.generic.thoth.unlink.confirm"
+msgstr "Are you sure you want to unlink this Work from the submission?"
+
 msgid "plugins.generic.thoth.unlink.existingWork"
 msgstr "The Work can not be unlinked because it still exists in Thoth."
 

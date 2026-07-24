@@ -90,6 +90,9 @@ msgstr "Opera non trovata in Thoth"
 msgid "plugins.generic.thoth.unlink"
 msgstr "Scollega"
 
+msgid "plugins.generic.thoth.unlink.confirm"
+msgstr "Vuoi davvero scollegare quest'opera dalla proposta?"
+
 msgid "plugins.generic.thoth.unlink.existingWork"
 msgstr "L'opera non può essere scollegata perché esiste ancora in Thoth."
 

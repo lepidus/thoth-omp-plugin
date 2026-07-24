@@ -36,6 +36,7 @@ class ThothSectionTemplateFilterTest extends PKPTestCase
             '"unlinkUrl":"api\/_submissions\/13\/thothWork"',
             $templateManager->script
         );
+        $this->assertStringContainsString('"unlinkConfirm":', $templateManager->script);
     }
 }
 

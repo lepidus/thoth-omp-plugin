@@ -57,6 +57,10 @@
     }
 
     $.pkp.plugins.generic.thothplugin.workflow.unlinkWork = function () {
+        if (!confirm($.pkp.plugins.generic.thothplugin.workflow.unlinkConfirm)) {
+            return;
+        }
+
         $.pkp.plugins.generic.thothplugin.workflow.loading = true;
         $.pkp.plugins.generic.thothplugin.workflow.refreshSection();
 

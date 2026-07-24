@@ -90,6 +90,9 @@ msgstr "Obra no encontrada en Thoth"
 msgid "plugins.generic.thoth.unlink"
 msgstr "Desvincular"
 
+msgid "plugins.generic.thoth.unlink.confirm"
+msgstr "¿Está seguro de que desea desvincular esta obra del envío?"
+
 msgid "plugins.generic.thoth.unlink.existingWork"
 msgstr "La obra no se puede desvincular porque todavía existe en Thoth."
 

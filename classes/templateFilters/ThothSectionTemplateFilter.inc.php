@@ -85,6 +85,7 @@ class ThothSectionTemplateFilter
 
         $data = [
             'registerTitle' => $registerTitle,
+            'unlinkConfirm' => __('plugins.generic.thoth.unlink.confirm'),
             'unlinkError' => __('plugins.generic.thoth.connectionError'),
             'registerUrl' => $registerUrl,
             'synchronizeUrl' => $synchronizeUrl,
