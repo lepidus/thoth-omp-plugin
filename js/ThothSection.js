@@ -57,10 +57,27 @@
     }
 
     $.pkp.plugins.generic.thothplugin.workflow.unlinkWork = function () {
-        if (!confirm($.pkp.plugins.generic.thothplugin.workflow.unlinkConfirm)) {
-            return;
-        }
+        const focusEl = document.activeElement;
+        const workflow = $.pkp.plugins.generic.thothplugin.workflow;
+        var opts = {
+            title: workflow.unlinkTitle,
+            okButton: workflow.unlinkTitle,
+            cancelButton: workflow.unlinkCancel,
+            dialogText: workflow.unlinkConfirm,
+            callback: workflow.performUnlink,
+            closeCallback: () => focusEl.focus(),
+            titleIcon: 'modal_confirm',
+            width: 'auto'
+        };
 
+        $(
+            '<div id="' +
+            $.pkp.classes.Helper.uuid() +
+            '" class="pkp_modal pkpModalWrapper" tabIndex="-1"></div>'
+        ).pkpHandler('$.pkp.controllers.modal.ConfirmationModalHandler', opts);
+    }
+
+    $.pkp.plugins.generic.thothplugin.workflow.performUnlink = function () {
         $.pkp.plugins.generic.thothplugin.workflow.loading = true;
         $.pkp.plugins.generic.thothplugin.workflow.refreshSection();
 
