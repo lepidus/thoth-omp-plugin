@@ -31,6 +31,7 @@ use Illuminate\Support\LazyCollection;
 use Mockery;
 use PKP\tests\PKPTestCase;
 use ThothApi\GraphQL\Client as ThothClient;
+use ThothApi\GraphQL\Enums\WorkStatus;
 use ThothApi\GraphQL\Inputs\PatchWork as ThothWork;
 
 class ThothChapterServiceTest extends PKPTestCase
@@ -102,9 +103,11 @@ class ThothChapterServiceTest extends PKPTestCase
         $mockFactory = $this->getMockBuilder(ThothChapterFactory::class)
             ->onlyMethods(['createFromChapter'])
             ->getMock();
+        $thothChapter = new ThothWork();
+        $thothChapter->setWorkStatus(WorkStatus::ACTIVE);
         $mockFactory->expects($this->once())
             ->method('createFromChapter')
-            ->willReturn(new ThothWork());
+            ->willReturn($thothChapter);
 
         $mockRepository = $this->getMockBuilder(ThothChapterRepository::class)
             ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
@@ -112,6 +115,9 @@ class ThothChapterServiceTest extends PKPTestCase
             ->getMock();
         $mockRepository->expects($this->once())
             ->method('add')
+            ->with($this->callback(function (ThothWork $createdChapter): bool {
+                return $createdChapter->getWorkStatus() === WorkStatus::FORTHCOMING;
+            }))
             ->willReturn('fed8b9ee-2537-4a66-a1a1-eeadf4001c59');
 
         $mockChapter = $this->getMockBuilder(\APP\monograph\Chapter::class)
@@ -183,6 +189,7 @@ class ThothChapterServiceTest extends PKPTestCase
             ->with('thothChapterId', 'chapter-id');
 
         $desiredWork = new ThothWork();
+        $desiredWork->setWorkStatus(WorkStatus::ACTIVE);
         $factory = $this->createMock(ThothChapterFactory::class);
         $factory->expects($this->once())
             ->method('createFromChapter')
@@ -196,7 +203,8 @@ class ThothChapterServiceTest extends PKPTestCase
             ->method('edit')
             ->with($this->callback(function (ThothWork $work): bool {
                 return $work->getWorkId() === 'chapter-id'
-                    && $work->getImprintId() === 'imprint-id';
+                    && $work->getImprintId() === 'imprint-id'
+                    && $work->getWorkStatus() === WorkStatus::ACTIVE;
             }));
 
         $titleService = $this->createMock(ThothTitleService::class);
