@@ -15,6 +15,7 @@ require_once(__DIR__ . '/../../../vendor/autoload.php');
  * @brief Test class for the ThothBookRegistrationService class
  */
 
+use ThothApi\Exception\QueryException;
 use ThothApi\GraphQL\Client as ThothClient;
 use ThothApi\GraphQL\Enums\WorkStatus;
 use ThothApi\GraphQL\Inputs\PatchWork as ThothWork;
@@ -171,5 +172,125 @@ class ThothBookRegistrationServiceTest extends PKPTestCase
         $secondRegistrationResult = $service->register($mockPublication, 'f740cf4e-16d1-487c-9a92-615882a591e9');
 
         $service->setActive($secondRegistrationResult);
+    }
+
+    public function testActiveBookIsRegisteredAndRemainsForthcoming()
+    {
+        $book = new ThothWork();
+        $book->setWorkStatus(WorkStatus::ACTIVE);
+
+        $publication = $this->getMockBuilder(Publication::class)
+            ->setMethods(['getData', 'setData'])
+            ->getMock();
+        $publication->method('getData')->with('locale')->willReturn('en_US');
+        $publication->expects($this->once())
+            ->method('setData')
+            ->with('thothBookId', 'work-id');
+
+        $factory = $this->getMockBuilder(ThothBookFactory::class)
+            ->setMethods(['createFromPublication'])
+            ->getMock();
+        $factory->method('createFromPublication')->with($publication)->willReturn($book);
+
+        $repository = $this->getMockBuilder(ThothBookRepository::class)
+            ->setConstructorArgs([$this->createMock(ThothClient::class)])
+            ->setMethods(['add', 'edit'])
+            ->getMock();
+        $repository->expects($this->once())
+            ->method('add')
+            ->willReturnCallback(function (ThothWork $createdBook) {
+                $this->assertSame(WorkStatus::FORTHCOMING, $createdBook->getWorkStatus());
+                return 'work-id';
+            });
+        $repository->expects($this->never())->method('edit');
+
+        $service = $this->createServiceWithDefaults($factory, $repository);
+
+        $result = $service->register($publication, 'imprint-id');
+
+        $this->assertFalse($result->shouldActivate());
+        $this->assertNull($result->getBookToActivate());
+
+        $service->setActive($result);
+    }
+
+    public function testForthcomingBookIsNotActivated()
+    {
+        $book = new ThothWork();
+        $book->setWorkStatus(WorkStatus::FORTHCOMING);
+
+        $publication = $this->getMockBuilder(Publication::class)
+            ->setMethods(['getData', 'setData'])
+            ->getMock();
+        $publication->method('getData')->with('locale')->willReturn('en_US');
+
+        $factory = $this->getMockBuilder(ThothBookFactory::class)
+            ->setMethods(['createFromPublication'])
+            ->getMock();
+        $factory->method('createFromPublication')->willReturn($book);
+
+        $repository = $this->getMockBuilder(ThothBookRepository::class)
+            ->setConstructorArgs([$this->createMock(ThothClient::class)])
+            ->setMethods(['add', 'edit'])
+            ->getMock();
+        $repository->expects($this->once())
+            ->method('add')
+            ->with($this->identicalTo($book))
+            ->willReturn('work-id');
+        $repository->expects($this->never())->method('edit');
+
+        $service = $this->createServiceWithDefaults($factory, $repository);
+
+        $result = $service->register($publication, 'imprint-id');
+        $service->setActive($result);
+
+        $this->assertFalse($result->shouldActivate());
+        $this->assertSame(WorkStatus::FORTHCOMING, $book->getWorkStatus());
+    }
+
+    public function testRegistrationDeletesCreatedBookWhenMetadataFails()
+    {
+        $publication = $this->getMockBuilder(Publication::class)
+            ->setMethods(['getData', 'setData'])
+            ->getMock();
+        $publication->method('getData')->with('locale')->willReturn('en_US');
+
+        $factory = $this->getMockBuilder(ThothBookFactory::class)
+            ->setMethods(['createFromPublication'])
+            ->getMock();
+        $factory->method('createFromPublication')->willReturn(new ThothWork());
+
+        $repository = $this->getMockBuilder(ThothBookRepository::class)
+            ->setConstructorArgs([$this->createMock(ThothClient::class)])
+            ->setMethods(['add', 'delete'])
+            ->getMock();
+        $repository->method('add')->willReturn('work-id');
+        $repository->expects($this->once())->method('delete')->with('work-id');
+
+        $titleService = $this->createMock(ThothTitleService::class);
+        $titleService->method('registerByPublication')->willThrowException(
+            new QueryException(['message' => 'metadata failed'], null, null, null, 200)
+        );
+        $service = $this->createServiceWithDefaults($factory, $repository, $titleService);
+
+        $this->expectException(QueryException::class);
+
+        $service->register($publication, 'imprint-id');
+    }
+
+    private function createServiceWithDefaults($factory, $repository, $titleService = null)
+    {
+        return new ThothBookRegistrationService(
+            $factory,
+            $repository,
+            $this->createMock(ThothAbstractService::class),
+            $this->createMock(ThothContributionService::class),
+            $this->createMock(ThothLanguageService::class),
+            $this->createMock(ThothPublicationService::class),
+            $this->createMock(ThothReferenceService::class),
+            $this->createMock(ThothSubjectService::class),
+            $titleService ?: $this->createMock(ThothTitleService::class),
+            $this->createMock(ThothWorkRelationService::class)
+        );
     }
 }

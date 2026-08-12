@@ -14,6 +14,8 @@
  * @brief Helper class that encapsulates business logic for Thoth chapters
  */
 
+use ThothApi\GraphQL\Enums\WorkStatus;
+
 class ThothChapterService
 {
     public $factory;
@@ -50,6 +52,7 @@ class ThothChapterService
     public function register($chapter, $thothImprintId, $thothChapter = null)
     {
         $thothChapter = $thothChapter ?? $this->getDesiredWork($chapter, $thothImprintId);
+        $thothChapter->setWorkStatus(WorkStatus::FORTHCOMING);
         $thothChapterId = $this->repository->add($thothChapter);
         $chapter->setData('thothChapterId', $thothChapterId);
         $this->registerMetadata($chapter, $thothChapterId);
