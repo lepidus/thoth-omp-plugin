@@ -120,4 +120,74 @@ class ThothMetadataSynchronizationServiceTest extends PKPTestCase
             'plugins.generic.thoth.synchronize.activeWorkPublicationDeletionsSkipped',
         ], $service->synchronize($publication, 'work-id'));
     }
+
+    public function testSynchronizeWarnsWhenActiveChapterDeletionsAreSkipped()
+    {
+        $publication = $this->createMock(Publication::class);
+        $bookService = $this->createMock(ThothBookService::class);
+        $bookService->method('update')->willReturn(null);
+        $contributionService = $this->createMock(ThothContributionService::class);
+        $publicationService = $this->createMock(ThothPublicationService::class);
+        $publicationService->method('synchronizeByPublication')->willReturn(false);
+        $languageService = $this->createMock(ThothLanguageService::class);
+        $subjectService = $this->createMock(ThothSubjectService::class);
+        $referenceService = $this->createMock(ThothReferenceService::class);
+        $workRelationService = $this->createMock(ThothWorkRelationService::class);
+        $workRelationService->method('synchronizeByPublication')->willReturn(true);
+
+        $service = new ThothMetadataSynchronizationService(
+            $bookService,
+            $contributionService,
+            $publicationService,
+            $languageService,
+            $subjectService,
+            $referenceService,
+            $workRelationService
+        );
+
+        $this->assertSame([
+            'plugins.generic.thoth.synchronize.activeWorkPublicationDeletionsSkipped',
+        ], $service->synchronize($publication, 'work-id'));
+    }
+
+    public function testSynchronizePropagatesRemoteFailureAndStopsRemainingDomains()
+    {
+        $publication = $this->createMock(Publication::class);
+        $exception = new \ThothApi\Exception\QueryException(
+            ['message' => 'remote failure'],
+            null,
+            null,
+            null,
+            200
+        );
+        $bookService = $this->createMock(ThothBookService::class);
+        $bookService->expects($this->once())->method('update')->willReturn(null);
+        $contributionService = $this->createMock(ThothContributionService::class);
+        $contributionService->expects($this->once())->method('synchronizeByPublication');
+        $publicationService = $this->createMock(ThothPublicationService::class);
+        $publicationService->expects($this->once())
+            ->method('synchronizeByPublication')
+            ->willThrowException($exception);
+        $languageService = $this->createMock(ThothLanguageService::class);
+        $languageService->expects($this->never())->method('synchronizeByPublication');
+        $subjectService = $this->createMock(ThothSubjectService::class);
+        $subjectService->expects($this->never())->method('synchronizeByPublication');
+        $referenceService = $this->createMock(ThothReferenceService::class);
+        $referenceService->expects($this->never())->method('synchronizeByPublication');
+        $workRelationService = $this->createMock(ThothWorkRelationService::class);
+        $workRelationService->expects($this->never())->method('synchronizeByPublication');
+
+        $service = new ThothMetadataSynchronizationService(
+            $bookService,
+            $contributionService,
+            $publicationService,
+            $languageService,
+            $subjectService,
+            $referenceService,
+            $workRelationService
+        );
+
+        $this->expectExceptionObject($exception);
+        $service->synchronize($publication, 'work-id');
+    }
 }
