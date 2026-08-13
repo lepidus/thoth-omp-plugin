@@ -17,7 +17,10 @@
  */
 
 use APP\core\Application;
+use APP\facades\Repo;
+use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use PKP\core\JSONMessage;
+use PKP\core\PKPContainer;
 use PKP\linkAction\LinkAction;
 use PKP\linkAction\request\AjaxModal;
 use PKP\security\Role;
@@ -34,6 +37,8 @@ import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.notification.ThothNotification');
 import('plugins.generic.thoth.classes.schema.ThothSchema');
 import('plugins.generic.thoth.classes.services.ThothCatalogFilesCacheService');
+import('plugins.generic.thoth.classes.services.ThothWorkLinkService');
+import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.templateFilters.ThothCatalogFilesTemplateFilter');
 import('plugins.generic.thoth.classes.templateFilters.ThothFrontcoverTemplateFilter');
 import('plugins.generic.thoth.classes.templateFilters.ThothFeatureVideoWorkflowTemplateFilter');
@@ -46,6 +51,17 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
         $success = parent::register($category, $path);
 
         if ($success && $this->getEnabled()) {
+            $compositionRoot = new ThothCompositionRoot(
+                function (): object {
+                    return new ThothWorkLinkService(ThothContainer::getInstance()->get('workRepository'));
+                },
+                Repo::publication(),
+                Repo::submission(),
+                Application::get()->getRequest(),
+                new ThothNotification()
+            );
+            $compositionRoot->register(PKPContainer::getInstance());
+
             $this->addToSchema();
             $this->addFormConfig();
             $this->addFormModifiers();
