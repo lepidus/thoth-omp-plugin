@@ -2,6 +2,7 @@
 
 namespace APP\plugins\generic\thoth\classes\Bootstrap;
 
+use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Contracts\NotificationPublisher;
 use APP\plugins\generic\thoth\classes\Contracts\PluginLogger;
 use APP\plugins\generic\thoth\classes\Contracts\PublicationReader;
@@ -12,6 +13,7 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPluginLogger;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationReader;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
+use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 
 final class ThothCompositionRoot
 {
@@ -55,6 +57,12 @@ final class ThothCompositionRoot
         });
         $container->bind(PluginLogger::class, function (): PluginLogger {
             return new LegacyPluginLogger();
+        });
+        $container->bind(GetWorkStatus::class, function ($container): GetWorkStatus {
+            return new GetWorkStatus($container->make(WorkGateway::class));
+        });
+        $container->bind(GetWorkStatusController::class, function ($container): GetWorkStatusController {
+            return new GetWorkStatusController($container->make(GetWorkStatus::class));
         });
     }
 }

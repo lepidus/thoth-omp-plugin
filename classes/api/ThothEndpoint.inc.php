@@ -17,6 +17,7 @@
 use APP\core\Application;
 use APP\facades\Repo;
 use APP\i18n\AppLocale;
+use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use PKP\db\DAORegistry;
 use PKP\security\Role;
 use ThothApi\Exception\QueryException;
@@ -30,6 +31,13 @@ import('plugins.generic.thoth.classes.services.ThothWorkLinkService');
 
 class ThothEndpoint
 {
+    private GetWorkStatusController $getWorkStatusController;
+
+    public function __construct(GetWorkStatusController $getWorkStatusController)
+    {
+        $this->getWorkStatusController = $getWorkStatusController;
+    }
+
     public function addEndpoints($hookName, $args)
     {
         $endpoints = & $args[0];
@@ -256,24 +264,7 @@ class ThothEndpoint
             return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
         }
 
-        $thothWorkId = $submission->getData('thothWorkId');
-        if (!$thothWorkId) {
-            return $response->withStatus(404)->withJsonError('plugins.generic.thoth.status.unregistered');
-        }
-
-        try {
-            $workStatus = (new ThothWorkLinkService(ThothRepo::work()))->getStatus($thothWorkId);
-            if ($workStatus === null) {
-                return $response->withStatus(404)->withJson([
-                    'error' => __('plugins.generic.thoth.status.notFound'),
-                    'workNotFound' => true,
-                ]);
-            }
-
-            return $response->withJson(['workStatus' => $workStatus], 200);
-        } catch (QueryException $exception) {
-            return $response->withStatus(500)->withJsonError('plugins.generic.thoth.connectionError');
-        }
+        return $this->getWorkStatusController->get($submission, $response);
     }
 
     public function unlinkWork($slimRequest, $response, $args)

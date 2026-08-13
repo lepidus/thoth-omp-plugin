@@ -2,6 +2,9 @@
 
 require_once(__DIR__ . '/../../../vendor/autoload.php');
 
+use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
+use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
+use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use PKP\tests\PKPTestCase;
 
 import('plugins.generic.thoth.classes.api.ThothEndpoint');
@@ -10,7 +13,7 @@ class ThothEndpointTest extends PKPTestCase
 {
     public function testSubmissionMustBelongToRequestContext(): void
     {
-        $endpoint = new class () extends ThothEndpoint {
+        $endpoint = new class ($this->createWorkStatusController()) extends ThothEndpoint {
             public function isSubmissionInContextForTest($submission, $context)
             {
                 return $this->isSubmissionInContext($submission, $context);
@@ -23,6 +26,11 @@ class ThothEndpointTest extends PKPTestCase
         self::assertTrue($endpoint->isSubmissionInContextForTest($submission, $sameContext));
         self::assertFalse($endpoint->isSubmissionInContextForTest($submission, $differentContext));
         self::assertFalse($endpoint->isSubmissionInContextForTest(null, $sameContext));
+    }
+
+    private function createWorkStatusController(): GetWorkStatusController
+    {
+        return new GetWorkStatusController(new GetWorkStatus($this->createMock(WorkGateway::class)));
     }
 
     private function createObjectWithIdAndContext($id, $contextId)

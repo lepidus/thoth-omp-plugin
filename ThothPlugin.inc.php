@@ -19,6 +19,7 @@
 use APP\core\Application;
 use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
+use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use PKP\core\JSONMessage;
 use PKP\core\PKPContainer;
 use PKP\linkAction\LinkAction;
@@ -311,7 +312,8 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
 
     public function addEndpoints()
     {
-        $thothEndpoint = new ThothEndpoint();
+        $container = PKPContainer::getInstance();
+        $thothEndpoint = new ThothEndpoint($container->make(GetWorkStatusController::class));
         HookRegistry::register('APIHandler::endpoints', [$thothEndpoint, 'addEndpoints']);
     }
 
