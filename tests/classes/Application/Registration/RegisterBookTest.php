@@ -50,6 +50,33 @@ class RegisterBookTest extends PKPTestCase
             new SubmissionId(17)
         );
     }
+
+    public function testItCompensatesRemoteAndLocalStateWhenSavingTheLinkFails(): void
+    {
+        $publication = new stdClass();
+        $result = new RegistrationResult(
+            new WorkId('4c64863b-ce51-4cf5-bedf-0dd911147f6d'),
+            new SynchronizationResult()
+        );
+        $registrar = new CompensatingBookRegistrarDouble($result);
+        $submissionId = new SubmissionId(17);
+        $links = $this->createMock(SubmissionLinkRepository::class);
+        $links->method('saveWorkId')->willThrowException(new \RuntimeException('link failed'));
+        $links->expects($this->once())->method('deleteWorkId')->with($submissionId);
+
+        try {
+            (new RegisterBook($registrar, $links))->execute(
+                $publication,
+                new ImprintId('f740cf4e-16d1-487c-9a92-615882a591e9'),
+                $submissionId
+            );
+            $this->fail('The link failure should be rethrown');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('link failed', $exception->getMessage());
+        }
+
+        $this->assertSame($publication, $registrar->compensatedPublication);
+    }
 }
 
 class BookRegistrarDouble implements BookRegistrar
@@ -69,5 +96,28 @@ class BookRegistrarDouble implements BookRegistrar
         $this->imprintId = $imprintId;
 
         return $this->result;
+    }
+
+    public function rollback(object $publication): void
+    {
+    }
+}
+
+class CompensatingBookRegistrarDouble implements BookRegistrar
+{
+    public ?object $compensatedPublication = null;
+
+    public function __construct(private RegistrationResult $result)
+    {
+    }
+
+    public function register(object $publication, ImprintId $imprintId): RegistrationResult
+    {
+        return $this->result;
+    }
+
+    public function rollback(object $publication): void
+    {
+        $this->compensatedPublication = $publication;
     }
 }

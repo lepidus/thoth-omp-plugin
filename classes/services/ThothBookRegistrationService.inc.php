@@ -15,7 +15,6 @@
  */
 
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
-use ThothApi\Exception\QueryException;
 use ThothApi\GraphQL\Enums\WorkStatus;
 
 import('plugins.generic.thoth.classes.services.ThothBookRegistrationResult');
@@ -74,21 +73,16 @@ class ThothBookRegistrationService
         $publication->setData('thothBookId', $thothBookId);
         $registrationResult = new ThothBookRegistrationResult($thothBookId);
 
-        try {
-            $this->registerMetadata($publication, $thothBookId);
+        $this->registerMetadata($publication, $thothBookId);
 
-            $this->contributionService->registerByPublication($publication);
-            $this->publicationService->registerByPublication($publication);
-            $this->languageService->registerByPublication($publication);
-            $this->subjectService->registerByPublication($publication);
-            $this->referenceService->registerByPublication($publication);
-            $this->workRelationService->registerByPublication($publication, $thothImprintId);
-            if ($this->frontcoverService) {
-                $registrationResult->setWarning($this->frontcoverService->sync($publication, $thothBookId));
-            }
-        } catch (QueryException $e) {
-            $this->deleteRegisteredEntry($registrationResult);
-            throw $e;
+        $this->contributionService->registerByPublication($publication);
+        $this->publicationService->registerByPublication($publication);
+        $this->languageService->registerByPublication($publication);
+        $this->subjectService->registerByPublication($publication);
+        $this->referenceService->registerByPublication($publication);
+        $this->workRelationService->registerByPublication($publication, $thothImprintId);
+        if ($this->frontcoverService) {
+            $registrationResult->setWarning($this->frontcoverService->sync($publication, $thothBookId));
         }
 
         return $registrationResult;

@@ -250,7 +250,7 @@ class ThothBookRegistrationServiceTest extends PKPTestCase
         $this->assertSame(WorkStatus::FORTHCOMING, $book->getWorkStatus());
     }
 
-    public function testRegistrationDeletesCreatedBookWhenMetadataFails()
+    public function testRegistrationLeavesCompensationToTheUseCaseWhenMetadataFails()
     {
         $publication = $this->getMockBuilder(Publication::class)
             ->setMethods(['getData', 'setData'])
@@ -267,7 +267,7 @@ class ThothBookRegistrationServiceTest extends PKPTestCase
             ->setMethods(['add', 'delete'])
             ->getMock();
         $repository->method('add')->willReturn('work-id');
-        $repository->expects($this->once())->method('delete')->with('work-id');
+        $repository->expects($this->never())->method('delete');
 
         $titleService = $this->createMock(ThothTitleService::class);
         $titleService->method('registerByPublication')->willThrowException(

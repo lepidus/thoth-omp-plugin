@@ -24,8 +24,17 @@ final class RegisterBook
         ImprintId $imprintId,
         SubmissionId $submissionId
     ): RegistrationResult {
-        $result = $this->registrar->register($publication, $imprintId);
-        $this->submissionLinks->saveWorkId($submissionId, $result->getWorkId());
+        try {
+            $result = $this->registrar->register($publication, $imprintId);
+            $this->submissionLinks->saveWorkId($submissionId, $result->getWorkId());
+        } catch (\Throwable $exception) {
+            try {
+                $this->registrar->rollback($publication);
+            } finally {
+                $this->submissionLinks->deleteWorkId($submissionId);
+            }
+            throw $exception;
+        }
 
         return $result;
     }

@@ -31,4 +31,16 @@ final class LegacyBookRegistrar implements BookRegistrar
             $synchronizationResult
         );
     }
+
+    public function rollback(object $publication): void
+    {
+        import('plugins.generic.thoth.classes.services.ThothBookRegistrationResult');
+        $workId = $publication->getData('thothBookId');
+        if (!$workId) {
+            return;
+        }
+
+        $this->service->deleteRegisteredEntry(new \ThothBookRegistrationResult($workId));
+        $publication->setData('thothBookId', null);
+    }
 }

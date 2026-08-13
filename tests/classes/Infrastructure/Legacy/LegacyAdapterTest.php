@@ -140,4 +140,25 @@ class LegacyAdapterTest extends PKPTestCase
         $this->assertSame(self::WORK_ID, $result->getWorkId()->toString());
         $this->assertSame('warning.key', $result->getSynchronizationResult()->getWarnings()[0]->getMessageKey());
     }
+
+    public function testBookRegistrarRollbackDeletesTheCreatedWorkOnlyOnce(): void
+    {
+        import('plugins.generic.thoth.classes.services.ThothBookRegistrationResult');
+        $publication = $this->getMockBuilder(stdClass::class)->addMethods(['getData', 'setData'])->getMock();
+        $publication->expects($this->exactly(2))
+            ->method('getData')
+            ->with('thothBookId')
+            ->willReturnOnConsecutiveCalls(self::WORK_ID, null);
+        $publication->expects($this->once())->method('setData')->with('thothBookId', null);
+        $service = $this->getMockBuilder(stdClass::class)->addMethods(['deleteRegisteredEntry'])->getMock();
+        $service->expects($this->once())
+            ->method('deleteRegisteredEntry')
+            ->with($this->callback(function ($result): bool {
+                return $result->getWorkId() === self::WORK_ID;
+            }));
+        $registrar = new LegacyBookRegistrar($service);
+
+        $registrar->rollback($publication);
+        $registrar->rollback($publication);
+    }
 }
