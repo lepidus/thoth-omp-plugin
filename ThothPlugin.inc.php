@@ -316,7 +316,7 @@ class ThothPlugin extends GenericPlugin
 
     public function addListeners()
     {
-        $publicationPublishListener = new PublicationPublishListener();
+        $publicationPublishListener = Registry::get('laravelContainer')->make(PublicationPublishListener::class);
         HookRegistry::register('Publication::validatePublish', [$publicationPublishListener, 'validate']);
         HookRegistry::register('Publication::publish', [$publicationPublishListener, 'registerThothBook']);
 

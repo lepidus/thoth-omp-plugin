@@ -15,6 +15,7 @@ import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPluginLogger')
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationReader');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacySubmissionLinkRepository');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkGateway');
+import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
 import('plugins.generic.thoth.classes.Presentation.Api.RegisterBookController');
 import('plugins.generic.thoth.classes.Presentation.Api.UnlinkWorkController');
@@ -75,6 +76,13 @@ final class ThothCompositionRoot
             return new RegisterBook(
                 $container->make(BookRegistrar::class),
                 $container->make(SubmissionLinkRepository::class)
+            );
+        });
+        $container->bind(PublicationPublishListener::class, function ($container): PublicationPublishListener {
+            return new PublicationPublishListener(
+                $container->make(RegisterBook::class),
+                $this->request,
+                $this->notification
             );
         });
         $container->bind(UnlinkWork::class, function ($container): UnlinkWork {

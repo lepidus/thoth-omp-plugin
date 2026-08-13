@@ -17,6 +17,7 @@ import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPluginLogger')
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationReader');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacySubmissionLinkRepository');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkGateway');
+import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
 import('plugins.generic.thoth.classes.Presentation.Api.RegisterBookController');
 import('plugins.generic.thoth.classes.Presentation.Api.UnlinkWorkController');
@@ -61,6 +62,10 @@ class ThothCompositionRootTest extends PKPTestCase
         $this->assertInstanceOf(LegacyPluginLogger::class, $container->make(PluginLogger::class));
         $this->assertInstanceOf(GetWorkStatus::class, $container->make(GetWorkStatus::class));
         $this->assertInstanceOf(RegisterBook::class, $container->make(RegisterBook::class));
+        $this->assertInstanceOf(
+            PublicationPublishListener::class,
+            $container->make(PublicationPublishListener::class)
+        );
         $this->assertInstanceOf(UnlinkWork::class, $container->make(UnlinkWork::class));
         $this->assertInstanceOf(
             GetWorkStatusController::class,
