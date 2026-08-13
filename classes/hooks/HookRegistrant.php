@@ -25,6 +25,7 @@ use APP\plugins\generic\thoth\classes\gridModifier\PublicationFormatGridModifier
 use APP\plugins\generic\thoth\classes\listeners\PublicationEditListener;
 use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\notification\ThothNotification;
+use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\schema\ThothSchema;
 use APP\plugins\generic\thoth\classes\services\ThothCatalogFilesCacheService;
 use APP\plugins\generic\thoth\classes\templateFilters\ThothCatalogFilesTemplateFilter;
@@ -37,10 +38,12 @@ use PKP\plugins\Hook;
 class HookRegistrant
 {
     private GenericPlugin $plugin;
+    private GetWorkStatusController $getWorkStatusController;
 
-    public function __construct(GenericPlugin $plugin)
+    public function __construct(GenericPlugin $plugin, GetWorkStatusController $getWorkStatusController)
     {
         $this->plugin = $plugin;
+        $this->getWorkStatusController = $getWorkStatusController;
     }
 
     public function register(): void
@@ -95,7 +98,8 @@ class HookRegistrant
 
     private function registerEndpoints(): void
     {
-        Hook::add('APIHandler::endpoints::_submissions', (new ThothEndpoint())->addEndpoints(...));
+        $endpoint = new ThothEndpoint($this->getWorkStatusController);
+        Hook::add('APIHandler::endpoints::_submissions', $endpoint->addEndpoints(...));
     }
 
     private function registerTemplateHooks(): void

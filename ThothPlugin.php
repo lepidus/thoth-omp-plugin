@@ -26,6 +26,7 @@ use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\hooks\HookRegistrant;
 use APP\plugins\generic\thoth\classes\notification\ThothNotification;
+use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\services\ThothWorkLinkService;
 use PKP\core\JSONMessage;
 use PKP\core\PKPContainer;
@@ -48,7 +49,10 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
             );
             $compositionRoot->register(PKPContainer::getInstance());
 
-            $hookRegistrant = new HookRegistrant($this);
+            $hookRegistrant = new HookRegistrant(
+                $this,
+                PKPContainer::getInstance()->make(GetWorkStatusController::class)
+            );
             $hookRegistrant->register();
         }
 

@@ -23,6 +23,7 @@ use APP\plugins\generic\thoth\classes\exceptions\MetadataSynchronizationExceptio
 use APP\plugins\generic\thoth\classes\facades\ThothRepository;
 use APP\plugins\generic\thoth\classes\facades\ThothService;
 use APP\plugins\generic\thoth\classes\notification\ThothNotification;
+use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\services\ThothWorkLinkService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as IlluminateRequest;
@@ -40,6 +41,10 @@ use ThothApi\Exception\QueryException;
 
 class ThothEndpoint implements HasAuthorizationPolicy
 {
+    public function __construct(private readonly GetWorkStatusController $getWorkStatusController)
+    {
+    }
+
     public function addEndpoints(string $hookName, PKPBaseController $apiController, APIHandler $apiHandler): bool
     {
         $apiHandler->addRoute(
@@ -253,36 +258,7 @@ class ThothEndpoint implements HasAuthorizationPolicy
             );
         }
 
-        $thothWorkId = $submission->getData('thothWorkId');
-        if (!$thothWorkId) {
-            return response()->json(
-                ['error' => __('plugins.generic.thoth.status.unregistered')],
-                Response::HTTP_NOT_FOUND
-            );
-        }
-
-        try {
-            $workStatus = (new ThothWorkLinkService(ThothRepository::work()))->getStatus($thothWorkId);
-            if ($workStatus === null) {
-                return response()->json(
-                    [
-                        'error' => __('plugins.generic.thoth.status.notFound'),
-                        'workNotFound' => true,
-                    ],
-                    Response::HTTP_NOT_FOUND
-                );
-            }
-
-            return response()->json(
-                ['workStatus' => $workStatus],
-                Response::HTTP_OK
-            );
-        } catch (\Exception $e) {
-            return response()->json(
-                ['error' => __('plugins.generic.thoth.connectionError')],
-                Response::HTTP_INTERNAL_SERVER_ERROR
-            );
-        }
+        return $this->getWorkStatusController->get($submission);
     }
 
     public function unlinkWork(IlluminateRequest $illuminateRequest): JsonResponse

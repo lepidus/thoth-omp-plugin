@@ -2,6 +2,7 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\Bootstrap;
 
+use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use APP\plugins\generic\thoth\classes\Contracts\NotificationPublisher;
 use APP\plugins\generic\thoth\classes\Contracts\PluginLogger;
@@ -13,6 +14,7 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPluginLogger;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationReader;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
+use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use Illuminate\Container\Container;
 use PKP\tests\PKPTestCase;
 
@@ -48,6 +50,11 @@ class ThothCompositionRootTest extends PKPTestCase
             $container->make(NotificationPublisher::class)
         );
         $this->assertInstanceOf(LegacyPluginLogger::class, $container->make(PluginLogger::class));
+        $this->assertInstanceOf(GetWorkStatus::class, $container->make(GetWorkStatus::class));
+        $this->assertInstanceOf(
+            GetWorkStatusController::class,
+            $container->make(GetWorkStatusController::class)
+        );
         $this->assertNotSame($container->make(WorkGateway::class), $container->make(WorkGateway::class));
     }
 }
