@@ -3,6 +3,7 @@
 namespace APP\plugins\generic\thoth\classes\Bootstrap;
 
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
+use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Contracts\NotificationPublisher;
 use APP\plugins\generic\thoth\classes\Contracts\PluginLogger;
 use APP\plugins\generic\thoth\classes\Contracts\PublicationReader;
@@ -52,6 +53,13 @@ final class ThothCompositionRoot
         $container->bind(
             GetWorkStatus::class,
             fn ($container): GetWorkStatus => new GetWorkStatus($container->make(WorkGateway::class))
+        );
+        $container->bind(
+            UnlinkWork::class,
+            fn ($container): UnlinkWork => new UnlinkWork(
+                $container->make(WorkGateway::class),
+                $container->make(SubmissionLinkRepository::class)
+            )
         );
         $container->bind(
             GetWorkStatusController::class,

@@ -18,6 +18,7 @@ namespace APP\plugins\generic\thoth\classes\hooks;
 
 use APP\core\Application;
 use APP\plugins\generic\thoth\classes\api\ThothEndpoint;
+use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\components\forms\config\CatalogEntryFormConfig;
 use APP\plugins\generic\thoth\classes\components\forms\config\ContributorFormConfig;
 use APP\plugins\generic\thoth\classes\components\forms\config\PublishFormConfig;
@@ -39,11 +40,16 @@ class HookRegistrant
 {
     private GenericPlugin $plugin;
     private GetWorkStatusController $getWorkStatusController;
+    private UnlinkWork $unlinkWork;
 
-    public function __construct(GenericPlugin $plugin, GetWorkStatusController $getWorkStatusController)
-    {
+    public function __construct(
+        GenericPlugin $plugin,
+        GetWorkStatusController $getWorkStatusController,
+        UnlinkWork $unlinkWork
+    ) {
         $this->plugin = $plugin;
         $this->getWorkStatusController = $getWorkStatusController;
+        $this->unlinkWork = $unlinkWork;
     }
 
     public function register(): void
@@ -98,7 +104,7 @@ class HookRegistrant
 
     private function registerEndpoints(): void
     {
-        $endpoint = new ThothEndpoint($this->getWorkStatusController);
+        $endpoint = new ThothEndpoint($this->getWorkStatusController, $this->unlinkWork);
         Hook::add('APIHandler::endpoints::_submissions', $endpoint->addEndpoints(...));
     }
 

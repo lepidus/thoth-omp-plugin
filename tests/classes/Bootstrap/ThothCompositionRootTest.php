@@ -3,6 +3,7 @@
 namespace APP\plugins\generic\thoth\tests\classes\Bootstrap;
 
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
+use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use APP\plugins\generic\thoth\classes\Contracts\NotificationPublisher;
 use APP\plugins\generic\thoth\classes\Contracts\PluginLogger;
@@ -51,6 +52,7 @@ class ThothCompositionRootTest extends PKPTestCase
         );
         $this->assertInstanceOf(LegacyPluginLogger::class, $container->make(PluginLogger::class));
         $this->assertInstanceOf(GetWorkStatus::class, $container->make(GetWorkStatus::class));
+        $this->assertInstanceOf(UnlinkWork::class, $container->make(UnlinkWork::class));
         $this->assertInstanceOf(
             GetWorkStatusController::class,
             $container->make(GetWorkStatusController::class)

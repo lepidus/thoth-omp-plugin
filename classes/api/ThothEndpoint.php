@@ -18,13 +18,15 @@ namespace APP\plugins\generic\thoth\classes\api;
 
 use APP\core\Application;
 use APP\facades\Repo;
+use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\components\forms\FeatureVideoForm;
+use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
+use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use APP\plugins\generic\thoth\classes\exceptions\MetadataSynchronizationException;
 use APP\plugins\generic\thoth\classes\facades\ThothRepository;
 use APP\plugins\generic\thoth\classes\facades\ThothService;
 use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
-use APP\plugins\generic\thoth\classes\services\ThothWorkLinkService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as IlluminateRequest;
 use Illuminate\Http\Response;
@@ -41,8 +43,10 @@ use ThothApi\Exception\QueryException;
 
 class ThothEndpoint implements HasAuthorizationPolicy
 {
-    public function __construct(private readonly GetWorkStatusController $getWorkStatusController)
-    {
+    public function __construct(
+        private readonly GetWorkStatusController $getWorkStatusController,
+        private readonly UnlinkWork $unlinkWork
+    ) {
     }
 
     public function addEndpoints(string $hookName, PKPBaseController $apiController, APIHandler $apiHandler): bool
@@ -282,8 +286,11 @@ class ThothEndpoint implements HasAuthorizationPolicy
         }
 
         try {
-            $workStatus = (new ThothWorkLinkService(ThothRepository::work()))->getStatus($thothWorkId);
-            if ($workStatus !== null) {
+            $unlinked = $this->unlinkWork->execute(
+                new SubmissionId($submission->getId()),
+                new WorkId($thothWorkId)
+            );
+            if (!$unlinked) {
                 return response()->json(
                     ['error' => __('plugins.generic.thoth.unlink.existingWork')],
                     Response::HTTP_CONFLICT
@@ -295,8 +302,6 @@ class ThothEndpoint implements HasAuthorizationPolicy
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }
-
-        Repo::submission()->edit($submission, ['thothWorkId' => null]);
 
         return response()->json(['status' => true], Response::HTTP_OK);
     }
