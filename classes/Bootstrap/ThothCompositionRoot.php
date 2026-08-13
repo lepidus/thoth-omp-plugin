@@ -2,6 +2,7 @@
 
 namespace APP\plugins\generic\thoth\classes\Bootstrap;
 
+use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
@@ -76,6 +77,12 @@ final class ThothCompositionRoot
         $container->bind(PluginLogger::class, function (): PluginLogger {
             return new LegacyPluginLogger();
         });
+        $container->bind(ExternalFailureReporter::class, function ($container): ExternalFailureReporter {
+            return new ExternalFailureReporter(
+                $container->make(NotificationPublisher::class),
+                $container->make(PluginLogger::class)
+            );
+        });
         $container->bind(GetWorkStatus::class, function ($container): GetWorkStatus {
             return new GetWorkStatus($container->make(WorkGateway::class));
         });
@@ -90,7 +97,8 @@ final class ThothCompositionRoot
                 $container->make(RegisterBook::class),
                 $this->request,
                 $this->notification,
-                $container->make(BookRegistrationPolicy::class)
+                $container->make(BookRegistrationPolicy::class),
+                $container->make(ExternalFailureReporter::class)
             );
         });
         $container->bind(UnlinkWork::class, function ($container): UnlinkWork {
@@ -105,7 +113,8 @@ final class ThothCompositionRoot
         $container->bind(RegisterBookController::class, function ($container): RegisterBookController {
             return new RegisterBookController(
                 $container->make(RegisterBook::class),
-                $container->make(BookRegistrationPolicy::class)
+                $container->make(BookRegistrationPolicy::class),
+                $container->make(ExternalFailureReporter::class)
             );
         });
         $container->bind(UnlinkWorkController::class, function ($container): UnlinkWorkController {

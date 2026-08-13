@@ -43,15 +43,23 @@ final class LegacyNotificationPublisher implements NotificationPublisher
         int $userId,
         SubmissionId $submissionId,
         string $messageKey,
-        ?string $cause = null
+        ?string $cause = null,
+        bool $notifyUser = true
     ): void {
-        $this->notification->notify(
-            $this->requireRequestForUser($userId),
-            $this->requireSubmission($submissionId),
-            PKPNotification::NOTIFICATION_TYPE_ERROR,
-            $messageKey,
-            $cause
-        );
+        $request = $this->requireRequestForUser($userId);
+        $submission = $this->requireSubmission($submissionId);
+        $cause = $cause ?? __('plugins.generic.thoth.connectionError');
+        if ($notifyUser) {
+            $this->notification->notify(
+                $request,
+                $submission,
+                PKPNotification::NOTIFICATION_TYPE_ERROR,
+                $messageKey,
+                $cause
+            );
+            return;
+        }
+        $this->notification->logInfo($request, $submission, $messageKey . '.log', $cause);
     }
 
     private function requireRequestForUser(int $userId): object

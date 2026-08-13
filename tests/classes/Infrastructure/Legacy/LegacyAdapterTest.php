@@ -2,6 +2,9 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\Infrastructure\Legacy;
 
+require_once(__DIR__ . '/../../../../vendor/autoload.php');
+
+use APP\plugins\generic\thoth\classes\Application\Exception\RegistrationFailed;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\ImprintId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\PublicationId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
@@ -16,6 +19,7 @@ use PKP\notification\PKPNotification;
 use PKP\tests\PKPTestCase;
 use RuntimeException;
 use stdClass;
+use ThothApi\Exception\QueryException;
 
 class LegacyAdapterTest extends PKPTestCase
 {
@@ -139,6 +143,24 @@ class LegacyAdapterTest extends PKPTestCase
 
         $this->assertSame(self::WORK_ID, $result->getWorkId()->toString());
         $this->assertSame('warning.key', $result->getSynchronizationResult()->getWarnings()[0]->getMessageKey());
+    }
+
+    public function testBookRegistrarDoesNotLeakTheClientException(): void
+    {
+        $service = $this->getMockBuilder(stdClass::class)->addMethods(['register'])->getMock();
+        $service->method('register')->willThrowException(new QueryException([
+            'message' => 'The imprint is not available',
+        ]));
+        try {
+            (new LegacyBookRegistrar($service))->register(
+                new stdClass(),
+                new ImprintId('f740cf4e-16d1-487c-9a92-615882a591e9')
+            );
+            $this->fail('The normalized registration failure should be thrown');
+        } catch (RegistrationFailed $failure) {
+            $this->assertSame('The imprint is not available', $failure->getSafeCause());
+            $this->assertInstanceOf(QueryException::class, $failure->getPrevious());
+        }
     }
 
     public function testBookRegistrarRollbackDeletesTheCreatedWorkOnlyOnce(): void

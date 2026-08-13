@@ -2,8 +2,11 @@
 
 require_once(__DIR__ . '/../../../vendor/autoload.php');
 
+use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
+use APP\plugins\generic\thoth\classes\Contracts\NotificationPublisher;
+use APP\plugins\generic\thoth\classes\Contracts\PluginLogger;
 use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
@@ -85,7 +88,11 @@ class PublicationPublishListenerTest extends PKPTestCase
             new RegisterBook($registrar, $links),
             $request,
             $notification,
-            new BookRegistrationPolicy()
+            new BookRegistrationPolicy(),
+            new ExternalFailureReporter(
+                $this->createMock(NotificationPublisher::class),
+                $this->createMock(PluginLogger::class)
+            )
         );
         $listener->registerThothBook('Publication::publish', [$publication, null, $submission]);
 

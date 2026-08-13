@@ -146,6 +146,9 @@ msgstr "Metapodatki prispevka so bili registrirani v Thothu."
 msgid "plugins.generic.thoth.register.error"
 msgstr "Pri pošiljanju metapodatkov prispevka v Thoth je prišlo do težave. Poskusite znova pozneje ali se obrnite na skrbnika sistema."
 
+msgid "plugins.generic.thoth.error.cause"
+msgstr "Vzrok: {$cause}"
+
 msgid "plugins.generic.thoth.publicationFormat.accessibility"
 msgstr "Metapodatki o dostopnosti"
 

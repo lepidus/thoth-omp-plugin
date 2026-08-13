@@ -5,12 +5,13 @@ namespace APP\plugins\generic\thoth\classes\Presentation\Api;
 use APP\core\Application;
 use APP\facades\Repo;
 use APP\i18n\AppLocale;
+use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
+use APP\plugins\generic\thoth\classes\Application\Exception\ExternalServiceFailure;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\ImprintId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
 use PKP\db\DAORegistry;
-use ThothApi\Exception\QueryException;
 
 import('plugins.generic.thoth.classes.facades.ThothService');
 import('plugins.generic.thoth.classes.notification.ThothNotification');
@@ -19,11 +20,16 @@ final class RegisterBookController
 {
     private RegisterBook $registerBook;
     private BookRegistrationPolicy $registrationPolicy;
+    private ExternalFailureReporter $failureReporter;
 
-    public function __construct(RegisterBook $registerBook, BookRegistrationPolicy $registrationPolicy)
-    {
+    public function __construct(
+        RegisterBook $registerBook,
+        BookRegistrationPolicy $registrationPolicy,
+        ExternalFailureReporter $failureReporter
+    ) {
         $this->registerBook = $registerBook;
         $this->registrationPolicy = $registrationPolicy;
+        $this->failureReporter = $failureReporter;
     }
 
     public function register($slimRequest, $response, array $args)
@@ -90,11 +96,22 @@ final class RegisterBookController
                 null,
                 $this->warningKeys($result)
             );
-        } catch (QueryException $exception) {
-            $this->handleNotification($request, $submission, false, $disableNotification, $exception);
+        } catch (ExternalServiceFailure $exception) {
+            $cause = $exception->getSafeCause() ?? __('plugins.generic.thoth.connectionError');
+            $this->failureReporter->report(
+                $exception,
+                (int) $request->getUser()->getId(),
+                new SubmissionId($submissionId),
+                [
+                    'contextId' => (int) $context->getId(),
+                    'submissionId' => $submissionId,
+                    'publicationId' => (int) $publication->getId(),
+                ],
+                !$disableNotification
+            );
             $failure['errors'][] = __(
                 'plugins.generic.thoth.register.error.log',
-                ['reason' => $exception->getMessage()]
+                ['reason' => $cause]
             );
             return $response->withStatus(403)->withJson($failure);
         }
