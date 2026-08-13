@@ -17,6 +17,7 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPluginLogger;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationReader;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
+use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
@@ -69,6 +70,14 @@ final class ThothCompositionRoot
             fn ($container): RegisterBook => new RegisterBook(
                 $container->make(BookRegistrar::class),
                 $container->make(SubmissionLinkRepository::class)
+            )
+        );
+        $container->bind(
+            PublicationPublishListener::class,
+            fn ($container): PublicationPublishListener => new PublicationPublishListener(
+                $container->make(RegisterBook::class),
+                $this->request,
+                $this->notification
             )
         );
         $container->bind(

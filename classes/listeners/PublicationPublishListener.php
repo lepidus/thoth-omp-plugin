@@ -16,25 +16,30 @@
 
 namespace APP\plugins\generic\thoth\classes\listeners;
 
-use APP\core\Application;
-use APP\facades\Repo;
-use APP\plugins\generic\thoth\classes\facades\ThothService;
-use APP\plugins\generic\thoth\classes\notification\ThothNotification;
+use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
+use APP\plugins\generic\thoth\classes\Domain\Identifier\ImprintId;
+use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
 use ThothApi\Exception\QueryException;
 
 class PublicationPublishListener
 {
+    public function __construct(
+        private RegisterBook $registerBook,
+        private object $request,
+        private object $notification
+    ) {
+    }
+
     public function validate($hookName, $args)
     {
         $errors = & $args[0];
-        $request = Application::get()->getRequest();
 
-        $confirmation = $request->getUserVar('registerConfirmation');
+        $confirmation = $this->request->getUserVar('registerConfirmation');
         if (!$confirmation || $confirmation == 'false') {
             return;
         }
 
-        $thothImprintId = $request->getUserVar('thothImprintId');
+        $thothImprintId = $this->request->getUserVar('thothImprintId');
         if (empty($thothImprintId)) {
             $errors['thothImprintId'] = [__('plugins.generic.thoth.imprint.required')];
         }
@@ -44,38 +49,29 @@ class PublicationPublishListener
     {
         $publication = $args[0];
         $submission = $args[2];
-        $request = Application::get()->getRequest();
 
         if ($submission->getData('thothWorkId')) {
             return false;
         }
 
-        $confirmation = $request->getUserVar('registerConfirmation');
+        $confirmation = $this->request->getUserVar('registerConfirmation');
         if (!$confirmation || $confirmation == 'false') {
             return false;
         }
 
-        $thothImprintId = $request->getUserVar('thothImprintId');
-        $thothNotification = new ThothNotification();
-        $registrationResult = null;
+        $thothImprintId = $this->request->getUserVar('thothImprintId');
         try {
-            $thothBookRegistrationService = ThothService::bookRegistration();
-            $registrationResult = $thothBookRegistrationService->register($publication, $thothImprintId);
-            $thothBookRegistrationService->setActive($registrationResult);
-            $thothBookId = $registrationResult->getWorkId();
-            Repo::submission()->edit($submission, ['thothWorkId' => $thothBookId]);
-            $thothNotification->notifySuccess($request, $submission);
-            if ($warning = $registrationResult->getWarning()) {
-                $thothNotification->notifyWarning($request, $submission, $warning);
+            $result = $this->registerBook->execute(
+                $publication,
+                new ImprintId($thothImprintId),
+                new SubmissionId($submission->getId())
+            );
+            $this->notification->notifySuccess($this->request, $submission);
+            foreach ($result->getSynchronizationResult()->getWarnings() as $warning) {
+                $this->notification->notifyWarning($this->request, $submission, $warning->getMessageKey());
             }
         } catch (QueryException $e) {
-            if ($registrationResult !== null) {
-                $thothBookRegistrationService->deleteRegisteredEntry($registrationResult);
-            }
-            $thothNotification->notifyError($request, $submission, $e);
-            if ($registrationResult && $warning = $registrationResult->getWarning()) {
-                $thothNotification->notifyWarning($request, $submission, $warning);
-            }
+            $this->notification->notifyError($this->request, $submission, $e);
         }
 
         return false;

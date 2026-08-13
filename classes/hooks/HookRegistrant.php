@@ -43,17 +43,20 @@ class HookRegistrant
     private GetWorkStatusController $getWorkStatusController;
     private RegisterBookController $registerBookController;
     private UnlinkWorkController $unlinkWorkController;
+    private PublicationPublishListener $publicationPublishListener;
 
     public function __construct(
         GenericPlugin $plugin,
         GetWorkStatusController $getWorkStatusController,
         RegisterBookController $registerBookController,
-        UnlinkWorkController $unlinkWorkController
+        UnlinkWorkController $unlinkWorkController,
+        PublicationPublishListener $publicationPublishListener
     ) {
         $this->plugin = $plugin;
         $this->getWorkStatusController = $getWorkStatusController;
         $this->registerBookController = $registerBookController;
         $this->unlinkWorkController = $unlinkWorkController;
+        $this->publicationPublishListener = $publicationPublishListener;
     }
 
     public function register(): void
@@ -98,9 +101,8 @@ class HookRegistrant
 
     private function registerListeners(): void
     {
-        $publicationPublishListener = new PublicationPublishListener();
-        Hook::add('Publication::validatePublish', $publicationPublishListener->validate(...));
-        Hook::add('Publication::publish', $publicationPublishListener->registerThothBook(...));
+        Hook::add('Publication::validatePublish', $this->publicationPublishListener->validate(...));
+        Hook::add('Publication::publish', $this->publicationPublishListener->registerThothBook(...));
 
         $publicationEditListener = new PublicationEditListener();
         Hook::add('Publication::edit', $publicationEditListener->updateThothBook(...));

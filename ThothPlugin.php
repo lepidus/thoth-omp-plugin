@@ -25,6 +25,7 @@ use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\hooks\HookRegistrant;
+use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
@@ -56,7 +57,8 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                 $this,
                 PKPContainer::getInstance()->make(GetWorkStatusController::class),
                 PKPContainer::getInstance()->make(RegisterBookController::class),
-                PKPContainer::getInstance()->make(UnlinkWorkController::class)
+                PKPContainer::getInstance()->make(UnlinkWorkController::class),
+                PKPContainer::getInstance()->make(PublicationPublishListener::class)
             );
             $hookRegistrant->register();
         }
