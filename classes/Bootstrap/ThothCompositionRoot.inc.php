@@ -11,7 +11,6 @@ import('plugins.generic.thoth.classes.Contracts.PublicationReader');
 import('plugins.generic.thoth.classes.Contracts.SubmissionLinkRepository');
 import('plugins.generic.thoth.classes.Contracts.WorkGateway');
 import('plugins.generic.thoth.classes.Domain.Registration.BookRegistrationPolicy');
-import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyBookRegistrar');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyNotificationPublisher');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPluginLogger');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationReader');
@@ -56,7 +55,7 @@ final class ThothCompositionRoot
             return new LegacyWorkGateway(($this->workLinkServiceFactory)());
         });
         $container->bind(BookRegistrar::class, function (): BookRegistrar {
-            return new LegacyBookRegistrar(($this->bookRegistrationServiceFactory)());
+            return ($this->bookRegistrationServiceFactory)();
         });
         $container->bind(PublicationReader::class, function (): PublicationReader {
             return new LegacyPublicationReader($this->publicationRepository);
