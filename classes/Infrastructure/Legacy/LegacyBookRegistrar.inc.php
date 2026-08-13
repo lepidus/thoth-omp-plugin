@@ -6,6 +6,7 @@ import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
 import('plugins.generic.thoth.classes.Domain.Result.RegistrationResult');
 import('plugins.generic.thoth.classes.Domain.Result.SynchronizationResult');
 import('plugins.generic.thoth.classes.Domain.Result.SynchronizationWarning');
+import('plugins.generic.thoth.classes.services.ThothBookRegistrationResult');
 
 final class LegacyBookRegistrar implements BookRegistrar
 {
@@ -28,5 +29,16 @@ final class LegacyBookRegistrar implements BookRegistrar
             new WorkId($legacyResult->getWorkId()),
             $synchronizationResult
         );
+    }
+
+    public function rollback(object $publication): void
+    {
+        $workId = $publication->getData('thothBookId');
+        if (!$workId) {
+            return;
+        }
+
+        $this->service->deleteRegisteredEntry(new ThothBookRegistrationResult($workId));
+        $publication->setData('thothBookId', null);
     }
 }
