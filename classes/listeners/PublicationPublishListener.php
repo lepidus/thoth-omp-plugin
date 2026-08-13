@@ -19,6 +19,8 @@ namespace APP\plugins\generic\thoth\classes\listeners;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\ImprintId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
+use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
+use APP\plugins\generic\thoth\classes\facades\ThothService;
 use ThothApi\Exception\QueryException;
 
 class PublicationPublishListener
@@ -26,7 +28,8 @@ class PublicationPublishListener
     public function __construct(
         private RegisterBook $registerBook,
         private object $request,
-        private object $notification
+        private object $notification,
+        private BookRegistrationPolicy $registrationPolicy
     ) {
     }
 
@@ -35,13 +38,25 @@ class PublicationPublishListener
         $errors = & $args[0];
 
         $confirmation = $this->request->getUserVar('registerConfirmation');
-        if (!$confirmation || $confirmation == 'false') {
+        $thothImprintId = $this->request->getUserVar('thothImprintId');
+        $eligibility = $this->registrationPolicy->evaluate($confirmation, $thothImprintId, null, []);
+        if (!$eligibility->isRequested()) {
             return;
         }
 
-        $thothImprintId = $this->request->getUserVar('thothImprintId');
-        if (empty($thothImprintId)) {
+        if ($eligibility->isImprintMissing()) {
             $errors['thothImprintId'] = [__('plugins.generic.thoth.imprint.required')];
+            return;
+        }
+
+        try {
+            $metadataErrors = ThothService::book()->validate($args[1]);
+        } catch (\Exception $exception) {
+            $metadataErrors = [__('plugins.generic.thoth.connectionError')];
+        }
+        $eligibility = $this->registrationPolicy->evaluate($confirmation, $thothImprintId, null, $metadataErrors);
+        if (!$eligibility->isEligible()) {
+            $errors['thothMetadata'] = $eligibility->getMetadataErrors();
         }
     }
 
@@ -50,16 +65,18 @@ class PublicationPublishListener
         $publication = $args[0];
         $submission = $args[2];
 
-        if ($submission->getData('thothWorkId')) {
-            return false;
-        }
-
         $confirmation = $this->request->getUserVar('registerConfirmation');
-        if (!$confirmation || $confirmation == 'false') {
+        $thothImprintId = $this->request->getUserVar('thothImprintId');
+        $eligibility = $this->registrationPolicy->evaluate(
+            $confirmation,
+            $thothImprintId,
+            $submission->getData('thothWorkId'),
+            []
+        );
+        if (!$eligibility->isEligible()) {
             return false;
         }
 
-        $thothImprintId = $this->request->getUserVar('thothImprintId');
         try {
             $result = $this->registerBook->execute(
                 $publication,

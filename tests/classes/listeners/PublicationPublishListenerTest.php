@@ -8,6 +8,7 @@ use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
 use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
 use APP\plugins\generic\thoth\classes\Domain\Result\RegistrationResult;
 use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationResult;
 use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationWarning;
@@ -82,7 +83,12 @@ class PublicationPublishListenerTest extends PKPTestCase
                 })
             );
 
-        $listener = new PublicationPublishListener(new RegisterBook($registrar, $links), $request, $notification);
+        $listener = new PublicationPublishListener(
+            new RegisterBook($registrar, $links),
+            $request,
+            $notification,
+            new BookRegistrationPolicy()
+        );
         $listener->registerThothBook('Publication::publish', [$publication, null, $submission]);
 
         $this->assertSame(0, $notification->errors);

@@ -28,6 +28,7 @@ use APP\plugins\generic\thoth\classes\services\ThothPublicationService;
 use APP\plugins\generic\thoth\classes\services\ThothTitleService;
 use PKP\tests\PKPTestCase;
 use ThothApi\GraphQL\Client as ThothClient;
+use ThothApi\GraphQL\Enums\WorkStatus;
 use ThothApi\GraphQL\Inputs\PatchWork as ThothWork;
 
 class ThothBookServiceTest extends PKPTestCase
@@ -128,10 +129,12 @@ class ThothBookServiceTest extends PKPTestCase
             {
                 return [
                     'workId' => '9f65f147-1d9d-4dd1-9f78-89b58d088a2c',
+                    'workStatus' => WorkStatus::ACTIVE,
                 ];
             }
         };
         $newThothBook = new ThothWork([
+            'workStatus' => WorkStatus::FORTHCOMING,
             'doi' => 'https://doi.org/10.12345/updated',
         ]);
 
@@ -154,6 +157,7 @@ class ThothBookServiceTest extends PKPTestCase
             ->method('new')
             ->with([
                 'workId' => '9f65f147-1d9d-4dd1-9f78-89b58d088a2c',
+                'workStatus' => WorkStatus::ACTIVE,
                 'doi' => 'https://doi.org/10.12345/updated',
             ])
             ->willReturn($newThothBook);

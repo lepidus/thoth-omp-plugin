@@ -18,13 +18,17 @@ namespace APP\plugins\generic\thoth\classes\factories;
 
 use APP\core\Application;
 use APP\facades\Repo;
-use PKP\core\Core;
-use ThothApi\GraphQL\Enums\WorkStatus;
+use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
 use ThothApi\GraphQL\Enums\WorkType;
 use ThothApi\GraphQL\Inputs\PatchWork as ThothWork;
 
 class ThothChapterFactory
 {
+    public function __construct(private ?BookRegistrationPolicy $registrationPolicy = null)
+    {
+        $this->registrationPolicy ??= new BookRegistrationPolicy();
+    }
+
     public function createFromChapter($chapter)
     {
         $request = Application::get()->getRequest();
@@ -65,13 +69,7 @@ class ThothChapterFactory
 
     public function getWorkStatusByDatePublished($chapter, $publication)
     {
-        $dataPublished = $chapter->getDatePublished() ?? $publication->getData('datePublished');
-
-        if ($dataPublished && $dataPublished <= Core::getCurrentDate()) {
-            return WorkStatus::ACTIVE;
-        }
-
-        return WorkStatus::FORTHCOMING;
+        return $this->registrationPolicy->initialWorkStatus();
     }
 
     private function extractPages($chapter): array

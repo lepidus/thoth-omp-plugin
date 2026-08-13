@@ -189,7 +189,7 @@ class ThothChapterServiceTest extends PKPTestCase
             ->with('thothChapterId', 'chapter-id');
 
         $desiredWork = new ThothWork();
-        $desiredWork->setWorkStatus(WorkStatus::ACTIVE);
+        $desiredWork->setWorkStatus(WorkStatus::FORTHCOMING);
         $factory = $this->createMock(ThothChapterFactory::class);
         $factory->expects($this->once())
             ->method('createFromChapter')
@@ -226,7 +226,7 @@ class ThothChapterServiceTest extends PKPTestCase
                 $chapter,
                 'chapter-id',
                 [['publicationId' => 'publication-id']],
-                'FORTHCOMING'
+                'ACTIVE'
             )
             ->willReturn(true);
 
@@ -241,7 +241,7 @@ class ThothChapterServiceTest extends PKPTestCase
 
         $this->assertTrue($service->update($chapter, [
             'workId' => 'chapter-id',
-            'workStatus' => 'FORTHCOMING',
+            'workStatus' => 'ACTIVE',
             'titles' => [['titleId' => 'title-id']],
             'abstracts' => [['abstractId' => 'abstract-id']],
             'contributions' => [['contributionId' => 'contribution-id']],

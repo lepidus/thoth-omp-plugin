@@ -162,7 +162,7 @@ class ThothChapterFactoryTest extends PKPTestCase
 
         $this->assertEquals(new ThothWork([
             'workType' => WorkType::BOOK_CHAPTER,
-            'workStatus' => WorkStatus::ACTIVE,
+            'workStatus' => WorkStatus::FORTHCOMING,
             'publicationDate' => '2024-01-01',
             'doi' => 'https://doi.org/10.12345/11112222',
             'firstPage' => '31',
@@ -184,7 +184,7 @@ class ThothChapterFactoryTest extends PKPTestCase
 
         $factory = new ThothChapterFactory();
         $workStatus = $factory->getWorkStatusByDatePublished($mockChapter, null);
-        $this->assertEquals(WorkStatus::ACTIVE, $workStatus);
+        $this->assertEquals(WorkStatus::FORTHCOMING, $workStatus);
 
         $workStatus = $factory->getWorkStatusByDatePublished($mockChapter, null);
         $this->assertEquals(WorkStatus::FORTHCOMING, $workStatus);

@@ -11,6 +11,7 @@ use APP\plugins\generic\thoth\classes\Contracts\PluginLogger;
 use APP\plugins\generic\thoth\classes\Contracts\PublicationReader;
 use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
+use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookRegistrar;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyNotificationPublisher;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPluginLogger;
@@ -36,6 +37,10 @@ final class ThothCompositionRoot
 
     public function register(object $container): void
     {
+        $container->singleton(
+            BookRegistrationPolicy::class,
+            fn (): BookRegistrationPolicy => new BookRegistrationPolicy()
+        );
         $container->bind(
             WorkGateway::class,
             fn (): WorkGateway => new LegacyWorkGateway(($this->workLinkServiceFactory)())
@@ -77,7 +82,8 @@ final class ThothCompositionRoot
             fn ($container): PublicationPublishListener => new PublicationPublishListener(
                 $container->make(RegisterBook::class),
                 $this->request,
-                $this->notification
+                $this->notification,
+                $container->make(BookRegistrationPolicy::class)
             )
         );
         $container->bind(
@@ -96,7 +102,8 @@ final class ThothCompositionRoot
         $container->bind(
             RegisterBookController::class,
             fn ($container): RegisterBookController => new RegisterBookController(
-                $container->make(RegisterBook::class)
+                $container->make(RegisterBook::class),
+                $container->make(BookRegistrationPolicy::class)
             )
         );
         $container->bind(

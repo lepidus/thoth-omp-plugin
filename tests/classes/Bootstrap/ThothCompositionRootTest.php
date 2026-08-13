@@ -12,6 +12,7 @@ use APP\plugins\generic\thoth\classes\Contracts\PluginLogger;
 use APP\plugins\generic\thoth\classes\Contracts\PublicationReader;
 use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
+use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookRegistrar;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyNotificationPublisher;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPluginLogger;
@@ -72,6 +73,10 @@ class ThothCompositionRootTest extends PKPTestCase
         );
         $this->assertInstanceOf(RegisterBookController::class, $container->make(RegisterBookController::class));
         $this->assertInstanceOf(UnlinkWorkController::class, $container->make(UnlinkWorkController::class));
+        $this->assertSame(
+            $container->make(BookRegistrationPolicy::class),
+            $container->make(BookRegistrationPolicy::class)
+        );
         $this->assertNotSame($container->make(WorkGateway::class), $container->make(WorkGateway::class));
     }
 }

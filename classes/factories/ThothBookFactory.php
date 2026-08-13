@@ -18,17 +18,21 @@ namespace APP\plugins\generic\thoth\classes\factories;
 
 use APP\core\Application;
 use APP\facades\Repo;
+use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
 use APP\submission\Submission;
-use PKP\core\Core;
 use PKP\db\DAORegistry;
 use PKP\doi\Doi;
 use PKP\submission\PKPSubmission;
-use ThothApi\GraphQL\Enums\WorkStatus;
 use ThothApi\GraphQL\Enums\WorkType;
 use ThothApi\GraphQL\Inputs\PatchWork as ThothWork;
 
 class ThothBookFactory
 {
+    public function __construct(private ?BookRegistrationPolicy $registrationPolicy = null)
+    {
+        $this->registrationPolicy ??= new BookRegistrationPolicy();
+    }
+
     public function createFromPublication($publication)
     {
         $request = Application::get()->getRequest();
@@ -111,11 +115,7 @@ class ThothBookFactory
 
     public function getWorkStatusByDatePublished($datePublished)
     {
-        if ($datePublished && $datePublished <= Core::getCurrentDate()) {
-            return WorkStatus::ACTIVE;
-        }
-
-        return WorkStatus::FORTHCOMING;
+        return $this->registrationPolicy->initialWorkStatus();
     }
 
     public function getDoi($publication)

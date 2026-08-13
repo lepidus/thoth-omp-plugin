@@ -7,6 +7,7 @@ use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\ImprintId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
+use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
 use APP\plugins\generic\thoth\classes\facades\ThothRepository;
 use APP\plugins\generic\thoth\classes\facades\ThothService;
 use APP\plugins\generic\thoth\classes\notification\ThothNotification;
@@ -20,8 +21,10 @@ use ThothApi\Exception\QueryException;
 
 final class RegisterBookController
 {
-    public function __construct(private readonly RegisterBook $registerBook)
-    {
+    public function __construct(
+        private readonly RegisterBook $registerBook,
+        private readonly BookRegistrationPolicy $registrationPolicy
+    ) {
     }
 
     public function register(IlluminateRequest $illuminateRequest): JsonResponse
@@ -31,7 +34,8 @@ final class RegisterBookController
         $submission = Repo::submission()->get($submissionId);
 
         $thothImprintId = $illuminateRequest->input('thothImprintId');
-        if (!$thothImprintId) {
+        $eligibility = $this->registrationPolicy->evaluate(true, $thothImprintId, null, []);
+        if ($eligibility->isImprintMissing()) {
             return response()->json(
                 ['thothImprintId' => [__('plugins.generic.thoth.imprint.required')]],
                 Response::HTTP_BAD_REQUEST
@@ -49,7 +53,13 @@ final class RegisterBookController
             );
         }
 
-        if ($submission->getData('thothWorkId')) {
+        $eligibility = $this->registrationPolicy->evaluate(
+            true,
+            $thothImprintId,
+            $submission->getData('thothWorkId'),
+            []
+        );
+        if ($eligibility->isAlreadyRegistered()) {
             return response()->json(
                 ['error' => __('plugins.generic.thoth.api.403.alreadyRegistered')],
                 Response::HTTP_FORBIDDEN
@@ -64,7 +74,9 @@ final class RegisterBookController
             $failure['errors'][] = __('plugins.generic.thoth.connectionError');
         }
 
-        if ($failure['errors']) {
+        $eligibility = $this->registrationPolicy->evaluate(true, $thothImprintId, null, $failure['errors']);
+        if (!$eligibility->isEligible()) {
+            $failure['errors'] = $eligibility->getMetadataErrors();
             return response()->json($failure, Response::HTTP_BAD_REQUEST);
         }
 

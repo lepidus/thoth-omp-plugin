@@ -16,6 +16,7 @@
 
 namespace APP\plugins\generic\thoth\classes\services;
 
+use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
 use ThothApi\Exception\QueryException;
 use ThothApi\GraphQL\Enums\WorkStatus;
 
@@ -32,6 +33,7 @@ class ThothBookRegistrationService
     private ThothTitleService $titleService;
     private ThothWorkRelationService $workRelationService;
     private ?ThothFrontcoverService $frontcoverService;
+    private BookRegistrationPolicy $registrationPolicy;
 
     public function __construct(
         $factory,
@@ -44,7 +46,8 @@ class ThothBookRegistrationService
         ThothSubjectService $subjectService,
         ThothTitleService $titleService,
         ThothWorkRelationService $workRelationService,
-        ?ThothFrontcoverService $frontcoverService = null
+        ?ThothFrontcoverService $frontcoverService = null,
+        ?BookRegistrationPolicy $registrationPolicy = null
     ) {
         $this->factory = $factory;
         $this->repository = $repository;
@@ -57,6 +60,7 @@ class ThothBookRegistrationService
         $this->titleService = $titleService;
         $this->workRelationService = $workRelationService;
         $this->frontcoverService = $frontcoverService;
+        $this->registrationPolicy = $registrationPolicy ?? new BookRegistrationPolicy();
     }
 
     public function register($publication, $thothImprintId): ThothBookRegistrationResult
@@ -64,7 +68,7 @@ class ThothBookRegistrationService
         $thothBook = $this->factory->createFromPublication($publication);
         $thothBook->setImprintId($thothImprintId);
 
-        $thothBook->setWorkStatus(WorkStatus::FORTHCOMING);
+        $thothBook->setWorkStatus($this->registrationPolicy->initialWorkStatus());
 
         $thothBookId = $this->repository->add($thothBook);
         $publication->setData('thothBookId', $thothBookId);
