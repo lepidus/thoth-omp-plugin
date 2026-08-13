@@ -130,13 +130,15 @@ msgid "plugins.generic.thoth.validation.isbnExists"
 msgstr "Publikacija z ISBN-jem \"{$isbn}\" že obstaja."
 
 msgid "plugins.generic.thoth.register.confirmation"
-msgstr "Ali želite v Thothu registrirati metapodatke, povezane s tem prispevkom?"
+msgstr ""
+"Ali želite v Thothu registrirati metapodatke tega prispevka? Upoštevajte, da so ti naslovi v Thothu označeni kot \"Prihajajoče\", da lahko založnik pregleda trenutni nabor metapodatkov v zaledju Thoth. "
+"Naslove je treba v Thothu še vedno nastaviti na \"Aktivno\", da jih bodo povezani delovni tokovi obdelali."
 
 msgid "publication.publish.confirmation"
 msgstr "Vse zahteve za objavo so izpolnjene. Ali ste prepričani, da želite ta vnos v katalog objaviti?"
 
 msgid "plugins.generic.thoth.register.success"
-msgstr "Metapodatki prispevka so bili uspešno poslani v Thoth."
+msgstr "Metapodatki prispevka so bili uspešno poslani v Thoth. Novo delo je bilo ustvarjeno s stanjem Prihajajoče."
 
 msgid "plugins.generic.thoth.register.success.log"
 msgstr "Metapodatki prispevka so bili registrirani v Thothu."
@@ -229,7 +231,12 @@ msgid "plugins.generic.thoth.actions.register.label"
 msgstr "Registriraj prispevke"
 
 msgid "plugins.generic.thoth.actions.register.prompt"
-msgstr "V Thoth boste poslali metapodatke za {$count} elementov. Ali ste prepričani, da želite registrirati te zapise?"
+msgstr ""
+"V Thoth boste poslali metapodatke za '{$count}' elementov. Upoštevajte, da so ti naslovi v Thothu označeni kot \"Prihajajoče\", da lahko založnik pregleda trenutni nabor metapodatkov v zaledju Thoth. "
+"Naslove je treba v Thothu še vedno nastaviti na \"Aktivno\", da jih bodo povezani delovni tokovi obdelali. Ali ste prepričani, da želite registrirati te zapise?"
+
+msgid "plugins.generic.thoth.actions.register.success"
+msgstr "Metapodatki vseh {$count} prispevkov so bili registrirani v Thothu. Nova dela so bila ustvarjena s stanjem Prihajajoče."
 
 msgid "plugins.generic.thoth.api.403.alreadyRegistered"
 msgstr "Prispevek je že registriran v Thothu."

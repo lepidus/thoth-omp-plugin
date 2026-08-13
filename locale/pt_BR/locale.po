@@ -121,10 +121,12 @@ msgid "plugins.generic.thoth.validation.isbnExists"
 msgstr "Uma publicação com o ISBN \"{$isbn}\" já existe."
 
 msgid "plugins.generic.thoth.register.confirmation"
-msgstr "Deseja realmente registrar na Thoth os metadados relacionados a essa submissão?"
+msgstr ""
+"Deseja registrar os metadados desta submissão na Thoth? Observe que esses títulos estão sendo marcados como \"Em breve\" na Thoth para permitir que a editora revise o conjunto atual de metadados no backend da Thoth. "
+"Os títulos ainda precisam ser definidos como \"Ativo\" na Thoth para serem considerados pelos fluxos de trabalho relacionados."
 
 msgid "plugins.generic.thoth.register.success"
-msgstr "Metadados da submissão enviados para Thoth com sucesso."
+msgstr "Metadados da submissão enviados para a Thoth com sucesso. O novo Work foi criado com o status Em breve."
 
 msgid "plugins.generic.thoth.register.success.log"
 msgstr "Metadados da submissão registrados no Thoth."
@@ -159,8 +161,11 @@ msgstr "Registrar Submissões"
 
 msgid "plugins.generic.thoth.actions.register.prompt"
 msgstr ""
-"Você está prestes a enviar metadados de submissão de {$count} item(s) para "
-"Thoth. Tem certeza de que deseja registrar esses registros?"
+"Você está prestes a enviar à Thoth os metadados de '{$count}' itens. Observe que esses títulos estão sendo marcados como \"Em breve\" na Thoth para permitir que a editora revise o conjunto atual de metadados no backend da Thoth. "
+"Os títulos ainda precisam ser definidos como \"Ativo\" na Thoth para serem considerados pelos fluxos de trabalho relacionados. Tem certeza de que deseja registrar esses registros?"
+
+msgid "plugins.generic.thoth.actions.register.success"
+msgstr "Os metadados de todas as {$count} submissões foram registrados na Thoth. Os novos Works foram criados com o status Em breve."
 
 msgid "plugins.generic.thoth.api.403.alreadyRegistered"
 msgstr "A submissão já foi registrada na Thoth."

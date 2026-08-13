@@ -121,10 +121,12 @@ msgid "plugins.generic.thoth.validation.isbnExists"
 msgstr "A publication with the ISBN \"{$isbn}\" already exists."
 
 msgid "plugins.generic.thoth.register.confirmation"
-msgstr "Do you want to register in Thoth the metadata related to this submission?"
+msgstr ""
+"Do you want to register this submission's metadata in Thoth? Please note that these titles are being marked as \"Forthcoming\" in Thoth to enable the publisher to review the current metadata set in the Thoth backend. "
+"Titles still need to be set to \"Active\" in Thoth to be picked up by related workflows."
 
 msgid "plugins.generic.thoth.register.success"
-msgstr "Submission metadata successfully sent to Thoth."
+msgstr "Submission metadata successfully sent to Thoth. The new Work was created with the Forthcoming status."
 
 msgid "plugins.generic.thoth.register.success.log"
 msgstr "Submission metadata registered in Thoth."
@@ -159,8 +161,11 @@ msgstr "Register Submissions"
 
 msgid "plugins.generic.thoth.actions.register.prompt"
 msgstr ""
-"You are about to send submission metadata for {$count} item(s) to "
-"Thoth. Are you sure you want to register these records?"
+"You are about to send submission metadata for '{$count}' item(s) to Thoth. Please note that these titles are being marked as \"Forthcoming\" in Thoth to enable the publisher to review the current metadata set in the Thoth backend. "
+"Titles still need to be set to \"Active\" in Thoth to be picked up by related workflows. Are you sure you want to register these records?"
+
+msgid "plugins.generic.thoth.actions.register.success"
+msgstr "Metadata for all {$count} submission(s) was registered in Thoth. The new Works were created with the Forthcoming status."
 
 msgid "plugins.generic.thoth.api.403.alreadyRegistered"
 msgstr "The submission is already registered in Thoth."

@@ -194,6 +194,7 @@ pkp.Vue.component('thoth-list-panel', {
 			isSidebarVisible: true,
 			errors: [],
 			imprintValue: '',
+			registrationBatch: null,
 			selected: [],
 			startedItems: [],
 		};
@@ -291,6 +292,11 @@ pkp.Vue.component('thoth-list-panel', {
 		},
 		registerAll() {
 			this.startedItems = [...this.selected];
+			this.registrationBatch = {
+				total: this.selected.length,
+				completed: 0,
+				failed: 0,
+			};
 
 			this.selected.forEach((id) => {
 				let item = this.items.find(item => item.id === id);
@@ -298,6 +304,7 @@ pkp.Vue.component('thoth-list-panel', {
 			});
 		},
 		submitItem(item) {
+			let succeeded = false;
 			$.ajax({
 				url: `${this.apiUrl}/${item.id}/register`,
 				type: 'POST',
@@ -309,13 +316,34 @@ pkp.Vue.component('thoth-list-panel', {
 					thothImprintId: this.selectedImprint,
 					disableNotification: true
 				},
-				success: (response) => this.updateItem(response),
+				success: (response) => {
+					succeeded = true;
+					this.updateItem(response);
+				},
 				error: (response) => this.setErrors(response),
-				complete: () => {
-					this.selected = this.selected.filter(id => id !== item.id);
-					this.startedItems = this.startedItems.filter(id => id !== item.id);
-				}
+				complete: () => this.completeItemRegistration(item.id, succeeded)
 			});
+		},
+		completeItemRegistration(itemId, succeeded) {
+			this.selected = this.selected.filter(id => id !== itemId);
+			this.startedItems = this.startedItems.filter(id => id !== itemId);
+			this.registrationBatch.completed += 1;
+			if (!succeeded) {
+				this.registrationBatch.failed += 1;
+			}
+
+			if (
+				this.registrationBatch.completed === this.registrationBatch.total
+				&& this.registrationBatch.failed === 0
+			) {
+				pkp.eventBus.$emit(
+					'notify',
+					this.__('plugins.generic.thoth.actions.register.success', {
+						count: this.registrationBatch.total,
+					}),
+					'success'
+				);
+			}
 		},
 		setErrors(response) {
 			if (
