@@ -28,8 +28,8 @@ import('plugins.generic.thoth.classes.formModifiers.PublicationFormatFormModifie
 import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.notification.ThothNotification');
-import('plugins.generic.thoth.classes.Application.Work.UnlinkWork');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
+import('plugins.generic.thoth.classes.Presentation.Api.UnlinkWorkController');
 import('plugins.generic.thoth.classes.schema.ThothSchema');
 import('plugins.generic.thoth.classes.services.ThothCatalogFilesCacheService');
 import('plugins.generic.thoth.classes.services.ThothWorkLinkService');
@@ -210,7 +210,7 @@ class ThothPlugin extends GenericPlugin
         $container = Registry::get('laravelContainer');
         $thothEndpoint = new ThothEndpoint(
             $container->make(GetWorkStatusController::class),
-            $container->make(UnlinkWork::class)
+            $container->make(UnlinkWorkController::class)
         );
         HookRegistry::register('APIHandler::endpoints', [$thothEndpoint, 'addEndpoints']);
     }

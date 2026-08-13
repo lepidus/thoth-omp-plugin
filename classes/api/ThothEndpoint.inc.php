@@ -20,21 +20,21 @@ import('plugins.generic.thoth.classes.facades.ThothService');
 import('plugins.generic.thoth.classes.facades.ThothRepo');
 import('plugins.generic.thoth.classes.exceptions.MetadataSynchronizationException');
 import('plugins.generic.thoth.classes.notification.ThothNotification');
-import('plugins.generic.thoth.classes.Application.Work.UnlinkWork');
-import('plugins.generic.thoth.classes.Domain.Identifier.SubmissionId');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
+import('plugins.generic.thoth.classes.Presentation.Api.UnlinkWorkController');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class ThothEndpoint
 {
     private GetWorkStatusController $getWorkStatusController;
-    private UnlinkWork $unlinkWork;
+    private UnlinkWorkController $unlinkWorkController;
 
-    public function __construct(GetWorkStatusController $getWorkStatusController, UnlinkWork $unlinkWork)
-    {
+    public function __construct(
+        GetWorkStatusController $getWorkStatusController,
+        UnlinkWorkController $unlinkWorkController
+    ) {
         $this->getWorkStatusController = $getWorkStatusController;
-        $this->unlinkWork = $unlinkWork;
+        $this->unlinkWorkController = $unlinkWorkController;
     }
 
     public function addEndpoints($hookName, $args)
@@ -278,24 +278,7 @@ class ThothEndpoint
             return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
         }
 
-        $thothWorkId = $submission->getData('thothWorkId');
-        if (!$thothWorkId) {
-            return $response->withStatus(404)->withJsonError('plugins.generic.thoth.status.unregistered');
-        }
-
-        try {
-            $unlinked = $this->unlinkWork->execute(
-                new SubmissionId((int) $submission->getId()),
-                new WorkId($thothWorkId)
-            );
-            if (!$unlinked) {
-                return $response->withStatus(409)->withJsonError('plugins.generic.thoth.unlink.existingWork');
-            }
-        } catch (QueryException $exception) {
-            return $response->withStatus(500)->withJsonError('plugins.generic.thoth.connectionError');
-        }
-
-        return $response->withJson(['status' => true], 200);
+        return $this->unlinkWorkController->delete($submission, $response);
     }
 
     public function synchronize($slimRequest, $response, $args)
