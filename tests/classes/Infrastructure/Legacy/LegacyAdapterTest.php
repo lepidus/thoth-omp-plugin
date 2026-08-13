@@ -154,11 +154,40 @@ class LegacyAdapterTest extends PKPTestCase
         $this->assertSame(self::WORK_ID, $result->getWorkId()->toString());
         $this->assertSame('warning.key', $result->getSynchronizationResult()->getWarnings()[0]->getMessageKey());
     }
+
+    public function testBookRegistrarRollbackDeletesTheCreatedWorkOnlyOnce(): void
+    {
+        $publication = $this->createMock(PublicationRegistrationStateDouble::class);
+        $publication->expects($this->exactly(2))
+            ->method('getData')
+            ->with('thothBookId')
+            ->willReturnOnConsecutiveCalls(self::WORK_ID, null);
+        $publication->expects($this->once())->method('setData')->with('thothBookId', null);
+        $service = $this->createMock(BookRegistrationServiceDouble::class);
+        $service->expects($this->once())
+            ->method('deleteRegisteredEntry')
+            ->with($this->callback(function ($result): bool {
+                return $result->getWorkId() === self::WORK_ID;
+            }));
+        $registrar = new LegacyBookRegistrar($service);
+
+        $registrar->rollback($publication);
+        $registrar->rollback($publication);
+    }
 }
 
 interface BookRegistrationServiceDouble
 {
     public function register(object $publication, string $imprintId): ThothBookRegistrationResult;
+
+    public function deleteRegisteredEntry(ThothBookRegistrationResult $result): void;
+}
+
+interface PublicationRegistrationStateDouble
+{
+    public function getData(string $name);
+
+    public function setData(string $name, $value): void;
 }
 
 interface WorkLinkServiceDouble
