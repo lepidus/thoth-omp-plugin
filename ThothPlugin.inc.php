@@ -52,6 +52,9 @@ class ThothPlugin extends GenericPlugin
                 function (): object {
                     return new ThothWorkLinkService(ThothContainer::getInstance()->get('workRepository'));
                 },
+                function (): object {
+                    return ThothContainer::getInstance()->get('bookRegistrationService');
+                },
                 DAORegistry::getDAO('PublicationDAO'),
                 DAORegistry::getDAO('SubmissionDAO'),
                 Application::get()->getRequest(),

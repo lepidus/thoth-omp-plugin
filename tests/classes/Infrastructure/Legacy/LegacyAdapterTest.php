@@ -6,6 +6,7 @@ import('plugins.generic.thoth.classes.Contracts.PluginLogger');
 import('plugins.generic.thoth.classes.Contracts.PublicationReader');
 import('plugins.generic.thoth.classes.Contracts.SubmissionLinkRepository');
 import('plugins.generic.thoth.classes.Contracts.WorkGateway');
+import('plugins.generic.thoth.classes.Domain.Identifier.ImprintId');
 import('plugins.generic.thoth.classes.Domain.Identifier.PublicationId');
 import('plugins.generic.thoth.classes.Domain.Identifier.SubmissionId');
 import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
@@ -14,6 +15,8 @@ import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPluginLogger')
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationReader');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacySubmissionLinkRepository');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkGateway');
+import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyBookRegistrar');
+import('plugins.generic.thoth.classes.services.ThothBookRegistrationResult');
 
 class LegacyAdapterTest extends PKPTestCase
 {
@@ -112,5 +115,25 @@ class LegacyAdapterTest extends PKPTestCase
             '[Thoth] WARNING: Remote metadata was preserved '
             . '{"submissionId":17,"authorization":"[redacted]","nested":{"signedUrl":"[redacted]"}}',
         ], $entries);
+    }
+
+    public function testBookRegistrarTranslatesTheLegacyRegistrationResult(): void
+    {
+        $publication = new stdClass();
+        $legacyResult = new ThothBookRegistrationResult(self::WORK_ID);
+        $legacyResult->setWarning('warning.key');
+        $service = $this->getMockBuilder(stdClass::class)->addMethods(['register'])->getMock();
+        $service->expects($this->once())
+            ->method('register')
+            ->with($publication, 'f740cf4e-16d1-487c-9a92-615882a591e9')
+            ->willReturn($legacyResult);
+
+        $result = (new LegacyBookRegistrar($service))->register(
+            $publication,
+            new ImprintId('f740cf4e-16d1-487c-9a92-615882a591e9')
+        );
+
+        $this->assertSame(self::WORK_ID, $result->getWorkId()->toString());
+        $this->assertSame('warning.key', $result->getSynchronizationResult()->getWarnings()[0]->getMessageKey());
     }
 }

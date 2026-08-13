@@ -2,14 +2,17 @@
 
 import('lib.pkp.tests.PKPTestCase');
 import('plugins.generic.thoth.classes.Bootstrap.ThothCompositionRoot');
+import('plugins.generic.thoth.classes.Application.Registration.RegisterBook');
 import('plugins.generic.thoth.classes.Application.Work.GetWorkStatus');
 import('plugins.generic.thoth.classes.Application.Work.UnlinkWork');
 import('plugins.generic.thoth.classes.Contracts.NotificationPublisher');
+import('plugins.generic.thoth.classes.Contracts.BookRegistrar');
 import('plugins.generic.thoth.classes.Contracts.PluginLogger');
 import('plugins.generic.thoth.classes.Contracts.PublicationReader');
 import('plugins.generic.thoth.classes.Contracts.SubmissionLinkRepository');
 import('plugins.generic.thoth.classes.Contracts.WorkGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyNotificationPublisher');
+import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyBookRegistrar');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPluginLogger');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationReader');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacySubmissionLinkRepository');
@@ -30,6 +33,9 @@ class ThothCompositionRootTest extends PKPTestCase
                 $workLinkServiceResolved = true;
                 return new stdClass();
             },
+            function (): object {
+                return new stdClass();
+            },
             new stdClass(),
             new stdClass(),
             new stdClass(),
@@ -40,6 +46,7 @@ class ThothCompositionRootTest extends PKPTestCase
 
         $this->assertFalse($workLinkServiceResolved);
         $this->assertInstanceOf(LegacyWorkGateway::class, $container->make(WorkGateway::class));
+        $this->assertInstanceOf(LegacyBookRegistrar::class, $container->make(BookRegistrar::class));
         $this->assertTrue($workLinkServiceResolved);
         $this->assertInstanceOf(LegacyPublicationReader::class, $container->make(PublicationReader::class));
         $this->assertInstanceOf(
@@ -52,6 +59,7 @@ class ThothCompositionRootTest extends PKPTestCase
         );
         $this->assertInstanceOf(LegacyPluginLogger::class, $container->make(PluginLogger::class));
         $this->assertInstanceOf(GetWorkStatus::class, $container->make(GetWorkStatus::class));
+        $this->assertInstanceOf(RegisterBook::class, $container->make(RegisterBook::class));
         $this->assertInstanceOf(UnlinkWork::class, $container->make(UnlinkWork::class));
         $this->assertInstanceOf(
             GetWorkStatusController::class,
