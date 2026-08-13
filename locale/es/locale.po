@@ -118,10 +118,12 @@ msgid "plugins.generic.thoth.validation.isbnExists"
 msgstr "Una publicación con el ISBN \"{$isbn}\" ya existe."
 
 msgid "plugins.generic.thoth.register.confirmation"
-msgstr "¿Desea registrar en Thoth los metadatos relacionados con este envío?"
+msgstr ""
+"¿Desea registrar en Thoth los metadatos de este envío? Tenga en cuenta que estos títulos se están marcando como \"Próximamente\" en Thoth para permitir que la editorial revise el conjunto actual de metadatos en el backend de Thoth. "
+"Los títulos aún deben establecerse como \"Activo\" en Thoth para que los flujos de trabajo relacionados los procesen."
 
 msgid "plugins.generic.thoth.register.success"
-msgstr "Metadatos de envío enviados correctamente a Thoth."
+msgstr "Metadatos del envío enviados correctamente a Thoth. El nuevo Work se creó con el estado Próximamente."
 
 msgid "plugins.generic.thoth.register.success.log"
 msgstr "Metadatos de envío registrados en Thoth."
@@ -156,8 +158,11 @@ msgstr "Registrar Envíos"
 
 msgid "plugins.generic.thoth.actions.register.prompt"
 msgstr ""
-"Está a punto de enviar metadatos de envíos de {$count} elemento(s) a "
-"Thoth. ¿Está seguro de que desea registrar estos registros?"
+"Está a punto de enviar metadatos de envíos de '{$count}' elemento(s) a Thoth. Tenga en cuenta que estos títulos se están marcando como \"Próximamente\" en Thoth para permitir que la editorial revise el conjunto actual de metadatos en el backend de Thoth. "
+"Los títulos aún deben establecerse como \"Activo\" en Thoth para que los flujos de trabajo relacionados los procesen. ¿Está seguro de que desea registrar estos registros?"
+
+msgid "plugins.generic.thoth.actions.register.success"
+msgstr "Los metadatos de los {$count} envíos se registraron en Thoth. Los nuevos Works se crearon con el estado Próximamente."
 
 msgid "plugins.generic.thoth.api.403.alreadyRegistered"
 msgstr "El envío ya está registrado en Thoth."

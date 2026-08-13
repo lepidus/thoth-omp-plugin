@@ -10,6 +10,7 @@
   "list.viewMore",
   "plugins.generic.thoth.actions.register.label",
   "plugins.generic.thoth.actions.register.prompt",
+  "plugins.generic.thoth.actions.register.success",
   "plugins.generic.thoth.connectionError",
   "plugins.generic.thoth.featureVideo",
   "plugins.generic.thoth.imprint",

@@ -177,6 +177,7 @@ const imprintValue = ref(props.selectedImprint || '');
 const selected = ref([]);
 const startedItems = ref([]);
 const errors = ref({});
+const registrationBatch = ref(null);
 
 const lastPage = computed(() => Math.ceil(totalItems.value / props.count));
 
@@ -315,6 +316,11 @@ function openRegister() {
 
 function registerAll() {
 	startedItems.value = [...selected.value];
+	registrationBatch.value = {
+		total: selected.value.length,
+		completed: 0,
+		failed: 0,
+	};
 
 	selected.value.forEach((id) => {
 		const item = currentItems.value.find((i) => i.id === id);
@@ -345,6 +351,27 @@ async function submitItem(item) {
 
 	selected.value = selected.value.filter((id) => id !== item.id);
 	startedItems.value = startedItems.value.filter((id) => id !== item.id);
+	completeItemRegistration(isSuccess.value);
+}
+
+function completeItemRegistration(succeeded) {
+	registrationBatch.value.completed += 1;
+	if (!succeeded) {
+		registrationBatch.value.failed += 1;
+	}
+
+	if (
+		registrationBatch.value.completed === registrationBatch.value.total &&
+		registrationBatch.value.failed === 0
+	) {
+		pkp.eventBus.$emit(
+			'notify',
+			t('plugins.generic.thoth.actions.register.success', {
+				count: registrationBatch.value.total,
+			}),
+			'success',
+		);
+	}
 }
 
 function setErrors(itemId, response) {
