@@ -18,6 +18,7 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationRea
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 
 final class ThothCompositionRoot
@@ -73,7 +74,10 @@ final class ThothCompositionRoot
             return new GetWorkStatus($container->make(WorkGateway::class));
         });
         $container->bind(RegisterBook::class, function ($container): RegisterBook {
-            return new RegisterBook($container->make(BookRegistrar::class));
+            return new RegisterBook(
+                $container->make(BookRegistrar::class),
+                $container->make(SubmissionLinkRepository::class)
+            );
         });
         $container->bind(UnlinkWork::class, function ($container): UnlinkWork {
             return new UnlinkWork(
@@ -83,6 +87,9 @@ final class ThothCompositionRoot
         });
         $container->bind(GetWorkStatusController::class, function ($container): GetWorkStatusController {
             return new GetWorkStatusController($container->make(GetWorkStatus::class));
+        });
+        $container->bind(RegisterBookController::class, function ($container): RegisterBookController {
+            return new RegisterBookController($container->make(RegisterBook::class));
         });
         $container->bind(UnlinkWorkController::class, function ($container): UnlinkWorkController {
             return new UnlinkWorkController($container->make(UnlinkWork::class));
