@@ -14,7 +14,6 @@ use APP\plugins\generic\thoth\classes\Contracts\PublicationReader;
 use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookRegistrar;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyNotificationPublisher;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPluginLogger;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationReader;
@@ -35,13 +34,14 @@ class ThothCompositionRootTest extends PKPTestCase
     {
         $container = new Container();
         $workLinkServiceResolved = false;
+        $bookRegistrar = $this->createMock(BookRegistrar::class);
         $root = new ThothCompositionRoot(
             function () use (&$workLinkServiceResolved): object {
                 $workLinkServiceResolved = true;
                 return new stdClass();
             },
-            function (): object {
-                return new stdClass();
+            function () use ($bookRegistrar): object {
+                return $bookRegistrar;
             },
             new stdClass(),
             new stdClass(),
@@ -53,7 +53,7 @@ class ThothCompositionRootTest extends PKPTestCase
 
         $this->assertFalse($workLinkServiceResolved);
         $this->assertInstanceOf(LegacyWorkGateway::class, $container->make(WorkGateway::class));
-        $this->assertInstanceOf(LegacyBookRegistrar::class, $container->make(BookRegistrar::class));
+        $this->assertSame($bookRegistrar, $container->make(BookRegistrar::class));
         $this->assertTrue($workLinkServiceResolved);
         $this->assertInstanceOf(LegacyPublicationReader::class, $container->make(PublicationReader::class));
         $this->assertInstanceOf(

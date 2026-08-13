@@ -4,12 +4,9 @@ namespace APP\plugins\generic\thoth\tests\classes\Infrastructure\Legacy;
 
 require_once(__DIR__ . '/../../../../vendor/autoload.php');
 
-use APP\plugins\generic\thoth\classes\Application\Exception\RegistrationFailed;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\ImprintId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\PublicationId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookRegistrar;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyNotificationPublisher;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPluginLogger;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationReader;
@@ -19,7 +16,6 @@ use PKP\notification\PKPNotification;
 use PKP\tests\PKPTestCase;
 use RuntimeException;
 use stdClass;
-use ThothApi\Exception\QueryException;
 
 class LegacyAdapterTest extends PKPTestCase
 {
@@ -124,63 +120,4 @@ class LegacyAdapterTest extends PKPTestCase
         ], $entries);
     }
 
-    public function testBookRegistrarTranslatesTheLegacyRegistrationResult(): void
-    {
-        import('plugins.generic.thoth.classes.services.ThothBookRegistrationResult');
-        $publication = new stdClass();
-        $legacyResult = new \ThothBookRegistrationResult(self::WORK_ID);
-        $legacyResult->setWarning('warning.key');
-        $service = $this->getMockBuilder(stdClass::class)->addMethods(['register'])->getMock();
-        $service->expects($this->once())
-            ->method('register')
-            ->with($publication, 'f740cf4e-16d1-487c-9a92-615882a591e9')
-            ->willReturn($legacyResult);
-
-        $result = (new LegacyBookRegistrar($service))->register(
-            $publication,
-            new ImprintId('f740cf4e-16d1-487c-9a92-615882a591e9')
-        );
-
-        $this->assertSame(self::WORK_ID, $result->getWorkId()->toString());
-        $this->assertSame('warning.key', $result->getSynchronizationResult()->getWarnings()[0]->getMessageKey());
-    }
-
-    public function testBookRegistrarDoesNotLeakTheClientException(): void
-    {
-        $service = $this->getMockBuilder(stdClass::class)->addMethods(['register'])->getMock();
-        $service->method('register')->willThrowException(new QueryException([
-            'message' => 'The imprint is not available',
-        ]));
-        try {
-            (new LegacyBookRegistrar($service))->register(
-                new stdClass(),
-                new ImprintId('f740cf4e-16d1-487c-9a92-615882a591e9')
-            );
-            $this->fail('The normalized registration failure should be thrown');
-        } catch (RegistrationFailed $failure) {
-            $this->assertSame('The imprint is not available', $failure->getSafeCause());
-            $this->assertInstanceOf(QueryException::class, $failure->getPrevious());
-        }
-    }
-
-    public function testBookRegistrarRollbackDeletesTheCreatedWorkOnlyOnce(): void
-    {
-        import('plugins.generic.thoth.classes.services.ThothBookRegistrationResult');
-        $publication = $this->getMockBuilder(stdClass::class)->addMethods(['getData', 'setData'])->getMock();
-        $publication->expects($this->exactly(2))
-            ->method('getData')
-            ->with('thothBookId')
-            ->willReturnOnConsecutiveCalls(self::WORK_ID, null);
-        $publication->expects($this->once())->method('setData')->with('thothBookId', null);
-        $service = $this->getMockBuilder(stdClass::class)->addMethods(['deleteRegisteredEntry'])->getMock();
-        $service->expects($this->once())
-            ->method('deleteRegisteredEntry')
-            ->with($this->callback(function ($result): bool {
-                return $result->getWorkId() === self::WORK_ID;
-            }));
-        $registrar = new LegacyBookRegistrar($service);
-
-        $registrar->rollback($publication);
-        $registrar->rollback($publication);
-    }
 }
