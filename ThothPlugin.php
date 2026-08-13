@@ -27,6 +27,7 @@ use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\hooks\HookRegistrant;
 use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use APP\plugins\generic\thoth\classes\services\ThothWorkLinkService;
 use PKP\core\JSONMessage;
@@ -54,6 +55,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
             $hookRegistrant = new HookRegistrant(
                 $this,
                 PKPContainer::getInstance()->make(GetWorkStatusController::class),
+                PKPContainer::getInstance()->make(RegisterBookController::class),
                 PKPContainer::getInstance()->make(UnlinkWorkController::class)
             );
             $hookRegistrant->register();

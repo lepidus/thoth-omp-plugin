@@ -5,11 +5,14 @@ namespace APP\plugins\generic\thoth\tests\classes\api;
 require_once(__DIR__ . '/../../../vendor/autoload.php');
 
 use APP\plugins\generic\thoth\classes\api\ThothEndpoint;
+use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
+use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
 use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use PKP\core\PKPRequest;
 use PKP\plugins\interfaces\HasAuthorizationPolicy;
@@ -25,7 +28,16 @@ class ThothEndpointTest extends PKPTestCase
             $this->createMock(WorkGateway::class),
             $this->createMock(SubmissionLinkRepository::class)
         );
-        $endpoint = new ThothEndpoint($controller, new UnlinkWorkController($unlinkWork));
+        $endpoint = new ThothEndpoint(
+            $controller,
+            new RegisterBookController(
+                new RegisterBook(
+                    $this->createMock(BookRegistrar::class),
+                    $this->createMock(SubmissionLinkRepository::class)
+                )
+            ),
+            new UnlinkWorkController($unlinkWork)
+        );
         $args = [];
 
         $policies = $endpoint->getPolicies($this->createMock(PKPRequest::class), $args, []);

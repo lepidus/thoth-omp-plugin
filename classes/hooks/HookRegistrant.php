@@ -26,6 +26,7 @@ use APP\plugins\generic\thoth\classes\listeners\PublicationEditListener;
 use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use APP\plugins\generic\thoth\classes\schema\ThothSchema;
 use APP\plugins\generic\thoth\classes\services\ThothCatalogFilesCacheService;
@@ -40,15 +41,18 @@ class HookRegistrant
 {
     private GenericPlugin $plugin;
     private GetWorkStatusController $getWorkStatusController;
+    private RegisterBookController $registerBookController;
     private UnlinkWorkController $unlinkWorkController;
 
     public function __construct(
         GenericPlugin $plugin,
         GetWorkStatusController $getWorkStatusController,
+        RegisterBookController $registerBookController,
         UnlinkWorkController $unlinkWorkController
     ) {
         $this->plugin = $plugin;
         $this->getWorkStatusController = $getWorkStatusController;
+        $this->registerBookController = $registerBookController;
         $this->unlinkWorkController = $unlinkWorkController;
     }
 
@@ -104,7 +108,11 @@ class HookRegistrant
 
     private function registerEndpoints(): void
     {
-        $endpoint = new ThothEndpoint($this->getWorkStatusController, $this->unlinkWorkController);
+        $endpoint = new ThothEndpoint(
+            $this->getWorkStatusController,
+            $this->registerBookController,
+            $this->unlinkWorkController
+        );
         Hook::add('APIHandler::endpoints::_submissions', $endpoint->addEndpoints(...));
     }
 

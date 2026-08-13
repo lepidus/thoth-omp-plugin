@@ -24,6 +24,7 @@ use APP\plugins\generic\thoth\classes\facades\ThothRepository;
 use APP\plugins\generic\thoth\classes\facades\ThothService;
 use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as IlluminateRequest;
@@ -31,18 +32,17 @@ use Illuminate\Http\Response;
 use InvalidArgumentException;
 use PKP\core\PKPBaseController;
 use PKP\core\PKPRequest;
-use PKP\db\DAORegistry;
 use PKP\handler\APIHandler;
 use PKP\plugins\interfaces\HasAuthorizationPolicy;
 use PKP\security\authorization\SubmissionAccessPolicy;
 use PKP\security\Role;
-use PKP\userGroup\UserGroup;
 use ThothApi\Exception\QueryException;
 
 class ThothEndpoint implements HasAuthorizationPolicy
 {
     public function __construct(
         private readonly GetWorkStatusController $getWorkStatusController,
+        private readonly RegisterBookController $registerBookController,
         private readonly UnlinkWorkController $unlinkWorkController
     ) {
     }
@@ -139,113 +139,7 @@ class ThothEndpoint implements HasAuthorizationPolicy
 
     public function register(IlluminateRequest $illuminateRequest): JsonResponse
     {
-        $request = Application::get()->getRequest();
-        $submissionId = (int) $illuminateRequest->route('submissionId');
-        $submission = Repo::submission()->get($submissionId);
-
-        $thothImprintId = $illuminateRequest->input('thothImprintId');
-        if (!$thothImprintId) {
-            return response()->json(
-                ['thothImprintId' => [__('plugins.generic.thoth.imprint.required')]],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
-
-        if (!$submission) {
-            return response()->json(
-                ['error' => __('api.404.resourceNotFound')],
-                Response::HTTP_NOT_FOUND
-            );
-        }
-
-        if (!$request->getContext()) {
-            return response()->json(
-                ['error' => __('api.submissions.403.contextRequired')],
-                Response::HTTP_FORBIDDEN
-            );
-        }
-
-        if ($submission->getData('thothWorkId')) {
-            return response()->json(
-                ['error' => __('plugins.generic.thoth.api.403.alreadyRegistered')],
-                Response::HTTP_FORBIDDEN
-            );
-        }
-
-        $publication = $submission->getCurrentPublication();
-
-        $failure = [
-            'id' => $submission->getId(),
-            'errors' => []
-        ];
-
-        try {
-            $failure['errors'] = ThothService::book()->validate($publication);
-        } catch (\Exception $e) {
-            $failure['errors'][] = __('plugins.generic.thoth.connectionError');
-        }
-
-        if ($failure['errors']) {
-            return response()->json($failure, Response::HTTP_BAD_REQUEST);
-        }
-
-        $disableNotification = $illuminateRequest->input('disableNotification', false);
-        $registrationResult = null;
-        try {
-            $thothBookRegistrationService = ThothService::bookRegistration();
-            $registrationResult = $thothBookRegistrationService->register($publication, $thothImprintId);
-            $thothBookRegistrationService->setActive($registrationResult);
-            $thothBookId = $registrationResult->getWorkId();
-            Repo::submission()->edit($submission, ['thothWorkId' => $thothBookId]);
-            $this->handleNotification(
-                $request,
-                $submission,
-                true,
-                $disableNotification,
-                null,
-                $registrationResult->getWarning()
-            );
-        } catch (QueryException $e) {
-            if ($registrationResult !== null) {
-                $thothBookRegistrationService->deleteRegisteredEntry($registrationResult);
-            }
-            $this->handleNotification(
-                $request,
-                $submission,
-                false,
-                $disableNotification,
-                $e,
-                $registrationResult ? $registrationResult->getWarning() : null
-            );
-            $failure['errors'][] = __('plugins.generic.thoth.register.error.log', ['reason' => $e->getMessage()]);
-            return response()->json($failure, Response::HTTP_BAD_REQUEST);
-        }
-
-        $thothWork = ThothRepository::work()->get($thothBookId);
-        $thothWorkStatus = $thothWork->getWorkStatus();
-
-        $submission = Repo::submission()->get($submission->getId());
-
-        $userGroups = UserGroup::withContextIds($submission->getData('contextId'))->get();
-
-        $genreDao = DAORegistry::getDAO('GenreDAO');
-        $genres = $genreDao->getByContextId($submission->getData('contextId'))->toArray();
-
-        $routeController = PKPBaseController::getRouteController();
-        $userRoles = (array) $routeController->getAuthorizedContextObject(Application::ASSOC_TYPE_USER_ROLES);
-
-        $submissionProps = Repo::submission()->getSchemaMap()->map(
-            $submission,
-            $userGroups,
-            $genres,
-            $userRoles
-        );
-        $submissionProps['thothWorkStatus'] = $thothWorkStatus;
-
-        return response()->json(
-            $submissionProps,
-            Response::HTTP_OK
-        );
+        return $this->registerBookController->register($illuminateRequest);
     }
 
     public function getWorkStatus(IlluminateRequest $illuminateRequest): JsonResponse
