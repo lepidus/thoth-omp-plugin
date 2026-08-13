@@ -1,0 +1,75 @@
+<?php
+
+namespace APP\plugins\generic\thoth\classes\Infrastructure\Legacy;
+
+use APP\plugins\generic\thoth\classes\Contracts\NotificationPublisher;
+use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
+use PKP\notification\Notification;
+use RuntimeException;
+
+final class LegacyNotificationPublisher implements NotificationPublisher
+{
+    private object $request;
+    private object $submissionRepository;
+    private object $notification;
+
+    public function __construct(object $request, object $submissionRepository, object $notification)
+    {
+        $this->request = $request;
+        $this->submissionRepository = $submissionRepository;
+        $this->notification = $notification;
+    }
+
+    public function publishSuccess(int $userId, SubmissionId $submissionId, string $messageKey): void
+    {
+        $this->notification->notify(
+            $this->requireRequestForUser($userId),
+            $this->requireSubmission($submissionId),
+            Notification::NOTIFICATION_TYPE_SUCCESS,
+            $messageKey
+        );
+    }
+
+    public function publishWarning(int $userId, SubmissionId $submissionId, string $messageKey): void
+    {
+        $this->notification->notifyWarning(
+            $this->requireRequestForUser($userId),
+            $this->requireSubmission($submissionId),
+            $messageKey
+        );
+    }
+
+    public function publishError(
+        int $userId,
+        SubmissionId $submissionId,
+        string $messageKey,
+        ?string $cause = null
+    ): void {
+        $this->notification->notify(
+            $this->requireRequestForUser($userId),
+            $this->requireSubmission($submissionId),
+            Notification::NOTIFICATION_TYPE_ERROR,
+            $messageKey,
+            $cause
+        );
+    }
+
+    private function requireRequestForUser(int $userId): object
+    {
+        if ($this->request->getUser()->getId() !== $userId) {
+            throw new RuntimeException('Notification user does not match the current request');
+        }
+
+        return $this->request;
+    }
+
+    private function requireSubmission(SubmissionId $submissionId): object
+    {
+        $submission = $this->submissionRepository->get($submissionId->toInt());
+        if (!$submission) {
+            throw new RuntimeException('Submission not found');
+        }
+
+        return $submission;
+    }
+}
