@@ -15,7 +15,7 @@
  */
 
 use APP\facades\Repo;
-use ThothApi\GraphQL\Enums\WorkStatus;
+use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
 
 class ThothChapterService
 {
@@ -25,6 +25,7 @@ class ThothChapterService
     public $publicationService;
     public $titleService;
     public $abstractService;
+    private BookRegistrationPolicy $registrationPolicy;
 
     public function __construct(
         $factory,
@@ -32,7 +33,8 @@ class ThothChapterService
         $contributionService,
         $publicationService,
         $titleService,
-        $abstractService
+        $abstractService,
+        ?BookRegistrationPolicy $registrationPolicy = null
     ) {
         $this->factory = $factory;
         $this->repository = $repository;
@@ -40,6 +42,7 @@ class ThothChapterService
         $this->publicationService = $publicationService;
         $this->titleService = $titleService;
         $this->abstractService = $abstractService;
+        $this->registrationPolicy = $registrationPolicy ?? new BookRegistrationPolicy();
     }
 
     public function getDesiredWork($chapter, $thothImprintId)
@@ -53,7 +56,7 @@ class ThothChapterService
     public function register($chapter, $thothImprintId, $thothChapter = null)
     {
         $thothChapter = $thothChapter ?? $this->getDesiredWork($chapter, $thothImprintId);
-        $thothChapter->setWorkStatus(WorkStatus::FORTHCOMING);
+        $thothChapter->setWorkStatus($this->registrationPolicy->initialWorkStatus());
         $thothChapterId = $this->repository->add($thothChapter);
         $chapter->setData('thothChapterId', $thothChapterId);
         $this->registerMetadata($chapter, $thothChapterId);
@@ -69,6 +72,9 @@ class ThothChapterService
         $thothChapter = $thothChapter ?? $this->getDesiredWork($chapter, $thothImprintId);
         $thothChapterId = $existingChapter['workId'];
         $thothChapter->setWorkId($thothChapterId);
+        $thothChapter->setWorkStatus(
+            $this->registrationPolicy->statusForExistingWork($existingChapter['workStatus'] ?? null)
+        );
         $this->repository->edit($thothChapter);
         $chapter->setData('thothChapterId', $thothChapterId);
 

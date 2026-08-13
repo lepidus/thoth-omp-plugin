@@ -14,6 +14,7 @@
  * @brief Helper class that encapsulates business logic for Thoth books
  */
 
+use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
 use PKP\db\DAORegistry;
 
 import('lib.pkp.classes.services.PKPSchemaService');
@@ -27,6 +28,7 @@ class ThothBookService
     public $titleService;
     public $abstractService;
     private $frontcoverService;
+    private BookRegistrationPolicy $registrationPolicy;
 
     private const PATCH_WORK_FIELDS = [
         'workId' => true,
@@ -67,7 +69,8 @@ class ThothBookService
         $publicationService,
         $titleService,
         $abstractService,
-        $frontcoverService = null
+        $frontcoverService = null,
+        ?BookRegistrationPolicy $registrationPolicy = null
     ) {
         $this->factory = $factory;
         $this->repository = $repository;
@@ -75,6 +78,7 @@ class ThothBookService
         $this->titleService = $titleService;
         $this->abstractService = $abstractService;
         $this->frontcoverService = $frontcoverService;
+        $this->registrationPolicy = $registrationPolicy ?? new BookRegistrationPolicy();
     }
 
     public function register($publication, $thothImprintId)
@@ -96,10 +100,15 @@ class ThothBookService
         $oldThothBook = $this->repository->get($thothBookId);
         $newThothBook = $this->factory->createFromPublication($publication);
 
-        $thothBook = $this->repository->new(array_merge(
-            $this->getPatchWorkData($oldThothBook),
-            $newThothBook->getAllData()
-        ));
+        $oldWorkData = $this->getPatchWorkData($oldThothBook);
+        $newWorkData = $newThothBook->getAllData();
+        if (isset($oldWorkData['workStatus'])) {
+            $newWorkData['workStatus'] = $this->registrationPolicy->statusForExistingWork(
+                $oldWorkData['workStatus']
+            );
+        }
+
+        $thothBook = $this->repository->new(array_merge($oldWorkData, $newWorkData));
 
         $this->repository->edit($thothBook);
         if ($includeTitlesAndAbstracts) {

@@ -207,6 +207,7 @@ class ThothBookServiceTest extends PKPTestCase
         };
 
         $newThothBook = new ThothWork([
+            'workStatus' => WorkStatus::FORTHCOMING,
             'doi' => 'https://doi.org/10.12345/updated',
         ]);
 

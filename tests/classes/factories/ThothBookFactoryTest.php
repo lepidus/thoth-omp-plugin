@@ -170,7 +170,7 @@ class ThothBookFactoryTest extends PKPTestCase
 
         $this->assertEquals(new ThothWork([
             'workType' => WorkType::MONOGRAPH,
-            'workStatus' => WorkStatus::ACTIVE,
+            'workStatus' => WorkStatus::FORTHCOMING,
             'edition' => 1,
             'publicationDate' => '2020-01-01',
             'place' => 'Salvador, BR',
@@ -211,7 +211,7 @@ class ThothBookFactoryTest extends PKPTestCase
     {
         $factory = new ThothBookFactory();
         $workStatus = $factory->getWorkStatusByDatePublished('2020-01-01');
-        $this->assertEquals(WorkStatus::ACTIVE, $workStatus);
+        $this->assertEquals(WorkStatus::FORTHCOMING, $workStatus);
 
         $workStatus = $factory->getWorkStatusByDatePublished('2050-12-12');
         $this->assertEquals(WorkStatus::FORTHCOMING, $workStatus);

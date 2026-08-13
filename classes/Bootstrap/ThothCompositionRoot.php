@@ -11,6 +11,7 @@ use APP\plugins\generic\thoth\classes\Contracts\PluginLogger;
 use APP\plugins\generic\thoth\classes\Contracts\PublicationReader;
 use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
+use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookRegistrar;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyNotificationPublisher;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPluginLogger;
@@ -50,6 +51,9 @@ final class ThothCompositionRoot
 
     public function register(object $container): void
     {
+        $container->singleton(BookRegistrationPolicy::class, function (): BookRegistrationPolicy {
+            return new BookRegistrationPolicy();
+        });
         $container->bind(WorkGateway::class, function (): WorkGateway {
             return new LegacyWorkGateway(($this->workLinkServiceFactory)());
         });
@@ -85,7 +89,8 @@ final class ThothCompositionRoot
             return new \PublicationPublishListener(
                 $container->make(RegisterBook::class),
                 $this->request,
-                $this->notification
+                $this->notification,
+                $container->make(BookRegistrationPolicy::class)
             );
         });
         $container->bind(UnlinkWork::class, function ($container): UnlinkWork {
@@ -98,7 +103,10 @@ final class ThothCompositionRoot
             return new GetWorkStatusController($container->make(GetWorkStatus::class));
         });
         $container->bind(RegisterBookController::class, function ($container): RegisterBookController {
-            return new RegisterBookController($container->make(RegisterBook::class));
+            return new RegisterBookController(
+                $container->make(RegisterBook::class),
+                $container->make(BookRegistrationPolicy::class)
+            );
         });
         $container->bind(UnlinkWorkController::class, function ($container): UnlinkWorkController {
             return new UnlinkWorkController($container->make(UnlinkWork::class));

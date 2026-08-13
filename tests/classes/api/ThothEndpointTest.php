@@ -8,6 +8,7 @@ use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
 use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
+use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
@@ -59,7 +60,8 @@ class ThothEndpointTest extends PKPTestCase
             new RegisterBook(
                 $this->createMock(BookRegistrar::class),
                 $this->createMock(SubmissionLinkRepository::class)
-            )
+            ),
+            new BookRegistrationPolicy()
         );
     }
 
