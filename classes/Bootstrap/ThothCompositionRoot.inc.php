@@ -1,5 +1,6 @@
 <?php
 
+import('plugins.generic.thoth.classes.Application.Work.GetWorkStatus');
 import('plugins.generic.thoth.classes.Contracts.NotificationPublisher');
 import('plugins.generic.thoth.classes.Contracts.PluginLogger');
 import('plugins.generic.thoth.classes.Contracts.PublicationReader');
@@ -10,6 +11,7 @@ import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPluginLogger')
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationReader');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacySubmissionLinkRepository');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkGateway');
+import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
 
 final class ThothCompositionRoot
 {
@@ -53,6 +55,12 @@ final class ThothCompositionRoot
         });
         $container->bind(PluginLogger::class, function (): PluginLogger {
             return new LegacyPluginLogger();
+        });
+        $container->bind(GetWorkStatus::class, function ($container): GetWorkStatus {
+            return new GetWorkStatus($container->make(WorkGateway::class));
+        });
+        $container->bind(GetWorkStatusController::class, function ($container): GetWorkStatusController {
+            return new GetWorkStatusController($container->make(GetWorkStatus::class));
         });
     }
 }

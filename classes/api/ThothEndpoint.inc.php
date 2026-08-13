@@ -8,6 +8,7 @@
  * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
  *
  * @class ThothEndpoint
+ *
  * @ingroup plugins_generic_thoth
  *
  * @brief Thoth endpoints for OMP API
@@ -19,11 +20,19 @@ import('plugins.generic.thoth.classes.facades.ThothService');
 import('plugins.generic.thoth.classes.facades.ThothRepo');
 import('plugins.generic.thoth.classes.exceptions.MetadataSynchronizationException');
 import('plugins.generic.thoth.classes.notification.ThothNotification');
+import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 import('plugins.generic.thoth.classes.services.ThothWorkLinkService');
 
 class ThothEndpoint
 {
+    private GetWorkStatusController $getWorkStatusController;
+
+    public function __construct(GetWorkStatusController $getWorkStatusController)
+    {
+        $this->getWorkStatusController = $getWorkStatusController;
+    }
+
     public function addEndpoints($hookName, $args)
     {
         $endpoints = & $args[0];
@@ -252,24 +261,7 @@ class ThothEndpoint
             return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
         }
 
-        $thothWorkId = $submission->getData('thothWorkId');
-        if (!$thothWorkId) {
-            return $response->withStatus(404)->withJsonError('plugins.generic.thoth.status.unregistered');
-        }
-
-        try {
-            $workStatus = (new ThothWorkLinkService(ThothRepo::work()))->getStatus($thothWorkId);
-            if ($workStatus === null) {
-                return $response->withStatus(404)->withJson([
-                    'error' => __('plugins.generic.thoth.status.notFound'),
-                    'workNotFound' => true,
-                ]);
-            }
-
-            return $response->withJson(['workStatus' => $workStatus], 200);
-        } catch (QueryException $exception) {
-            return $response->withStatus(500)->withJsonError('plugins.generic.thoth.connectionError');
-        }
+        return $this->getWorkStatusController->get($submission, $response);
     }
 
     public function unlinkWork($slimRequest, $response, $args)
