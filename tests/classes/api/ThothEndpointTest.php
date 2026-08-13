@@ -3,6 +3,8 @@
 require_once(__DIR__ . '/../../../vendor/autoload.php');
 
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
+use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
+use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use PKP\tests\PKPTestCase;
@@ -13,7 +15,7 @@ class ThothEndpointTest extends PKPTestCase
 {
     public function testSubmissionMustBelongToRequestContext(): void
     {
-        $endpoint = new class ($this->createWorkStatusController()) extends ThothEndpoint {
+        $endpoint = new class ($this->createWorkStatusController(), $this->createUnlinkWork()) extends ThothEndpoint {
             public function isSubmissionInContextForTest($submission, $context)
             {
                 return $this->isSubmissionInContext($submission, $context);
@@ -31,6 +33,14 @@ class ThothEndpointTest extends PKPTestCase
     private function createWorkStatusController(): GetWorkStatusController
     {
         return new GetWorkStatusController(new GetWorkStatus($this->createMock(WorkGateway::class)));
+    }
+
+    private function createUnlinkWork(): UnlinkWork
+    {
+        return new UnlinkWork(
+            $this->createMock(WorkGateway::class),
+            $this->createMock(SubmissionLinkRepository::class)
+        );
     }
 
     private function createObjectWithIdAndContext($id, $contextId)
