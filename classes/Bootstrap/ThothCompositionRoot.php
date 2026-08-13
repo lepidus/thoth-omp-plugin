@@ -2,13 +2,16 @@
 
 namespace APP\plugins\generic\thoth\classes\Bootstrap;
 
+use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
+use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
 use APP\plugins\generic\thoth\classes\Contracts\NotificationPublisher;
 use APP\plugins\generic\thoth\classes\Contracts\PluginLogger;
 use APP\plugins\generic\thoth\classes\Contracts\PublicationReader;
 use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookRegistrar;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyNotificationPublisher;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPluginLogger;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationReader;
@@ -20,6 +23,7 @@ use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 final class ThothCompositionRoot
 {
     private $workLinkServiceFactory;
+    private $bookRegistrationServiceFactory;
     private object $publicationRepository;
     private object $submissionRepository;
     private object $request;
@@ -27,12 +31,14 @@ final class ThothCompositionRoot
 
     public function __construct(
         callable $workLinkServiceFactory,
+        callable $bookRegistrationServiceFactory,
         object $publicationRepository,
         object $submissionRepository,
         object $request,
         object $notification
     ) {
         $this->workLinkServiceFactory = $workLinkServiceFactory;
+        $this->bookRegistrationServiceFactory = $bookRegistrationServiceFactory;
         $this->publicationRepository = $publicationRepository;
         $this->submissionRepository = $submissionRepository;
         $this->request = $request;
@@ -43,6 +49,9 @@ final class ThothCompositionRoot
     {
         $container->bind(WorkGateway::class, function (): WorkGateway {
             return new LegacyWorkGateway(($this->workLinkServiceFactory)());
+        });
+        $container->bind(BookRegistrar::class, function (): BookRegistrar {
+            return new LegacyBookRegistrar(($this->bookRegistrationServiceFactory)());
         });
         $container->bind(PublicationReader::class, function (): PublicationReader {
             return new LegacyPublicationReader($this->publicationRepository);
@@ -62,6 +71,9 @@ final class ThothCompositionRoot
         });
         $container->bind(GetWorkStatus::class, function ($container): GetWorkStatus {
             return new GetWorkStatus($container->make(WorkGateway::class));
+        });
+        $container->bind(RegisterBook::class, function ($container): RegisterBook {
+            return new RegisterBook($container->make(BookRegistrar::class));
         });
         $container->bind(UnlinkWork::class, function ($container): UnlinkWork {
             return new UnlinkWork(

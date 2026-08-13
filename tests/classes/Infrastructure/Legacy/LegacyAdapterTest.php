@@ -2,9 +2,11 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\Infrastructure\Legacy;
 
+use APP\plugins\generic\thoth\classes\Domain\Identifier\ImprintId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\PublicationId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookRegistrar;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyNotificationPublisher;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPluginLogger;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationReader;
@@ -116,5 +118,26 @@ class LegacyAdapterTest extends PKPTestCase
             '[Thoth] WARNING: Remote metadata was preserved '
             . '{"submissionId":17,"authorization":"[redacted]","nested":{"signedUrl":"[redacted]"}}',
         ], $entries);
+    }
+
+    public function testBookRegistrarTranslatesTheLegacyRegistrationResult(): void
+    {
+        import('plugins.generic.thoth.classes.services.ThothBookRegistrationResult');
+        $publication = new stdClass();
+        $legacyResult = new \ThothBookRegistrationResult(self::WORK_ID);
+        $legacyResult->setWarning('warning.key');
+        $service = $this->getMockBuilder(stdClass::class)->addMethods(['register'])->getMock();
+        $service->expects($this->once())
+            ->method('register')
+            ->with($publication, 'f740cf4e-16d1-487c-9a92-615882a591e9')
+            ->willReturn($legacyResult);
+
+        $result = (new LegacyBookRegistrar($service))->register(
+            $publication,
+            new ImprintId('f740cf4e-16d1-487c-9a92-615882a591e9')
+        );
+
+        $this->assertSame(self::WORK_ID, $result->getWorkId()->toString());
+        $this->assertSame('warning.key', $result->getSynchronizationResult()->getWarnings()[0]->getMessageKey());
     }
 }

@@ -57,6 +57,9 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                 function (): object {
                     return new ThothWorkLinkService(ThothContainer::getInstance()->get('workRepository'));
                 },
+                function (): object {
+                    return ThothContainer::getInstance()->get('bookRegistrationService');
+                },
                 Repo::publication(),
                 Repo::submission(),
                 Application::get()->getRequest(),
