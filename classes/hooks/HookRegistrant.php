@@ -18,7 +18,6 @@ namespace APP\plugins\generic\thoth\classes\hooks;
 
 use APP\core\Application;
 use APP\plugins\generic\thoth\classes\api\ThothEndpoint;
-use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\components\forms\config\CatalogEntryFormConfig;
 use APP\plugins\generic\thoth\classes\components\forms\config\ContributorFormConfig;
 use APP\plugins\generic\thoth\classes\components\forms\config\PublishFormConfig;
@@ -27,6 +26,7 @@ use APP\plugins\generic\thoth\classes\listeners\PublicationEditListener;
 use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use APP\plugins\generic\thoth\classes\schema\ThothSchema;
 use APP\plugins\generic\thoth\classes\services\ThothCatalogFilesCacheService;
 use APP\plugins\generic\thoth\classes\templateFilters\ThothCatalogFilesTemplateFilter;
@@ -40,16 +40,16 @@ class HookRegistrant
 {
     private GenericPlugin $plugin;
     private GetWorkStatusController $getWorkStatusController;
-    private UnlinkWork $unlinkWork;
+    private UnlinkWorkController $unlinkWorkController;
 
     public function __construct(
         GenericPlugin $plugin,
         GetWorkStatusController $getWorkStatusController,
-        UnlinkWork $unlinkWork
+        UnlinkWorkController $unlinkWorkController
     ) {
         $this->plugin = $plugin;
         $this->getWorkStatusController = $getWorkStatusController;
-        $this->unlinkWork = $unlinkWork;
+        $this->unlinkWorkController = $unlinkWorkController;
     }
 
     public function register(): void
@@ -104,7 +104,7 @@ class HookRegistrant
 
     private function registerEndpoints(): void
     {
-        $endpoint = new ThothEndpoint($this->getWorkStatusController, $this->unlinkWork);
+        $endpoint = new ThothEndpoint($this->getWorkStatusController, $this->unlinkWorkController);
         Hook::add('APIHandler::endpoints::_submissions', $endpoint->addEndpoints(...));
     }
 

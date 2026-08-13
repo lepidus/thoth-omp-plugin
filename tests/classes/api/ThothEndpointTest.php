@@ -10,6 +10,7 @@ use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use PKP\core\PKPRequest;
 use PKP\plugins\interfaces\HasAuthorizationPolicy;
 use PKP\security\authorization\SubmissionAccessPolicy;
@@ -24,7 +25,7 @@ class ThothEndpointTest extends PKPTestCase
             $this->createMock(WorkGateway::class),
             $this->createMock(SubmissionLinkRepository::class)
         );
-        $endpoint = new ThothEndpoint($controller, $unlinkWork);
+        $endpoint = new ThothEndpoint($controller, new UnlinkWorkController($unlinkWork));
         $args = [];
 
         $policies = $endpoint->getPolicies($this->createMock(PKPRequest::class), $args, []);

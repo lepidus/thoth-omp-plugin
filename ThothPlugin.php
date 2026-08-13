@@ -22,12 +22,12 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use APP\core\Application;
 use APP\facades\Repo;
-use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\hooks\HookRegistrant;
 use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use APP\plugins\generic\thoth\classes\services\ThothWorkLinkService;
 use PKP\core\JSONMessage;
 use PKP\core\PKPContainer;
@@ -53,7 +53,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
             $hookRegistrant = new HookRegistrant(
                 $this,
                 PKPContainer::getInstance()->make(GetWorkStatusController::class),
-                PKPContainer::getInstance()->make(UnlinkWork::class)
+                PKPContainer::getInstance()->make(UnlinkWorkController::class)
             );
             $hookRegistrant->register();
         }

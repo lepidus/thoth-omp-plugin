@@ -15,6 +15,7 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationRea
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 
 final class ThothCompositionRoot
 {
@@ -65,6 +66,12 @@ final class ThothCompositionRoot
             GetWorkStatusController::class,
             fn ($container): GetWorkStatusController => new GetWorkStatusController(
                 $container->make(GetWorkStatus::class)
+            )
+        );
+        $container->bind(
+            UnlinkWorkController::class,
+            fn ($container): UnlinkWorkController => new UnlinkWorkController(
+                $container->make(UnlinkWork::class)
             )
         );
     }
