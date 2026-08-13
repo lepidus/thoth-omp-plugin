@@ -3,7 +3,9 @@
 import('lib.pkp.tests.PKPTestCase');
 import('plugins.generic.thoth.classes.Application.Registration.RegisterBook');
 import('plugins.generic.thoth.classes.Contracts.BookRegistrar');
+import('plugins.generic.thoth.classes.Contracts.SubmissionLinkRepository');
 import('plugins.generic.thoth.classes.Domain.Identifier.ImprintId');
+import('plugins.generic.thoth.classes.Domain.Identifier.SubmissionId');
 import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
 import('plugins.generic.thoth.classes.Domain.Result.RegistrationResult');
 import('plugins.generic.thoth.classes.Domain.Result.SynchronizationResult');
@@ -19,12 +21,31 @@ class RegisterBookTest extends PKPTestCase
             new SynchronizationResult()
         );
         $registrar = new BookRegistrarDouble($result);
+        $links = $this->createMock(SubmissionLinkRepository::class);
+        $submissionId = new SubmissionId(17);
+        $links->expects($this->once())->method('saveWorkId')->with($submissionId, $result->getWorkId());
 
-        $actualResult = (new RegisterBook($registrar))->execute($publication, $imprintId);
+        $actualResult = (new RegisterBook($registrar, $links))->execute($publication, $imprintId, $submissionId);
 
         $this->assertSame($result, $actualResult);
         $this->assertSame($publication, $registrar->publication);
         $this->assertSame($imprintId, $registrar->imprintId);
+    }
+
+    public function testItDoesNotCreateALocalLinkWhenRegistrationFails(): void
+    {
+        $registrar = $this->createMock(BookRegistrar::class);
+        $registrar->method('register')->willThrowException(new RuntimeException('registration failed'));
+        $links = $this->createMock(SubmissionLinkRepository::class);
+        $links->expects($this->never())->method('saveWorkId');
+
+        $this->expectException(RuntimeException::class);
+
+        (new RegisterBook($registrar, $links))->execute(
+            new stdClass(),
+            new ImprintId('f740cf4e-16d1-487c-9a92-615882a591e9'),
+            new SubmissionId(17)
+        );
     }
 }
 

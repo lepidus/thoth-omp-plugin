@@ -21,19 +21,23 @@ import('plugins.generic.thoth.classes.facades.ThothRepo');
 import('plugins.generic.thoth.classes.exceptions.MetadataSynchronizationException');
 import('plugins.generic.thoth.classes.notification.ThothNotification');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
+import('plugins.generic.thoth.classes.Presentation.Api.RegisterBookController');
 import('plugins.generic.thoth.classes.Presentation.Api.UnlinkWorkController');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class ThothEndpoint
 {
     private GetWorkStatusController $getWorkStatusController;
+    private RegisterBookController $registerBookController;
     private UnlinkWorkController $unlinkWorkController;
 
     public function __construct(
         GetWorkStatusController $getWorkStatusController,
+        RegisterBookController $registerBookController,
         UnlinkWorkController $unlinkWorkController
     ) {
         $this->getWorkStatusController = $getWorkStatusController;
+        $this->registerBookController = $registerBookController;
         $this->unlinkWorkController = $unlinkWorkController;
     }
 
@@ -108,90 +112,7 @@ class ThothEndpoint
 
     public function register($slimRequest, $response, $args)
     {
-        $request = Application::get()->getRequest();
-        $handler = $request->getRouter()->getHandler();
-        $submission = $handler->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION);
-        $params = $slimRequest->getParsedBody();
-
-        $thothImprintId = $params['thothImprintId'];
-        if (!$thothImprintId) {
-            return $response->withStatus(400)->withJson(
-                ['thothImprintId' => [__('plugins.generic.thoth.imprint.required')]]
-            );
-        }
-
-        if (!$submission) {
-            return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
-        }
-
-        if (!$request->getContext()) {
-            return $response->withStatus(403)->withJsonError('api.submissions.403.contextRequired');
-        }
-
-        if ($submission->getData('thothWorkId')) {
-            return $response->withStatus(403)->withJsonError('plugins.generic.thoth.api.403.alreadyRegistered');
-        }
-
-        $publication = $submission->getCurrentPublication();
-
-        $failure = [
-            'id' => $submission->getId(),
-            'errors' => []
-        ];
-
-        try {
-            $failure['errors'] = ThothService::book()->validate($publication);
-        } catch (Exception $e) {
-            $failure['errors'][] = __('plugins.generic.thoth.connectionError');
-        }
-
-        if ($failure['errors']) {
-            return $response->withStatus(400)->withJson($failure);
-        }
-
-        AppLocale::requireComponents(LOCALE_COMPONENT_PKP_SUBMISSION, LOCALE_COMPONENT_APP_SUBMISSION);
-
-        $disableNotification = $params['disableNotification'] ?? false;
-        $registrationResult = null;
-        try {
-            $thothBookRegistrationService = ThothService::bookRegistration();
-            $registrationResult = $thothBookRegistrationService->register($publication, $thothImprintId);
-            $thothBookRegistrationService->setActive($registrationResult);
-            $thothBookId = $registrationResult->getWorkId();
-            $submission = Services::get('submission')->edit($submission, ['thothWorkId' => $thothBookId], $request);
-            $this->handleNotification(
-                $request,
-                $submission,
-                true,
-                $disableNotification,
-                null,
-                $registrationResult->getWarning()
-            );
-        } catch (QueryException $e) {
-            if ($registrationResult !== null) {
-                $thothBookRegistrationService->deleteRegisteredEntry($registrationResult);
-            }
-            $this->handleNotification(
-                $request,
-                $submission,
-                false,
-                $disableNotification,
-                $e,
-                $registrationResult ? $registrationResult->getWarning() : null
-            );
-            $failure['errors'][] = __('plugins.generic.thoth.register.error.log', ['reason' => $e->getMessage()]);
-            return $response->withStatus(403)->withJson($failure);
-        }
-
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO');
-
-        $submissionProps = Services::get('submission')->getFullProperties($submission, [
-            'request' => $request,
-            'slimRequest' => $slimRequest,
-            'userGroups' => $userGroupDao->getByContextId($submission->getData('contextId'))->toArray(),
-        ]);
-
-        return $response->withJson($submissionProps, 200);
+        return $this->registerBookController->register($slimRequest, $response, $args);
     }
 
     public function uploadFeatureVideo($slimRequest, $response, $args)

@@ -18,6 +18,7 @@ import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationRea
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacySubmissionLinkRepository');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkGateway');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
+import('plugins.generic.thoth.classes.Presentation.Api.RegisterBookController');
 import('plugins.generic.thoth.classes.Presentation.Api.UnlinkWorkController');
 
 use Illuminate\Container\Container;
@@ -65,6 +66,7 @@ class ThothCompositionRootTest extends PKPTestCase
             GetWorkStatusController::class,
             $container->make(GetWorkStatusController::class)
         );
+        $this->assertInstanceOf(RegisterBookController::class, $container->make(RegisterBookController::class));
         $this->assertInstanceOf(UnlinkWorkController::class, $container->make(UnlinkWorkController::class));
         $this->assertNotSame($container->make(WorkGateway::class), $container->make(WorkGateway::class));
     }
