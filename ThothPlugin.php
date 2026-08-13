@@ -20,8 +20,15 @@ namespace APP\plugins\generic\thoth;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
+use APP\core\Application;
+use APP\facades\Repo;
+use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
+use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\hooks\HookRegistrant;
+use APP\plugins\generic\thoth\classes\notification\ThothNotification;
+use APP\plugins\generic\thoth\classes\services\ThothWorkLinkService;
 use PKP\core\JSONMessage;
+use PKP\core\PKPContainer;
 use PKP\linkAction\LinkAction;
 use PKP\linkAction\request\AjaxModal;
 
@@ -32,6 +39,15 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
         $success = parent::register($category, $path);
 
         if ($success && $this->getEnabled()) {
+            $compositionRoot = new ThothCompositionRoot(
+                fn (): object => new ThothWorkLinkService(ThothContainer::getInstance()->get('workRepository')),
+                Repo::publication(),
+                Repo::submission(),
+                Application::get()->getRequest(),
+                new ThothNotification()
+            );
+            $compositionRoot->register(PKPContainer::getInstance());
+
             $hookRegistrant = new HookRegistrant($this);
             $hookRegistrant->register();
         }

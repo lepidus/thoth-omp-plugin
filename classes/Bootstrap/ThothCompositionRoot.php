@@ -1,0 +1,51 @@
+<?php
+
+namespace APP\plugins\generic\thoth\classes\Bootstrap;
+
+use APP\plugins\generic\thoth\classes\Contracts\NotificationPublisher;
+use APP\plugins\generic\thoth\classes\Contracts\PluginLogger;
+use APP\plugins\generic\thoth\classes\Contracts\PublicationReader;
+use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
+use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyNotificationPublisher;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPluginLogger;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationReader;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubmissionLinkRepository;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
+
+final class ThothCompositionRoot
+{
+    public function __construct(
+        private $workLinkServiceFactory,
+        private object $publicationRepository,
+        private object $submissionRepository,
+        private object $request,
+        private object $notification
+    ) {
+    }
+
+    public function register(object $container): void
+    {
+        $container->bind(
+            WorkGateway::class,
+            fn (): WorkGateway => new LegacyWorkGateway(($this->workLinkServiceFactory)())
+        );
+        $container->bind(
+            PublicationReader::class,
+            fn (): PublicationReader => new LegacyPublicationReader($this->publicationRepository)
+        );
+        $container->bind(
+            SubmissionLinkRepository::class,
+            fn (): SubmissionLinkRepository => new LegacySubmissionLinkRepository($this->submissionRepository)
+        );
+        $container->bind(
+            NotificationPublisher::class,
+            fn (): NotificationPublisher => new LegacyNotificationPublisher(
+                $this->request,
+                $this->submissionRepository,
+                $this->notification
+            )
+        );
+        $container->bind(PluginLogger::class, fn (): PluginLogger => new LegacyPluginLogger());
+    }
+}
