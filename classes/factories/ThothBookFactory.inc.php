@@ -13,7 +13,6 @@
  * @brief A factory to create Thoth books
  */
 
-use ThothApi\GraphQL\Enums\WorkStatus;
 use ThothApi\GraphQL\Enums\WorkType;
 use ThothApi\GraphQL\Inputs\PatchWork as ThothWork;
 
@@ -21,6 +20,14 @@ import('classes.submission.Submission');
 import('plugins.generic.thoth.classes.formatters.DoiFormatter');
 class ThothBookFactory
 {
+    private BookRegistrationPolicy $registrationPolicy;
+
+    public function __construct(?BookRegistrationPolicy $registrationPolicy = null)
+    {
+        import('plugins.generic.thoth.classes.Domain.Registration.BookRegistrationPolicy');
+        $this->registrationPolicy = $registrationPolicy ?? new BookRegistrationPolicy();
+    }
+
     public function createFromPublication($publication)
     {
         $request = Application::get()->getRequest();
@@ -91,11 +98,7 @@ class ThothBookFactory
 
     public function getWorkStatusByDatePublished($datePublished)
     {
-        if ($datePublished && $datePublished <= \Core::getCurrentDate()) {
-            return WorkStatus::ACTIVE;
-        }
-
-        return WorkStatus::FORTHCOMING;
+        return $this->registrationPolicy->initialWorkStatus();
     }
 
     public function getDoi($publication)

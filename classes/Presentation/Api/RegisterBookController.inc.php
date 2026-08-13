@@ -5,16 +5,19 @@ use ThothApi\Exception\QueryException;
 import('plugins.generic.thoth.classes.Application.Registration.RegisterBook');
 import('plugins.generic.thoth.classes.Domain.Identifier.ImprintId');
 import('plugins.generic.thoth.classes.Domain.Identifier.SubmissionId');
+import('plugins.generic.thoth.classes.Domain.Registration.BookRegistrationPolicy');
 import('plugins.generic.thoth.classes.facades.ThothService');
 import('plugins.generic.thoth.classes.notification.ThothNotification');
 
 final class RegisterBookController
 {
     private RegisterBook $registerBook;
+    private BookRegistrationPolicy $registrationPolicy;
 
-    public function __construct(RegisterBook $registerBook)
+    public function __construct(RegisterBook $registerBook, BookRegistrationPolicy $registrationPolicy)
     {
         $this->registerBook = $registerBook;
+        $this->registrationPolicy = $registrationPolicy;
     }
 
     public function register($slimRequest, $response, array $args)
@@ -23,9 +26,10 @@ final class RegisterBookController
         $handler = $request->getRouter()->getHandler();
         $submission = $handler->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION);
         $params = $slimRequest->getParsedBody();
-        $thothImprintId = $params['thothImprintId'];
+        $thothImprintId = $params['thothImprintId'] ?? null;
 
-        if (!$thothImprintId) {
+        $eligibility = $this->registrationPolicy->evaluate(true, $thothImprintId, null, []);
+        if ($eligibility->isImprintMissing()) {
             return $response->withStatus(400)->withJson(
                 ['thothImprintId' => [__('plugins.generic.thoth.imprint.required')]]
             );
@@ -36,7 +40,13 @@ final class RegisterBookController
         if (!$request->getContext()) {
             return $response->withStatus(403)->withJsonError('api.submissions.403.contextRequired');
         }
-        if ($submission->getData('thothWorkId')) {
+        $eligibility = $this->registrationPolicy->evaluate(
+            true,
+            $thothImprintId,
+            $submission->getData('thothWorkId'),
+            []
+        );
+        if ($eligibility->isAlreadyRegistered()) {
             return $response->withStatus(403)->withJsonError('plugins.generic.thoth.api.403.alreadyRegistered');
         }
 
@@ -48,7 +58,9 @@ final class RegisterBookController
         } catch (Exception $exception) {
             $failure['errors'][] = __('plugins.generic.thoth.connectionError');
         }
-        if ($failure['errors']) {
+        $eligibility = $this->registrationPolicy->evaluate(true, $thothImprintId, null, $failure['errors']);
+        if (!$eligibility->isEligible()) {
+            $failure['errors'] = $eligibility->getMetadataErrors();
             return $response->withStatus(400)->withJson($failure);
         }
 

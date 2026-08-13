@@ -8,6 +8,7 @@ import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
 import('plugins.generic.thoth.classes.Domain.Result.RegistrationResult');
 import('plugins.generic.thoth.classes.Domain.Result.SynchronizationResult');
 import('plugins.generic.thoth.classes.Domain.Result.SynchronizationWarning');
+import('plugins.generic.thoth.classes.Domain.Registration.BookRegistrationPolicy');
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 
 class PublicationPublishListenerTest extends PKPTestCase
@@ -77,7 +78,12 @@ class PublicationPublishListenerTest extends PKPTestCase
                 })
             );
 
-        $listener = new PublicationPublishListener(new RegisterBook($registrar, $links), $request, $notification);
+        $listener = new PublicationPublishListener(
+            new RegisterBook($registrar, $links),
+            $request,
+            $notification,
+            new BookRegistrationPolicy()
+        );
         $listener->registerThothBook('Publication::publish', [$publication, null, $submission]);
 
         $this->assertSame(0, $notification->errors);
