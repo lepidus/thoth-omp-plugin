@@ -16,10 +16,17 @@
 
 namespace APP\plugins\generic\thoth\classes\services;
 
+use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
+use APP\plugins\generic\thoth\classes\Domain\Identifier\ImprintId;
+use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
-use ThothApi\GraphQL\Enums\WorkStatus;
+use APP\plugins\generic\thoth\classes\Domain\Result\RegistrationResult;
+use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationResult;
+use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationWarning;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\ThothErrorTranslator;
+use ThothApi\Exception\QueryException;
 
-class ThothBookRegistrationService
+class ThothBookRegistrationService implements BookRegistrar
 {
     private $factory;
     private $repository;
@@ -33,6 +40,7 @@ class ThothBookRegistrationService
     private ThothWorkRelationService $workRelationService;
     private ?ThothFrontcoverService $frontcoverService;
     private BookRegistrationPolicy $registrationPolicy;
+    private ThothErrorTranslator $errorTranslator;
 
     public function __construct(
         $factory,
@@ -46,7 +54,8 @@ class ThothBookRegistrationService
         ThothTitleService $titleService,
         ThothWorkRelationService $workRelationService,
         ?ThothFrontcoverService $frontcoverService = null,
-        ?BookRegistrationPolicy $registrationPolicy = null
+        ?BookRegistrationPolicy $registrationPolicy = null,
+        ?ThothErrorTranslator $errorTranslator = null
     ) {
         $this->factory = $factory;
         $this->repository = $repository;
@@ -60,47 +69,50 @@ class ThothBookRegistrationService
         $this->workRelationService = $workRelationService;
         $this->frontcoverService = $frontcoverService;
         $this->registrationPolicy = $registrationPolicy ?? new BookRegistrationPolicy();
+        $this->errorTranslator = $errorTranslator ?? new ThothErrorTranslator();
     }
 
-    public function register($publication, $thothImprintId): ThothBookRegistrationResult
+    public function register(object $publication, ImprintId $imprintId): RegistrationResult
     {
-        $thothBook = $this->factory->createFromPublication($publication);
-        $thothBook->setImprintId($thothImprintId);
+        try {
+            $thothBook = $this->factory->createFromPublication($publication);
+            $thothBook->setImprintId($imprintId->toString());
 
-        $thothBook->setWorkStatus($this->registrationPolicy->initialWorkStatus());
+            $thothBook->setWorkStatus($this->registrationPolicy->initialWorkStatus());
 
-        $thothBookId = $this->repository->add($thothBook);
-        $publication->setData('thothBookId', $thothBookId);
-        $registrationResult = new ThothBookRegistrationResult($thothBookId);
+            $thothBookId = $this->repository->add($thothBook);
+            $publication->setData('thothBookId', $thothBookId);
 
-        $this->registerMetadata($publication, $thothBookId);
+            $this->registerMetadata($publication, $thothBookId);
 
-        $this->contributionService->registerByPublication($publication);
-        $this->publicationService->registerByPublication($publication);
-        $this->languageService->registerByPublication($publication);
-        $this->subjectService->registerByPublication($publication);
-        $this->referenceService->registerByPublication($publication);
-        $this->workRelationService->registerByPublication($publication, $thothImprintId);
-        $registrationResult->setWarning($this->frontcoverService?->sync($publication, $thothBookId));
+            $this->contributionService->registerByPublication($publication);
+            $this->publicationService->registerByPublication($publication);
+            $this->languageService->registerByPublication($publication);
+            $this->subjectService->registerByPublication($publication);
+            $this->referenceService->registerByPublication($publication);
+            $this->workRelationService->registerByPublication($publication, $imprintId->toString());
+            $warning = $this->frontcoverService?->sync($publication, $thothBookId);
+        } catch (QueryException $exception) {
+            throw $this->errorTranslator->registrationFailure($exception);
+        }
 
-        return $registrationResult;
+        $synchronizationResult = new SynchronizationResult();
+        if ($warning) {
+            $synchronizationResult = $synchronizationResult->withWarning(new SynchronizationWarning($warning));
+        }
+
+        return new RegistrationResult(new WorkId($thothBookId), $synchronizationResult);
     }
 
-    public function deleteRegisteredEntry(ThothBookRegistrationResult $registrationResult): void
+    public function rollback(object $publication): void
     {
-        $this->repository->delete($registrationResult->getWorkId());
-    }
-
-    public function setActive(ThothBookRegistrationResult $registrationResult): void
-    {
-        if (!$registrationResult->shouldActivate()) {
+        $workId = $publication->getData('thothBookId');
+        if (!$workId) {
             return;
         }
 
-        $thothBook = $registrationResult->getBookToActivate();
-        $thothBook->setWorkId($registrationResult->getWorkId());
-        $thothBook->setWorkStatus(WorkStatus::ACTIVE);
-        $this->repository->edit($thothBook);
+        $this->repository->delete($workId);
+        $publication->setData('thothBookId', null);
     }
 
     private function registerMetadata($publication, string $thothBookId): void
