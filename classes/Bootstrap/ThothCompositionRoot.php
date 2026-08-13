@@ -2,13 +2,16 @@
 
 namespace APP\plugins\generic\thoth\classes\Bootstrap;
 
+use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
+use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
 use APP\plugins\generic\thoth\classes\Contracts\NotificationPublisher;
 use APP\plugins\generic\thoth\classes\Contracts\PluginLogger;
 use APP\plugins\generic\thoth\classes\Contracts\PublicationReader;
 use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookRegistrar;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyNotificationPublisher;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPluginLogger;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationReader;
@@ -21,6 +24,7 @@ final class ThothCompositionRoot
 {
     public function __construct(
         private $workLinkServiceFactory,
+        private $bookRegistrationServiceFactory,
         private object $publicationRepository,
         private object $submissionRepository,
         private object $request,
@@ -33,6 +37,10 @@ final class ThothCompositionRoot
         $container->bind(
             WorkGateway::class,
             fn (): WorkGateway => new LegacyWorkGateway(($this->workLinkServiceFactory)())
+        );
+        $container->bind(
+            BookRegistrar::class,
+            fn (): BookRegistrar => new LegacyBookRegistrar(($this->bookRegistrationServiceFactory)())
         );
         $container->bind(
             PublicationReader::class,
@@ -54,6 +62,10 @@ final class ThothCompositionRoot
         $container->bind(
             GetWorkStatus::class,
             fn ($container): GetWorkStatus => new GetWorkStatus($container->make(WorkGateway::class))
+        );
+        $container->bind(
+            RegisterBook::class,
+            fn ($container): RegisterBook => new RegisterBook($container->make(BookRegistrar::class))
         );
         $container->bind(
             UnlinkWork::class,

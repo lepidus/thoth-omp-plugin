@@ -43,6 +43,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
         if ($success && $this->getEnabled()) {
             $compositionRoot = new ThothCompositionRoot(
                 fn (): object => new ThothWorkLinkService(ThothContainer::getInstance()->get('workRepository')),
+                fn (): object => ThothContainer::getInstance()->get('bookRegistrationService'),
                 Repo::publication(),
                 Repo::submission(),
                 Application::get()->getRequest(),
