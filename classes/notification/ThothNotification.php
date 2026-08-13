@@ -65,7 +65,7 @@ class ThothNotification
         $notificationMgr->createTrivialNotification(
             $currentUser->getId(),
             $notificationType,
-            ['contents' => __($messageKey)]
+            ['contents' => $this->notificationContents($messageKey, $error)]
         );
 
         $this->logInfo($request, $submission, $messageKey . '.log', $error);
@@ -103,6 +103,16 @@ class ThothNotification
         }
 
         return json_encode($error);
+    }
+
+    private function notificationContents(string $messageKey, ?string $cause): string
+    {
+        $message = __($messageKey);
+        if ($cause === null || $cause === '') {
+            return $message;
+        }
+
+        return $message . ' ' . __('plugins.generic.thoth.error.cause', ['cause' => $cause]);
     }
 
     public function addJavaScriptData($request, $templateMgr)

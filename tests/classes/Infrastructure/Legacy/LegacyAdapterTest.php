@@ -2,6 +2,9 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\Infrastructure\Legacy;
 
+require_once(__DIR__ . '/../../../../vendor/autoload.php');
+
+use APP\plugins\generic\thoth\classes\Application\Exception\RegistrationFailed;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\ImprintId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\PublicationId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
@@ -16,6 +19,7 @@ use APP\plugins\generic\thoth\classes\services\ThothBookRegistrationResult;
 use PKP\notification\Notification;
 use PKP\tests\PKPTestCase;
 use RuntimeException;
+use ThothApi\Exception\QueryException;
 
 class LegacyAdapterTest extends PKPTestCase
 {
@@ -113,6 +117,33 @@ class LegacyAdapterTest extends PKPTestCase
         ], $notifications);
     }
 
+    public function testNotificationPublisherUsesLocalizedFallbackForLogOnlyFailure(): void
+    {
+        $user = $this->createMock(UserDouble::class);
+        $user->method('getId')->willReturn(7);
+        $request = $this->createMock(RequestDouble::class);
+        $request->method('getUser')->willReturn($user);
+        $submission = new \stdClass();
+        $repository = $this->createMock(RecordRepositoryDouble::class);
+        $repository->method('get')->with(17)->willReturn($submission);
+        $notification = $this->createMock(NotificationDouble::class);
+        $notification->expects($this->never())->method('notify');
+        $notification->expects($this->once())->method('logInfo')->with(
+            $request,
+            $submission,
+            'plugins.generic.thoth.register.error.log',
+            __('plugins.generic.thoth.connectionError')
+        );
+
+        (new LegacyNotificationPublisher($request, $repository, $notification))->publishError(
+            7,
+            new SubmissionId(17),
+            'plugins.generic.thoth.register.error',
+            null,
+            false
+        );
+    }
+
     public function testPluginLoggerWritesStructuredContextToTheLegacyChannel(): void
     {
         $entries = [];
@@ -153,6 +184,25 @@ class LegacyAdapterTest extends PKPTestCase
 
         $this->assertSame(self::WORK_ID, $result->getWorkId()->toString());
         $this->assertSame('warning.key', $result->getSynchronizationResult()->getWarnings()[0]->getMessageKey());
+    }
+
+    public function testBookRegistrarDoesNotLeakTheClientException(): void
+    {
+        $service = $this->createMock(BookRegistrationServiceDouble::class);
+        $service->method('register')->willThrowException(new QueryException([
+            'message' => 'The imprint is not available',
+        ]));
+
+        try {
+            (new LegacyBookRegistrar($service))->register(
+                new \stdClass(),
+                new ImprintId('f740cf4e-16d1-487c-9a92-615882a591e9')
+            );
+            $this->fail('The normalized registration failure should be thrown');
+        } catch (RegistrationFailed $failure) {
+            $this->assertSame('The imprint is not available', $failure->getSafeCause());
+            $this->assertInstanceOf(QueryException::class, $failure->getPrevious());
+        }
     }
 
     public function testBookRegistrarRollbackDeletesTheCreatedWorkOnlyOnce(): void
@@ -231,4 +281,6 @@ interface NotificationDouble
     ): void;
 
     public function notifyWarning(object $request, object $submission, string $messageKey): void;
+
+    public function logInfo(object $request, object $submission, string $messageKey, ?string $cause = null): void;
 }

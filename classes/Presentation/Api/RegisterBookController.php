@@ -4,6 +4,8 @@ namespace APP\plugins\generic\thoth\classes\Presentation\Api;
 
 use APP\core\Application;
 use APP\facades\Repo;
+use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
+use APP\plugins\generic\thoth\classes\Application\Exception\ExternalServiceFailure;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\ImprintId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
@@ -17,13 +19,13 @@ use Illuminate\Http\Response;
 use PKP\core\PKPBaseController;
 use PKP\db\DAORegistry;
 use PKP\userGroup\UserGroup;
-use ThothApi\Exception\QueryException;
 
 final class RegisterBookController
 {
     public function __construct(
         private readonly RegisterBook $registerBook,
-        private readonly BookRegistrationPolicy $registrationPolicy
+        private readonly BookRegistrationPolicy $registrationPolicy,
+        private readonly ExternalFailureReporter $failureReporter
     ) {
     }
 
@@ -95,11 +97,22 @@ final class RegisterBookController
                 null,
                 $this->warningKeys($result)
             );
-        } catch (QueryException $exception) {
-            $this->handleNotification($request, $submission, false, $disableNotification, $exception);
+        } catch (ExternalServiceFailure $exception) {
+            $cause = $exception->getSafeCause() ?? __('plugins.generic.thoth.connectionError');
+            $this->failureReporter->report(
+                $exception,
+                (int) $request->getUser()->getId(),
+                new SubmissionId($submissionId),
+                [
+                    'contextId' => (int) $request->getContext()->getId(),
+                    'submissionId' => $submissionId,
+                    'publicationId' => (int) $publication->getId(),
+                ],
+                !$disableNotification
+            );
             $failure['errors'][] = __(
                 'plugins.generic.thoth.register.error.log',
-                ['reason' => $exception->getMessage()]
+                ['reason' => $cause]
             );
             return response()->json($failure, Response::HTTP_BAD_REQUEST);
         }

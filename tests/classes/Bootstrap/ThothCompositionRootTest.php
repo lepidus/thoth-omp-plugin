@@ -2,6 +2,7 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\Bootstrap;
 
+use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
@@ -60,6 +61,7 @@ class ThothCompositionRootTest extends PKPTestCase
             $container->make(NotificationPublisher::class)
         );
         $this->assertInstanceOf(LegacyPluginLogger::class, $container->make(PluginLogger::class));
+        $this->assertInstanceOf(ExternalFailureReporter::class, $container->make(ExternalFailureReporter::class));
         $this->assertInstanceOf(GetWorkStatus::class, $container->make(GetWorkStatus::class));
         $this->assertInstanceOf(RegisterBook::class, $container->make(RegisterBook::class));
         $this->assertInstanceOf(

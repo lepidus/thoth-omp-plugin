@@ -2,6 +2,7 @@
 
 namespace APP\plugins\generic\thoth\classes\Bootstrap;
 
+use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
@@ -67,6 +68,13 @@ final class ThothCompositionRoot
         );
         $container->bind(PluginLogger::class, fn (): PluginLogger => new LegacyPluginLogger());
         $container->bind(
+            ExternalFailureReporter::class,
+            fn ($container): ExternalFailureReporter => new ExternalFailureReporter(
+                $container->make(NotificationPublisher::class),
+                $container->make(PluginLogger::class)
+            )
+        );
+        $container->bind(
             GetWorkStatus::class,
             fn ($container): GetWorkStatus => new GetWorkStatus($container->make(WorkGateway::class))
         );
@@ -83,7 +91,8 @@ final class ThothCompositionRoot
                 $container->make(RegisterBook::class),
                 $this->request,
                 $this->notification,
-                $container->make(BookRegistrationPolicy::class)
+                $container->make(BookRegistrationPolicy::class),
+                $container->make(ExternalFailureReporter::class)
             )
         );
         $container->bind(
@@ -103,7 +112,8 @@ final class ThothCompositionRoot
             RegisterBookController::class,
             fn ($container): RegisterBookController => new RegisterBookController(
                 $container->make(RegisterBook::class),
-                $container->make(BookRegistrationPolicy::class)
+                $container->make(BookRegistrationPolicy::class),
+                $container->make(ExternalFailureReporter::class)
             )
         );
         $container->bind(

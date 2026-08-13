@@ -14,6 +14,7 @@ interface NotificationPublisher
         int $userId,
         SubmissionId $submissionId,
         string $messageKey,
-        ?string $cause = null
+        ?string $cause = null,
+        bool $notifyUser = true
     ): void;
 }
