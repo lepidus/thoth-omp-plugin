@@ -7,6 +7,7 @@ use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use PKP\tests\PKPTestCase;
 
 import('plugins.generic.thoth.classes.api.ThothEndpoint');
@@ -15,7 +16,7 @@ class ThothEndpointTest extends PKPTestCase
 {
     public function testSubmissionMustBelongToRequestContext(): void
     {
-        $endpoint = new class ($this->createWorkStatusController(), $this->createUnlinkWork()) extends ThothEndpoint {
+        $endpoint = new class ($this->createWorkStatusController(), $this->createUnlinkWorkController()) extends ThothEndpoint {
             public function isSubmissionInContextForTest($submission, $context)
             {
                 return $this->isSubmissionInContext($submission, $context);
@@ -35,11 +36,13 @@ class ThothEndpointTest extends PKPTestCase
         return new GetWorkStatusController(new GetWorkStatus($this->createMock(WorkGateway::class)));
     }
 
-    private function createUnlinkWork(): UnlinkWork
+    private function createUnlinkWorkController(): UnlinkWorkController
     {
-        return new UnlinkWork(
-            $this->createMock(WorkGateway::class),
-            $this->createMock(SubmissionLinkRepository::class)
+        return new UnlinkWorkController(
+            new UnlinkWork(
+                $this->createMock(WorkGateway::class),
+                $this->createMock(SubmissionLinkRepository::class)
+            )
         );
     }
 

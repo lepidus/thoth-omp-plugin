@@ -18,9 +18,9 @@
 
 use APP\core\Application;
 use APP\facades\Repo;
-use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use PKP\core\JSONMessage;
 use PKP\core\PKPContainer;
 use PKP\linkAction\LinkAction;
@@ -316,7 +316,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
         $container = PKPContainer::getInstance();
         $thothEndpoint = new ThothEndpoint(
             $container->make(GetWorkStatusController::class),
-            $container->make(UnlinkWork::class)
+            $container->make(UnlinkWorkController::class)
         );
         HookRegistry::register('APIHandler::endpoints', [$thothEndpoint, 'addEndpoints']);
     }
