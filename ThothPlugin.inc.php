@@ -307,7 +307,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
 
     public function addListeners()
     {
-        $publicationPublishListener = new PublicationPublishListener();
+        $publicationPublishListener = PKPContainer::getInstance()->make(PublicationPublishListener::class);
         HookRegistry::register('Publication::validatePublish', [$publicationPublishListener, 'validate']);
         HookRegistry::register('Publication::publish', [$publicationPublishListener, 'registerThothBook']);
 

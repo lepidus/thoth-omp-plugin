@@ -25,6 +25,8 @@ use Illuminate\Container\Container;
 use PKP\tests\PKPTestCase;
 use stdClass;
 
+import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
+
 class ThothCompositionRootTest extends PKPTestCase
 {
     public function testItRegistersTransientLegacyAdaptersForTheNewContracts(): void
@@ -63,6 +65,10 @@ class ThothCompositionRootTest extends PKPTestCase
         $this->assertInstanceOf(LegacyPluginLogger::class, $container->make(PluginLogger::class));
         $this->assertInstanceOf(GetWorkStatus::class, $container->make(GetWorkStatus::class));
         $this->assertInstanceOf(RegisterBook::class, $container->make(RegisterBook::class));
+        $this->assertInstanceOf(
+            \PublicationPublishListener::class,
+            $container->make(\PublicationPublishListener::class)
+        );
         $this->assertInstanceOf(UnlinkWork::class, $container->make(UnlinkWork::class));
         $this->assertInstanceOf(
             GetWorkStatusController::class,

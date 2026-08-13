@@ -21,6 +21,8 @@ use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 
+import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
+
 final class ThothCompositionRoot
 {
     private $workLinkServiceFactory;
@@ -77,6 +79,13 @@ final class ThothCompositionRoot
             return new RegisterBook(
                 $container->make(BookRegistrar::class),
                 $container->make(SubmissionLinkRepository::class)
+            );
+        });
+        $container->bind(\PublicationPublishListener::class, function ($container): \PublicationPublishListener {
+            return new \PublicationPublishListener(
+                $container->make(RegisterBook::class),
+                $this->request,
+                $this->notification
             );
         });
         $container->bind(UnlinkWork::class, function ($container): UnlinkWork {
