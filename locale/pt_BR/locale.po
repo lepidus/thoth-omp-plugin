@@ -133,6 +133,9 @@ msgstr ""
 "Houve um problema ao enviar os metadados da submissão para Thoth. Por favor, tente mais "
 "tarde, ou contate o administrador do sistema."
 
+msgid "plugins.generic.thoth.error.cause"
+msgstr "Causa: {$cause}"
+
 msgid "plugins.generic.thoth.register.error.log"
 msgstr "Erro ao registrar metadados no Thoth: {$reason}"
 

@@ -14,8 +14,8 @@
  * @brief Trigger actions on publication publish event
  */
 
-use ThothApi\Exception\QueryException;
-
+import('plugins.generic.thoth.classes.Application.Exception.ExternalFailureReporter');
+import('plugins.generic.thoth.classes.Application.Exception.ExternalServiceFailure');
 import('plugins.generic.thoth.classes.Application.Registration.RegisterBook');
 import('plugins.generic.thoth.classes.Domain.Identifier.ImprintId');
 import('plugins.generic.thoth.classes.Domain.Identifier.SubmissionId');
@@ -28,17 +28,20 @@ class PublicationPublishListener
     private object $request;
     private object $notification;
     private BookRegistrationPolicy $registrationPolicy;
+    private ExternalFailureReporter $failureReporter;
 
     public function __construct(
         RegisterBook $registerBook,
         object $request,
         object $notification,
-        BookRegistrationPolicy $registrationPolicy
+        BookRegistrationPolicy $registrationPolicy,
+        ExternalFailureReporter $failureReporter
     ) {
         $this->registerBook = $registerBook;
         $this->request = $request;
         $this->notification = $notification;
         $this->registrationPolicy = $registrationPolicy;
+        $this->failureReporter = $failureReporter;
     }
 
     public function validate($hookName, $args)
@@ -95,8 +98,17 @@ class PublicationPublishListener
             foreach ($result->getSynchronizationResult()->getWarnings() as $warning) {
                 $this->notification->notifyWarning($this->request, $submission, $warning->getMessageKey());
             }
-        } catch (QueryException $e) {
-            $this->notification->notifyError($this->request, $submission, $e);
+        } catch (ExternalServiceFailure $exception) {
+            $this->failureReporter->report(
+                $exception,
+                (int) $this->request->getUser()->getId(),
+                new SubmissionId((int) $submission->getId()),
+                [
+                    'contextId' => (int) $submission->getData('contextId'),
+                    'submissionId' => (int) $submission->getId(),
+                    'publicationId' => (int) $publication->getId(),
+                ]
+            );
         }
 
         return false;

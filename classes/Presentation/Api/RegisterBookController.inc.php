@@ -1,7 +1,7 @@
 <?php
 
-use ThothApi\Exception\QueryException;
-
+import('plugins.generic.thoth.classes.Application.Exception.ExternalFailureReporter');
+import('plugins.generic.thoth.classes.Application.Exception.ExternalServiceFailure');
 import('plugins.generic.thoth.classes.Application.Registration.RegisterBook');
 import('plugins.generic.thoth.classes.Domain.Identifier.ImprintId');
 import('plugins.generic.thoth.classes.Domain.Identifier.SubmissionId');
@@ -13,11 +13,16 @@ final class RegisterBookController
 {
     private RegisterBook $registerBook;
     private BookRegistrationPolicy $registrationPolicy;
+    private ExternalFailureReporter $failureReporter;
 
-    public function __construct(RegisterBook $registerBook, BookRegistrationPolicy $registrationPolicy)
-    {
+    public function __construct(
+        RegisterBook $registerBook,
+        BookRegistrationPolicy $registrationPolicy,
+        ExternalFailureReporter $failureReporter
+    ) {
         $this->registerBook = $registerBook;
         $this->registrationPolicy = $registrationPolicy;
+        $this->failureReporter = $failureReporter;
     }
 
     public function register($slimRequest, $response, array $args)
@@ -80,11 +85,22 @@ final class RegisterBookController
                 null,
                 $this->warningKeys($result)
             );
-        } catch (QueryException $exception) {
-            $this->handleNotification($request, $submission, false, $disableNotification, $exception);
+        } catch (ExternalServiceFailure $exception) {
+            $cause = $exception->getSafeCause() ?? __('plugins.generic.thoth.connectionError');
+            $this->failureReporter->report(
+                $exception,
+                (int) $request->getUser()->getId(),
+                new SubmissionId((int) $submissionId),
+                [
+                    'contextId' => (int) $request->getContext()->getId(),
+                    'submissionId' => (int) $submissionId,
+                    'publicationId' => (int) $publication->getId(),
+                ],
+                !$disableNotification
+            );
             $failure['errors'][] = __(
                 'plugins.generic.thoth.register.error.log',
-                ['reason' => $exception->getMessage()]
+                ['reason' => $cause]
             );
             return $response->withStatus(403)->withJson($failure);
         }

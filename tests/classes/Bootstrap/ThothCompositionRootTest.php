@@ -3,6 +3,7 @@
 import('lib.pkp.tests.PKPTestCase');
 import('plugins.generic.thoth.classes.Bootstrap.ThothCompositionRoot');
 import('plugins.generic.thoth.classes.Application.Registration.RegisterBook');
+import('plugins.generic.thoth.classes.Application.Exception.ExternalFailureReporter');
 import('plugins.generic.thoth.classes.Application.Work.GetWorkStatus');
 import('plugins.generic.thoth.classes.Application.Work.UnlinkWork');
 import('plugins.generic.thoth.classes.Contracts.NotificationPublisher');
@@ -61,6 +62,7 @@ class ThothCompositionRootTest extends PKPTestCase
             $container->make(NotificationPublisher::class)
         );
         $this->assertInstanceOf(LegacyPluginLogger::class, $container->make(PluginLogger::class));
+        $this->assertInstanceOf(ExternalFailureReporter::class, $container->make(ExternalFailureReporter::class));
         $this->assertInstanceOf(GetWorkStatus::class, $container->make(GetWorkStatus::class));
         $this->assertInstanceOf(RegisterBook::class, $container->make(RegisterBook::class));
         $this->assertInstanceOf(

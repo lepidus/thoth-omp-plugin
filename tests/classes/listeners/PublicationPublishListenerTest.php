@@ -2,7 +2,10 @@
 
 import('lib.pkp.tests.PKPTestCase');
 import('plugins.generic.thoth.classes.Application.Registration.RegisterBook');
+import('plugins.generic.thoth.classes.Application.Exception.ExternalFailureReporter');
 import('plugins.generic.thoth.classes.Contracts.BookRegistrar');
+import('plugins.generic.thoth.classes.Contracts.NotificationPublisher');
+import('plugins.generic.thoth.classes.Contracts.PluginLogger');
 import('plugins.generic.thoth.classes.Contracts.SubmissionLinkRepository');
 import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
 import('plugins.generic.thoth.classes.Domain.Result.RegistrationResult');
@@ -82,7 +85,11 @@ class PublicationPublishListenerTest extends PKPTestCase
             new RegisterBook($registrar, $links),
             $request,
             $notification,
-            new BookRegistrationPolicy()
+            new BookRegistrationPolicy(),
+            new ExternalFailureReporter(
+                $this->createMock(NotificationPublisher::class),
+                $this->createMock(PluginLogger::class)
+            )
         );
         $listener->registerThothBook('Publication::publish', [$publication, null, $submission]);
 

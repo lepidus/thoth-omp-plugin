@@ -133,6 +133,9 @@ msgstr ""
 "Si è verificato un problema durante l'invio dei metadati della proposta a Thoth. Riprova più tardi o "
 "contatta l'amministratore di sistema."
 
+msgid "plugins.generic.thoth.error.cause"
+msgstr "Causa: {$cause}"
+
 msgid "plugins.generic.thoth.register.error.log"
 msgstr "Errore durante la registrazione dei metadati in Thoth: {$reason}"
 
