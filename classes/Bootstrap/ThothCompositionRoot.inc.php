@@ -1,6 +1,7 @@
 <?php
 
 import('plugins.generic.thoth.classes.Application.Work.GetWorkStatus');
+import('plugins.generic.thoth.classes.Application.Work.UnlinkWork');
 import('plugins.generic.thoth.classes.Contracts.NotificationPublisher');
 import('plugins.generic.thoth.classes.Contracts.PluginLogger');
 import('plugins.generic.thoth.classes.Contracts.PublicationReader');
@@ -58,6 +59,12 @@ final class ThothCompositionRoot
         });
         $container->bind(GetWorkStatus::class, function ($container): GetWorkStatus {
             return new GetWorkStatus($container->make(WorkGateway::class));
+        });
+        $container->bind(UnlinkWork::class, function ($container): UnlinkWork {
+            return new UnlinkWork(
+                $container->make(WorkGateway::class),
+                $container->make(SubmissionLinkRepository::class)
+            );
         });
         $container->bind(GetWorkStatusController::class, function ($container): GetWorkStatusController {
             return new GetWorkStatusController($container->make(GetWorkStatus::class));

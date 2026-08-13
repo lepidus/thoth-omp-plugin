@@ -3,6 +3,7 @@
 import('lib.pkp.tests.PKPTestCase');
 import('plugins.generic.thoth.classes.Bootstrap.ThothCompositionRoot');
 import('plugins.generic.thoth.classes.Application.Work.GetWorkStatus');
+import('plugins.generic.thoth.classes.Application.Work.UnlinkWork');
 import('plugins.generic.thoth.classes.Contracts.NotificationPublisher');
 import('plugins.generic.thoth.classes.Contracts.PluginLogger');
 import('plugins.generic.thoth.classes.Contracts.PublicationReader');
@@ -50,6 +51,7 @@ class ThothCompositionRootTest extends PKPTestCase
         );
         $this->assertInstanceOf(LegacyPluginLogger::class, $container->make(PluginLogger::class));
         $this->assertInstanceOf(GetWorkStatus::class, $container->make(GetWorkStatus::class));
+        $this->assertInstanceOf(UnlinkWork::class, $container->make(UnlinkWork::class));
         $this->assertInstanceOf(
             GetWorkStatusController::class,
             $container->make(GetWorkStatusController::class)

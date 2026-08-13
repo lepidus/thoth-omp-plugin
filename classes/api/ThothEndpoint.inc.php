@@ -20,17 +20,21 @@ import('plugins.generic.thoth.classes.facades.ThothService');
 import('plugins.generic.thoth.classes.facades.ThothRepo');
 import('plugins.generic.thoth.classes.exceptions.MetadataSynchronizationException');
 import('plugins.generic.thoth.classes.notification.ThothNotification');
+import('plugins.generic.thoth.classes.Application.Work.UnlinkWork');
+import('plugins.generic.thoth.classes.Domain.Identifier.SubmissionId');
+import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
-import('plugins.generic.thoth.classes.services.ThothWorkLinkService');
 
 class ThothEndpoint
 {
     private GetWorkStatusController $getWorkStatusController;
+    private UnlinkWork $unlinkWork;
 
-    public function __construct(GetWorkStatusController $getWorkStatusController)
+    public function __construct(GetWorkStatusController $getWorkStatusController, UnlinkWork $unlinkWork)
     {
         $this->getWorkStatusController = $getWorkStatusController;
+        $this->unlinkWork = $unlinkWork;
     }
 
     public function addEndpoints($hookName, $args)
@@ -280,15 +284,16 @@ class ThothEndpoint
         }
 
         try {
-            $workStatus = (new ThothWorkLinkService(ThothRepo::work()))->getStatus($thothWorkId);
-            if ($workStatus !== null) {
+            $unlinked = $this->unlinkWork->execute(
+                new SubmissionId((int) $submission->getId()),
+                new WorkId($thothWorkId)
+            );
+            if (!$unlinked) {
                 return $response->withStatus(409)->withJsonError('plugins.generic.thoth.unlink.existingWork');
             }
         } catch (QueryException $exception) {
             return $response->withStatus(500)->withJsonError('plugins.generic.thoth.connectionError');
         }
-
-        Services::get('submission')->edit($submission, ['thothWorkId' => null], $request);
 
         return $response->withJson(['status' => true], 200);
     }
