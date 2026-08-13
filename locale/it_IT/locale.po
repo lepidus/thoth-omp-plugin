@@ -118,10 +118,12 @@ msgid "plugins.generic.thoth.validation.isbnExists"
 msgstr "Esiste già una pubblicazione con ISBN \"{$isbn}\"."
 
 msgid "plugins.generic.thoth.register.confirmation"
-msgstr "Vuoi registrare in Thoth i metadati relativi a questa proposta?"
+msgstr ""
+"Vuoi registrare in Thoth i metadati di questa proposta? Tieni presente che questi titoli vengono contrassegnati come \"In uscita\" in Thoth per consentire all'editore di esaminare l'insieme attuale dei metadati nel backend di Thoth. "
+"I titoli devono ancora essere impostati su \"Attivo\" in Thoth per essere elaborati dai flussi di lavoro correlati."
 
 msgid "plugins.generic.thoth.register.success"
-msgstr "Metadati della proposta inviati con successo a Thoth."
+msgstr "Metadati della proposta inviati con successo a Thoth. Il nuovo Work è stato creato con lo stato In uscita."
 
 msgid "plugins.generic.thoth.register.success.log"
 msgstr "Metadati della proposta registrati in Thoth."
@@ -156,8 +158,11 @@ msgstr "Registra proposte"
 
 msgid "plugins.generic.thoth.actions.register.prompt"
 msgstr ""
-"Stai per inviare i metadati della proposta per {$count} elementi a "
-"Thoth. Sei sicuro di voler registrare questi record?"
+"Stai per inviare a Thoth i metadati della proposta per '{$count}' elementi. Tieni presente che questi titoli vengono contrassegnati come \"In uscita\" in Thoth per consentire all'editore di esaminare l'insieme attuale dei metadati nel backend di Thoth. "
+"I titoli devono ancora essere impostati su \"Attivo\" in Thoth per essere elaborati dai flussi di lavoro correlati. Sei sicuro di voler registrare questi record?"
+
+msgid "plugins.generic.thoth.actions.register.success"
+msgstr "I metadati di tutte le {$count} proposte sono stati registrati in Thoth. I nuovi Work sono stati creati con lo stato In uscita."
 
 msgid "plugins.generic.thoth.api.403.alreadyRegistered"
 msgstr "La proposta è già registrata in Thoth."
