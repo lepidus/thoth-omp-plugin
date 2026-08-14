@@ -20,6 +20,7 @@ require_once(__DIR__ . '/vendor/autoload.php');
 
 import('lib.pkp.classes.plugins.GenericPlugin');
 import('plugins.generic.thoth.classes.api.ThothEndpoint');
+import('plugins.generic.thoth.classes.Application.Synchronization.WorkSynchronizer');
 import('plugins.generic.thoth.classes.Bootstrap.ThothCompositionRoot');
 import('plugins.generic.thoth.classes.components.forms.config.CatalogEntryFormConfig');
 import('plugins.generic.thoth.classes.components.forms.config.PublishFormConfig');
@@ -30,12 +31,14 @@ import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.notification.ThothNotification');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyContributionSynchronizer');
+import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyBookMetadataSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyLanguageSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyReferenceSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacySubjectSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkRelationSynchronizer');
-import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkSynchronizer');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyWorkMetadataGateway');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyWorkMetadataMapper');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
 import('plugins.generic.thoth.classes.Presentation.Api.RegisterBookController');
 import('plugins.generic.thoth.classes.Presentation.Api.SynchronizeMetadataController');
@@ -66,8 +69,14 @@ class ThothPlugin extends GenericPlugin
                     return ThothContainer::getInstance()->get('bookRegistrationService');
                 },
                 function (): array {
+                    $bookService = ThothService::book();
+
                     return [
-                        new LegacyWorkSynchronizer(ThothService::book()),
+                        new WorkSynchronizer(
+                            new LegacyWorkMetadataGateway($bookService->repository),
+                            new LegacyWorkMetadataMapper($bookService->factory)
+                        ),
+                        new LegacyBookMetadataSynchronizer($bookService),
                         new LegacyContributionSynchronizer(ThothService::contribution()),
                         new LegacyPublicationSynchronizer(ThothService::publication()),
                         new LegacyLanguageSynchronizer(ThothService::language()),
