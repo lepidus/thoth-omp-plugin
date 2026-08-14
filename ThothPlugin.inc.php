@@ -18,14 +18,17 @@
 
 use APP\core\Application;
 use APP\facades\Repo;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkSynchronizer;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookMetadataSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyContributionSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyLanguageSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyReferenceSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubjectSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkRelationSynchronizer;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkSynchronizer;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkMetadataGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkMetadataMapper;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
@@ -71,8 +74,14 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                     return ThothContainer::getInstance()->get('bookRegistrationService');
                 },
                 function (): array {
+                    $bookService = ThothService::book();
+
                     return [
-                        new LegacyWorkSynchronizer(ThothService::book()),
+                        new WorkSynchronizer(
+                            new LegacyWorkMetadataGateway($bookService->repository),
+                            new LegacyWorkMetadataMapper($bookService->factory)
+                        ),
+                        new LegacyBookMetadataSynchronizer($bookService),
                         new LegacyContributionSynchronizer(ThothService::contribution()),
                         new LegacyPublicationSynchronizer(ThothService::publication()),
                         new LegacyLanguageSynchronizer(ThothService::language()),

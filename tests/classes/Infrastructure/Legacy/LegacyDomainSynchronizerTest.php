@@ -14,6 +14,7 @@ import('plugins.generic.thoth.classes.services.ThothWorkRelationService');
 
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationResult;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookMetadataSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyContributionSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyLanguageSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationSynchronizer;
@@ -39,6 +40,28 @@ class LegacyDomainSynchronizerTest extends PKPTestCase
 
         $result = (new LegacyWorkSynchronizer($service))->synchronize($publication, $this->workId());
 
+        $this->assertSame('book.warning', $result->getWarnings()[0]->getMessageKey());
+    }
+
+    public function testBookMetadataSynchronizerPreservesPendingLegacyDomains(): void
+    {
+        $publication = new stdClass();
+        $service = new class () {
+            public $publication;
+            public $workId;
+
+            public function synchronizeRelatedMetadata($publication, $workId)
+            {
+                $this->publication = $publication;
+                $this->workId = $workId;
+                return 'book.warning';
+            }
+        };
+
+        $result = (new LegacyBookMetadataSynchronizer($service))->synchronize($publication, $this->workId());
+
+        $this->assertSame($publication, $service->publication);
+        $this->assertSame(self::WORK_ID, $service->workId);
         $this->assertSame('book.warning', $result->getWarnings()[0]->getMessageKey());
     }
 

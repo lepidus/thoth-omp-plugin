@@ -112,13 +112,23 @@ class ThothBookService
 
         $this->repository->edit($thothBook);
         if ($includeTitlesAndAbstracts) {
-            $this->updateTitlesAndAbstracts($publication, $thothBookId, $oldThothBook);
+            return $this->synchronizeRelatedMetadata($publication, $thothBookId, $oldThothBook);
         }
         if ($this->frontcoverService) {
             return $this->frontcoverService->sync($publication, $thothBookId);
         }
 
         return null;
+    }
+
+    public function synchronizeRelatedMetadata($publication, $thothBookId, $oldThothBook = null)
+    {
+        $oldThothBook = $oldThothBook ?? $this->repository->get($thothBookId);
+        $this->updateTitlesAndAbstracts($publication, $thothBookId, $oldThothBook);
+
+        return $this->frontcoverService
+            ? $this->frontcoverService->sync($publication, $thothBookId)
+            : null;
     }
 
     private function getPatchWorkData($thothBook): array
