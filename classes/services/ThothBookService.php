@@ -109,8 +109,16 @@ class ThothBookService
 
         $this->repository->edit($thothBook);
         if ($includeTitlesAndAbstracts) {
-            $this->updateTitlesAndAbstracts($publication, $thothBookId, $oldThothBook);
+            return $this->synchronizeRelatedMetadata($publication, $thothBookId, $oldThothBook);
         }
+        return $this->frontcoverService?->sync($publication, $thothBookId);
+    }
+
+    public function synchronizeRelatedMetadata($publication, string $thothBookId, $oldThothBook = null)
+    {
+        $oldThothBook = $oldThothBook ?? $this->repository->get($thothBookId);
+        $this->updateTitlesAndAbstracts($publication, $thothBookId, $oldThothBook);
+
         return $this->frontcoverService?->sync($publication, $thothBookId);
     }
 

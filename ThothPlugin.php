@@ -22,17 +22,20 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use APP\core\Application;
 use APP\facades\Repo;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkSynchronizer;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\facades\ThothService;
 use APP\plugins\generic\thoth\classes\hooks\HookRegistrant;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookMetadataSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyContributionSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyLanguageSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyReferenceSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubjectSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkRelationSynchronizer;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkSynchronizer;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkMetadataGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkMetadataMapper;
 use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
@@ -55,15 +58,23 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
             $compositionRoot = new ThothCompositionRoot(
                 fn (): object => new ThothWorkLinkService(ThothContainer::getInstance()->get('workRepository')),
                 fn (): object => ThothContainer::getInstance()->get('bookRegistrationService'),
-                fn (): array => [
-                    new LegacyWorkSynchronizer(ThothService::book()),
-                    new LegacyContributionSynchronizer(ThothService::contribution()),
-                    new LegacyPublicationSynchronizer(ThothService::publication()),
-                    new LegacyLanguageSynchronizer(ThothService::language()),
-                    new LegacySubjectSynchronizer(ThothService::subject()),
-                    new LegacyReferenceSynchronizer(ThothService::reference()),
-                    new LegacyWorkRelationSynchronizer(ThothService::workRelation()),
-                ],
+                function (): array {
+                    $bookService = ThothService::book();
+
+                    return [
+                        new WorkSynchronizer(
+                            new LegacyWorkMetadataGateway($bookService->repository),
+                            new LegacyWorkMetadataMapper($bookService->factory)
+                        ),
+                        new LegacyBookMetadataSynchronizer($bookService),
+                        new LegacyContributionSynchronizer(ThothService::contribution()),
+                        new LegacyPublicationSynchronizer(ThothService::publication()),
+                        new LegacyLanguageSynchronizer(ThothService::language()),
+                        new LegacySubjectSynchronizer(ThothService::subject()),
+                        new LegacyReferenceSynchronizer(ThothService::reference()),
+                        new LegacyWorkRelationSynchronizer(ThothService::workRelation()),
+                    ];
+                },
                 Repo::publication(),
                 Repo::submission(),
                 Application::get()->getRequest(),
