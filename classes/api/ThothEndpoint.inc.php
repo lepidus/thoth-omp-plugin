@@ -14,14 +14,11 @@
  * @brief Thoth endpoints for OMP API
  */
 
-use ThothApi\Exception\QueryException;
-
 import('plugins.generic.thoth.classes.facades.ThothService');
 import('plugins.generic.thoth.classes.facades.ThothRepo');
-import('plugins.generic.thoth.classes.exceptions.MetadataSynchronizationException');
-import('plugins.generic.thoth.classes.notification.ThothNotification');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
 import('plugins.generic.thoth.classes.Presentation.Api.RegisterBookController');
+import('plugins.generic.thoth.classes.Presentation.Api.SynchronizeMetadataController');
 import('plugins.generic.thoth.classes.Presentation.Api.UnlinkWorkController');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
@@ -29,15 +26,18 @@ class ThothEndpoint
 {
     private GetWorkStatusController $getWorkStatusController;
     private RegisterBookController $registerBookController;
+    private SynchronizeMetadataController $synchronizeMetadataController;
     private UnlinkWorkController $unlinkWorkController;
 
     public function __construct(
         GetWorkStatusController $getWorkStatusController,
         RegisterBookController $registerBookController,
+        SynchronizeMetadataController $synchronizeMetadataController,
         UnlinkWorkController $unlinkWorkController
     ) {
         $this->getWorkStatusController = $getWorkStatusController;
         $this->registerBookController = $registerBookController;
+        $this->synchronizeMetadataController = $synchronizeMetadataController;
         $this->unlinkWorkController = $unlinkWorkController;
     }
 
@@ -221,52 +221,11 @@ class ThothEndpoint
             return $response->withStatus(403)->withJsonError('api.submissions.403.contextRequired');
         }
 
-        $thothWorkId = $submission->getData('thothWorkId');
-        if (!$thothWorkId) {
-            return $response->withStatus(403)->withJsonError('plugins.generic.thoth.status.unregistered');
-        }
-
-        try {
-            $warning = ThothService::metadataSynchronization()->synchronize($publication, $thothWorkId);
-            $this->handleNotification($request, $submission, true, false, null, $warning);
-        } catch (MetadataSynchronizationException $exception) {
-            return $response->withStatus(409)->withJsonError(
-                'plugins.generic.thoth.synchronize.ambiguousMetadata'
-            );
-        } catch (QueryException $exception) {
-            $this->handleNotification($request, $submission, false, false, $exception);
-            return $response->withStatus(500)->withJsonError('plugins.generic.thoth.connectionError');
-        }
-
-        return $response->withJson(['status' => true], 200);
-    }
-
-
-    public function handleNotification(
-        $request,
-        $submission,
-        $success,
-        $disableNotification,
-        $errorMessage = null,
-        $warning = null
-    ) {
-        $thothNotification = new ThothNotification();
-
-        if ($disableNotification) {
-            $thothNotification->logInfo(
-                $request,
-                $submission,
-                $success ? 'plugins.generic.thoth.register.success.log' : 'plugins.generic.thoth.register.error.log',
-                $errorMessage
-            );
-            return;
-        }
-
-        $success
-            ? $thothNotification->notifySuccess($request, $submission)
-            : $thothNotification->notifyError($request, $submission, $errorMessage);
-        foreach ((array) $warning as $warningMessage) {
-            $thothNotification->notifyWarning($request, $submission, $warningMessage);
-        }
+        return $this->synchronizeMetadataController->synchronize(
+            $publication,
+            $submission,
+            (int) $request->getUser()->getId(),
+            $response
+        );
     }
 }

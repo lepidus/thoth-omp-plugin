@@ -4,6 +4,7 @@ import('lib.pkp.tests.PKPTestCase');
 import('plugins.generic.thoth.classes.Bootstrap.ThothCompositionRoot');
 import('plugins.generic.thoth.classes.Application.Registration.RegisterBook');
 import('plugins.generic.thoth.classes.Application.Exception.ExternalFailureReporter');
+import('plugins.generic.thoth.classes.Application.Synchronization.SynchronizeMetadata');
 import('plugins.generic.thoth.classes.Application.Work.GetWorkStatus');
 import('plugins.generic.thoth.classes.Application.Work.UnlinkWork');
 import('plugins.generic.thoth.classes.Contracts.NotificationPublisher');
@@ -21,6 +22,7 @@ import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkGateway');
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
 import('plugins.generic.thoth.classes.Presentation.Api.RegisterBookController');
+import('plugins.generic.thoth.classes.Presentation.Api.SynchronizeMetadataController');
 import('plugins.generic.thoth.classes.Presentation.Api.UnlinkWorkController');
 
 use Illuminate\Container\Container;
@@ -40,6 +42,7 @@ class ThothCompositionRootTest extends PKPTestCase
             function () use ($bookRegistrar): object {
                 return $bookRegistrar;
             },
+            fn (): array => [],
             new stdClass(),
             new stdClass(),
             new stdClass(),
@@ -75,6 +78,11 @@ class ThothCompositionRootTest extends PKPTestCase
             $container->make(GetWorkStatusController::class)
         );
         $this->assertInstanceOf(RegisterBookController::class, $container->make(RegisterBookController::class));
+        $this->assertInstanceOf(SynchronizeMetadata::class, $container->make(SynchronizeMetadata::class));
+        $this->assertInstanceOf(
+            SynchronizeMetadataController::class,
+            $container->make(SynchronizeMetadataController::class)
+        );
         $this->assertInstanceOf(UnlinkWorkController::class, $container->make(UnlinkWorkController::class));
         $this->assertSame(
             $container->make(BookRegistrationPolicy::class),

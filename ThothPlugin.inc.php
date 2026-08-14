@@ -25,11 +25,20 @@ import('plugins.generic.thoth.classes.components.forms.config.CatalogEntryFormCo
 import('plugins.generic.thoth.classes.components.forms.config.PublishFormConfig');
 import('plugins.generic.thoth.classes.formModifiers.AuthorFormModifier');
 import('plugins.generic.thoth.classes.formModifiers.PublicationFormatFormModifier');
+import('plugins.generic.thoth.classes.facades.ThothService');
 import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.notification.ThothNotification');
+import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyContributionSynchronizer');
+import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyLanguageSynchronizer');
+import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationSynchronizer');
+import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyReferenceSynchronizer');
+import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacySubjectSynchronizer');
+import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkRelationSynchronizer');
+import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkSynchronizer');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
 import('plugins.generic.thoth.classes.Presentation.Api.RegisterBookController');
+import('plugins.generic.thoth.classes.Presentation.Api.SynchronizeMetadataController');
 import('plugins.generic.thoth.classes.Presentation.Api.UnlinkWorkController');
 import('plugins.generic.thoth.classes.schema.ThothSchema');
 import('plugins.generic.thoth.classes.services.ThothCatalogFilesCacheService');
@@ -55,6 +64,17 @@ class ThothPlugin extends GenericPlugin
                 },
                 function (): object {
                     return ThothContainer::getInstance()->get('bookRegistrationService');
+                },
+                function (): array {
+                    return [
+                        new LegacyWorkSynchronizer(ThothService::book()),
+                        new LegacyContributionSynchronizer(ThothService::contribution()),
+                        new LegacyPublicationSynchronizer(ThothService::publication()),
+                        new LegacyLanguageSynchronizer(ThothService::language()),
+                        new LegacySubjectSynchronizer(ThothService::subject()),
+                        new LegacyReferenceSynchronizer(ThothService::reference()),
+                        new LegacyWorkRelationSynchronizer(ThothService::workRelation()),
+                    ];
                 },
                 DAORegistry::getDAO('PublicationDAO'),
                 DAORegistry::getDAO('SubmissionDAO'),
@@ -215,6 +235,7 @@ class ThothPlugin extends GenericPlugin
         $thothEndpoint = new ThothEndpoint(
             $container->make(GetWorkStatusController::class),
             $container->make(RegisterBookController::class),
+            $container->make(SynchronizeMetadataController::class),
             $container->make(UnlinkWorkController::class)
         );
         HookRegistry::register('APIHandler::endpoints', [$thothEndpoint, 'addEndpoints']);
