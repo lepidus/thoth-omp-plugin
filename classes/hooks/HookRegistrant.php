@@ -27,6 +27,7 @@ use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use APP\plugins\generic\thoth\classes\schema\ThothSchema;
 use APP\plugins\generic\thoth\classes\services\ThothCatalogFilesCacheService;
@@ -42,6 +43,7 @@ class HookRegistrant
     private GenericPlugin $plugin;
     private GetWorkStatusController $getWorkStatusController;
     private RegisterBookController $registerBookController;
+    private SynchronizeMetadataController $synchronizeMetadataController;
     private UnlinkWorkController $unlinkWorkController;
     private PublicationPublishListener $publicationPublishListener;
 
@@ -49,12 +51,14 @@ class HookRegistrant
         GenericPlugin $plugin,
         GetWorkStatusController $getWorkStatusController,
         RegisterBookController $registerBookController,
+        SynchronizeMetadataController $synchronizeMetadataController,
         UnlinkWorkController $unlinkWorkController,
         PublicationPublishListener $publicationPublishListener
     ) {
         $this->plugin = $plugin;
         $this->getWorkStatusController = $getWorkStatusController;
         $this->registerBookController = $registerBookController;
+        $this->synchronizeMetadataController = $synchronizeMetadataController;
         $this->unlinkWorkController = $unlinkWorkController;
         $this->publicationPublishListener = $publicationPublishListener;
     }
@@ -113,6 +117,7 @@ class HookRegistrant
         $endpoint = new ThothEndpoint(
             $this->getWorkStatusController,
             $this->registerBookController,
+            $this->synchronizeMetadataController,
             $this->unlinkWorkController
         );
         Hook::add('APIHandler::endpoints::_submissions', $endpoint->addEndpoints(...));

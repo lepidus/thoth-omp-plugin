@@ -7,6 +7,7 @@ require_once(__DIR__ . '/../../../vendor/autoload.php');
 use APP\plugins\generic\thoth\classes\api\ThothEndpoint;
 use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeMetadata;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
@@ -17,6 +18,7 @@ use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use PKP\core\PKPRequest;
 use PKP\plugins\interfaces\HasAuthorizationPolicy;
@@ -44,6 +46,10 @@ class ThothEndpointTest extends PKPTestCase
                     $this->createMock(NotificationPublisher::class),
                     $this->createMock(PluginLogger::class)
                 )
+            ),
+            new SynchronizeMetadataController(
+                new SynchronizeMetadata(),
+                $this->createMock(NotificationPublisher::class)
             ),
             new UnlinkWorkController($unlinkWork)
         );

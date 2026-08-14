@@ -4,6 +4,7 @@ namespace APP\plugins\generic\thoth\tests\classes\Bootstrap;
 
 use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeMetadata;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
@@ -22,6 +23,7 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
 use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use Illuminate\Container\Container;
 use PKP\tests\PKPTestCase;
@@ -39,6 +41,7 @@ class ThothCompositionRootTest extends PKPTestCase
                 return new \stdClass();
             },
             fn (): object => $bookRegistrar,
+            fn (): array => [],
             new \stdClass(),
             new \stdClass(),
             new \stdClass(),
@@ -74,6 +77,11 @@ class ThothCompositionRootTest extends PKPTestCase
             $container->make(GetWorkStatusController::class)
         );
         $this->assertInstanceOf(RegisterBookController::class, $container->make(RegisterBookController::class));
+        $this->assertInstanceOf(SynchronizeMetadata::class, $container->make(SynchronizeMetadata::class));
+        $this->assertInstanceOf(
+            SynchronizeMetadataController::class,
+            $container->make(SynchronizeMetadataController::class)
+        );
         $this->assertInstanceOf(UnlinkWorkController::class, $container->make(UnlinkWorkController::class));
         $this->assertSame(
             $container->make(BookRegistrationPolicy::class),

@@ -24,11 +24,20 @@ use APP\core\Application;
 use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use APP\plugins\generic\thoth\classes\container\ThothContainer;
+use APP\plugins\generic\thoth\classes\facades\ThothService;
 use APP\plugins\generic\thoth\classes\hooks\HookRegistrant;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyContributionSynchronizer;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyLanguageSynchronizer;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationSynchronizer;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyReferenceSynchronizer;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubjectSynchronizer;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkRelationSynchronizer;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkSynchronizer;
 use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use APP\plugins\generic\thoth\classes\services\ThothWorkLinkService;
 use PKP\core\JSONMessage;
@@ -46,6 +55,15 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
             $compositionRoot = new ThothCompositionRoot(
                 fn (): object => new ThothWorkLinkService(ThothContainer::getInstance()->get('workRepository')),
                 fn (): object => ThothContainer::getInstance()->get('bookRegistrationService'),
+                fn (): array => [
+                    new LegacyWorkSynchronizer(ThothService::book()),
+                    new LegacyContributionSynchronizer(ThothService::contribution()),
+                    new LegacyPublicationSynchronizer(ThothService::publication()),
+                    new LegacyLanguageSynchronizer(ThothService::language()),
+                    new LegacySubjectSynchronizer(ThothService::subject()),
+                    new LegacyReferenceSynchronizer(ThothService::reference()),
+                    new LegacyWorkRelationSynchronizer(ThothService::workRelation()),
+                ],
                 Repo::publication(),
                 Repo::submission(),
                 Application::get()->getRequest(),
@@ -57,6 +75,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                 $this,
                 PKPContainer::getInstance()->make(GetWorkStatusController::class),
                 PKPContainer::getInstance()->make(RegisterBookController::class),
+                PKPContainer::getInstance()->make(SynchronizeMetadataController::class),
                 PKPContainer::getInstance()->make(UnlinkWorkController::class),
                 PKPContainer::getInstance()->make(PublicationPublishListener::class)
             );

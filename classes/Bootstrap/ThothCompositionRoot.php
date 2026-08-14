@@ -4,6 +4,7 @@ namespace APP\plugins\generic\thoth\classes\Bootstrap;
 
 use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeMetadata;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
@@ -21,6 +22,7 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
 use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 
 final class ThothCompositionRoot
@@ -28,6 +30,7 @@ final class ThothCompositionRoot
     public function __construct(
         private $workLinkServiceFactory,
         private $bookRegistrationServiceFactory,
+        private $metadataSynchronizersFactory,
         private object $publicationRepository,
         private object $submissionRepository,
         private object $request,
@@ -102,6 +105,10 @@ final class ThothCompositionRoot
             )
         );
         $container->bind(
+            SynchronizeMetadata::class,
+            fn (): SynchronizeMetadata => new SynchronizeMetadata(...($this->metadataSynchronizersFactory)())
+        );
+        $container->bind(
             GetWorkStatusController::class,
             fn ($container): GetWorkStatusController => new GetWorkStatusController(
                 $container->make(GetWorkStatus::class)
@@ -113,6 +120,13 @@ final class ThothCompositionRoot
                 $container->make(RegisterBook::class),
                 $container->make(BookRegistrationPolicy::class),
                 $container->make(ExternalFailureReporter::class)
+            )
+        );
+        $container->bind(
+            SynchronizeMetadataController::class,
+            fn ($container): SynchronizeMetadataController => new SynchronizeMetadataController(
+                $container->make(SynchronizeMetadata::class),
+                $container->make(NotificationPublisher::class)
             )
         );
         $container->bind(

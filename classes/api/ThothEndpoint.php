@@ -19,12 +19,11 @@ namespace APP\plugins\generic\thoth\classes\api;
 use APP\core\Application;
 use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\components\forms\FeatureVideoForm;
-use APP\plugins\generic\thoth\classes\exceptions\MetadataSynchronizationException;
 use APP\plugins\generic\thoth\classes\facades\ThothRepository;
 use APP\plugins\generic\thoth\classes\facades\ThothService;
-use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as IlluminateRequest;
@@ -36,13 +35,13 @@ use PKP\handler\APIHandler;
 use PKP\plugins\interfaces\HasAuthorizationPolicy;
 use PKP\security\authorization\SubmissionAccessPolicy;
 use PKP\security\Role;
-use ThothApi\Exception\QueryException;
 
 class ThothEndpoint implements HasAuthorizationPolicy
 {
     public function __construct(
         private readonly GetWorkStatusController $getWorkStatusController,
         private readonly RegisterBookController $registerBookController,
+        private readonly SynchronizeMetadataController $synchronizeMetadataController,
         private readonly UnlinkWorkController $unlinkWorkController
     ) {
     }
@@ -197,31 +196,11 @@ class ThothEndpoint implements HasAuthorizationPolicy
             );
         }
 
-        $thothWorkId = $submission->getData('thothWorkId');
-        if (!$thothWorkId) {
-            return response()->json(
-                ['errorMessage' => __('plugins.generic.thoth.status.unregistered')],
-                Response::HTTP_FORBIDDEN
-            );
-        }
-
-        try {
-            $warning = ThothService::metadataSynchronization()->synchronize($publication, $thothWorkId);
-            $this->handleNotification($request, $submission, true, false, null, $warning);
-        } catch (MetadataSynchronizationException $exception) {
-            return response()->json(
-                ['errorMessage' => __('plugins.generic.thoth.synchronize.ambiguousMetadata')],
-                Response::HTTP_CONFLICT
-            );
-        } catch (QueryException $exception) {
-            $this->handleNotification($request, $submission, false, false, $exception);
-            return response()->json(
-                ['errorMessage' => __('plugins.generic.thoth.connectionError')],
-                Response::HTTP_INTERNAL_SERVER_ERROR
-            );
-        }
-
-        return response()->json(['status' => true], Response::HTTP_OK);
+        return $this->synchronizeMetadataController->synchronize(
+            $publication,
+            $submission,
+            (int) $request->getUser()->getId()
+        );
     }
 
     public function getFeatureVideoForm(IlluminateRequest $illuminateRequest): JsonResponse
@@ -340,31 +319,4 @@ class ThothEndpoint implements HasAuthorizationPolicy
         }
     }
 
-    public function handleNotification(
-        $request,
-        $submission,
-        $success,
-        $disableNotification,
-        $errorMessage = null,
-        $warning = null
-    ) {
-        $thothNotification = new ThothNotification();
-
-        if ($disableNotification) {
-            $thothNotification->logInfo(
-                $request,
-                $submission,
-                $success ? 'plugins.generic.thoth.register.success.log' : 'plugins.generic.thoth.register.error.log',
-                $errorMessage
-            );
-            return;
-        }
-
-        $success
-            ? $thothNotification->notifySuccess($request, $submission)
-            : $thothNotification->notifyError($request, $submission, $errorMessage);
-        foreach ((array) $warning as $warningMessage) {
-            $thothNotification->notifyWarning($request, $submission, $warningMessage);
-        }
-    }
 }
