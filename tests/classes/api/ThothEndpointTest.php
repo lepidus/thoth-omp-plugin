@@ -4,6 +4,7 @@ require_once(__DIR__ . '/../../../vendor/autoload.php');
 
 use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeMetadata;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
@@ -14,6 +15,7 @@ use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use PKP\tests\PKPTestCase;
 
@@ -26,6 +28,7 @@ class ThothEndpointTest extends PKPTestCase
         $endpoint = new class (
             $this->createWorkStatusController(),
             $this->createRegisterBookController(),
+            $this->createSynchronizeMetadataController(),
             $this->createUnlinkWorkController()
         ) extends ThothEndpoint {
             public function isSubmissionInContextForTest($submission, $context)
@@ -69,6 +72,14 @@ class ThothEndpointTest extends PKPTestCase
                 $this->createMock(NotificationPublisher::class),
                 $this->createMock(PluginLogger::class)
             )
+        );
+    }
+
+    private function createSynchronizeMetadataController(): SynchronizeMetadataController
+    {
+        return new SynchronizeMetadataController(
+            new SynchronizeMetadata(),
+            $this->createMock(NotificationPublisher::class)
         );
     }
 

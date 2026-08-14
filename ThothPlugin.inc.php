@@ -19,8 +19,16 @@
 use APP\core\Application;
 use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyContributionSynchronizer;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyLanguageSynchronizer;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationSynchronizer;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyReferenceSynchronizer;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubjectSynchronizer;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkRelationSynchronizer;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkSynchronizer;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use PKP\core\JSONMessage;
 use PKP\core\PKPContainer;
@@ -33,6 +41,7 @@ import('plugins.generic.thoth.classes.components.forms.config.CatalogEntryFormCo
 import('plugins.generic.thoth.classes.components.forms.config.PublishFormConfig');
 import('plugins.generic.thoth.classes.components.forms.config.ContributorFormConfig');
 import('plugins.generic.thoth.classes.formModifiers.PublicationFormatFormModifier');
+import('plugins.generic.thoth.classes.facades.ThothService');
 import('plugins.generic.thoth.classes.templateFilters.PublicationFormatTemplateFilter');
 import('plugins.generic.thoth.classes.templateFilters.ThothSectionTemplateFilter');
 import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
@@ -60,6 +69,17 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                 },
                 function (): object {
                     return ThothContainer::getInstance()->get('bookRegistrationService');
+                },
+                function (): array {
+                    return [
+                        new LegacyWorkSynchronizer(ThothService::book()),
+                        new LegacyContributionSynchronizer(ThothService::contribution()),
+                        new LegacyPublicationSynchronizer(ThothService::publication()),
+                        new LegacyLanguageSynchronizer(ThothService::language()),
+                        new LegacySubjectSynchronizer(ThothService::subject()),
+                        new LegacyReferenceSynchronizer(ThothService::reference()),
+                        new LegacyWorkRelationSynchronizer(ThothService::workRelation()),
+                    ];
                 },
                 Repo::publication(),
                 Repo::submission(),
@@ -321,6 +341,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
         $thothEndpoint = new ThothEndpoint(
             $container->make(GetWorkStatusController::class),
             $container->make(RegisterBookController::class),
+            $container->make(SynchronizeMetadataController::class),
             $container->make(UnlinkWorkController::class)
         );
         HookRegistry::register('APIHandler::endpoints', [$thothEndpoint, 'addEndpoints']);

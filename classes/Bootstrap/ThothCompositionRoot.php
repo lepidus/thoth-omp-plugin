@@ -4,6 +4,7 @@ namespace APP\plugins\generic\thoth\classes\Bootstrap;
 
 use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeMetadata;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
@@ -20,6 +21,7 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubmissionLink
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
@@ -28,6 +30,7 @@ final class ThothCompositionRoot
 {
     private $workLinkServiceFactory;
     private $bookRegistrationServiceFactory;
+    private $metadataSynchronizersFactory;
     private object $publicationRepository;
     private object $submissionRepository;
     private object $request;
@@ -36,6 +39,7 @@ final class ThothCompositionRoot
     public function __construct(
         callable $workLinkServiceFactory,
         callable $bookRegistrationServiceFactory,
+        callable $metadataSynchronizersFactory,
         object $publicationRepository,
         object $submissionRepository,
         object $request,
@@ -43,6 +47,7 @@ final class ThothCompositionRoot
     ) {
         $this->workLinkServiceFactory = $workLinkServiceFactory;
         $this->bookRegistrationServiceFactory = $bookRegistrationServiceFactory;
+        $this->metadataSynchronizersFactory = $metadataSynchronizersFactory;
         $this->publicationRepository = $publicationRepository;
         $this->submissionRepository = $submissionRepository;
         $this->request = $request;
@@ -106,6 +111,9 @@ final class ThothCompositionRoot
                 $container->make(SubmissionLinkRepository::class)
             );
         });
+        $container->bind(SynchronizeMetadata::class, function (): SynchronizeMetadata {
+            return new SynchronizeMetadata(...($this->metadataSynchronizersFactory)());
+        });
         $container->bind(GetWorkStatusController::class, function ($container): GetWorkStatusController {
             return new GetWorkStatusController($container->make(GetWorkStatus::class));
         });
@@ -116,6 +124,15 @@ final class ThothCompositionRoot
                 $container->make(ExternalFailureReporter::class)
             );
         });
+        $container->bind(
+            SynchronizeMetadataController::class,
+            function ($container): SynchronizeMetadataController {
+                return new SynchronizeMetadataController(
+                    $container->make(SynchronizeMetadata::class),
+                    $container->make(NotificationPublisher::class)
+                );
+            }
+        );
         $container->bind(UnlinkWorkController::class, function ($container): UnlinkWorkController {
             return new UnlinkWorkController($container->make(UnlinkWork::class));
         });
