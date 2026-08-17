@@ -132,23 +132,7 @@ class ThothContributionService
             $existingContribution = $remainingContributions[$existingKey];
             $thothContribution->setWorkId($thothWorkId);
             $thothContribution->setContributionId($existingContribution['contributionId']);
-            if ($contributorId = $this->getExistingContributorId($existingContribution)) {
-                $thothContribution->setContributorId($contributorId);
-                $this->contributorService->update($author, $contributorId);
-            }
-
-            $this->repository->edit($thothContribution);
-            $this->biographyService->updateByAuthor(
-                $author,
-                $existingContribution['contributionId'],
-                $existingContribution['biographies'] ?? [],
-                $author->getData('locale')
-            );
-            $this->affiliationService->update(
-                $author->getData('rorId'),
-                $existingContribution['contributionId'],
-                $existingContribution['affiliations'] ?? []
-            );
+            $this->updateContribution($author, $thothContribution, $existingContribution);
             unset($remainingContributions[$existingKey]);
         }
 
@@ -159,7 +143,35 @@ class ThothContributionService
         }
     }
 
-    private function getPublicationAuthors($publication, $primaryContactId): array
+    public function updateContribution(
+        $author,
+        $thothContribution,
+        array $existingContribution,
+        bool $metadataChanged = true
+    ): void {
+        $thothContributionId = $existingContribution['contributionId'];
+        if ($contributorId = $this->getExistingContributorId($existingContribution)) {
+            $thothContribution->setContributorId($contributorId);
+            $this->contributorService->update($author, $contributorId);
+        }
+
+        if ($metadataChanged) {
+            $this->repository->edit($thothContribution);
+        }
+        $this->biographyService->updateByAuthor(
+            $author,
+            $thothContributionId,
+            $existingContribution['biographies'] ?? [],
+            $author->getData('locale')
+        );
+        $this->affiliationService->update(
+            $author->getData('rorId'),
+            $thothContributionId,
+            $existingContribution['affiliations'] ?? []
+        );
+    }
+
+    public function getPublicationAuthors($publication, $primaryContactId): array
     {
         $authors = Repo::author()->getCollector()
             ->filterByPublicationIds([$publication->getId()])

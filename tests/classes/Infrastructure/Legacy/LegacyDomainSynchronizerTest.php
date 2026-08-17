@@ -5,7 +5,6 @@ namespace APP\plugins\generic\thoth\tests\classes\Infrastructure\Legacy;
 require_once(__DIR__ . '/../../../../vendor/autoload.php');
 
 import('plugins.generic.thoth.classes.services.ThothBookService');
-import('plugins.generic.thoth.classes.services.ThothContributionService');
 import('plugins.generic.thoth.classes.services.ThothLanguageService');
 import('plugins.generic.thoth.classes.services.ThothPublicationService');
 import('plugins.generic.thoth.classes.services.ThothReferenceService');
@@ -15,7 +14,6 @@ import('plugins.generic.thoth.classes.services.ThothWorkRelationService');
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationResult;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookMetadataSynchronizer;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyContributionSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyLanguageSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyReferenceSynchronizer;
@@ -63,17 +61,6 @@ class LegacyDomainSynchronizerTest extends PKPTestCase
         $this->assertSame($publication, $service->publication);
         $this->assertSame(self::WORK_ID, $service->workId);
         $this->assertSame('book.warning', $result->getWarnings()[0]->getMessageKey());
-    }
-
-    public function testContributionSynchronizerDelegatesWithoutWarnings(): void
-    {
-        $publication = new stdClass();
-        $service = $this->createMock(\ThothContributionService::class);
-        $service->expects($this->once())->method('synchronizeByPublication')->with($publication, self::WORK_ID);
-
-        $this->assertEmptyResult(
-            (new LegacyContributionSynchronizer($service))->synchronize($publication, $this->workId())
-        );
     }
 
     public function testPublicationSynchronizerTranslatesSkippedDeletionWarning(): void

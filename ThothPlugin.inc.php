@@ -19,11 +19,11 @@
 use APP\core\Application;
 use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\AbstractSynchronizer;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\ContributionSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\TitleSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkSynchronizer;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookMetadataSynchronizer;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyContributionSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyLanguageSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyReferenceSynchronizer;
@@ -31,6 +31,8 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubjectSynchro
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkRelationSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataMapper;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyContributionMetadataGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyContributionMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyTitleMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyTitleMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkMetadataGateway;
@@ -82,6 +84,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                 function (): array {
                     $bookService = ThothService::book();
                     $abstractService = ThothService::abstract();
+                    $contributionService = ThothService::contribution();
                     $titleService = ThothService::title();
 
                     return [
@@ -104,7 +107,10 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                             new LegacyAbstractMetadataMapper($abstractService->factory)
                         ),
                         new LegacyBookMetadataSynchronizer($bookService),
-                        new LegacyContributionSynchronizer(ThothService::contribution()),
+                        new ContributionSynchronizer(
+                            new LegacyContributionMetadataGateway($contributionService),
+                            new LegacyContributionMetadataMapper($contributionService)
+                        ),
                         new LegacyPublicationSynchronizer(ThothService::publication()),
                         new LegacyLanguageSynchronizer(ThothService::language()),
                         new LegacySubjectSynchronizer(ThothService::subject()),
