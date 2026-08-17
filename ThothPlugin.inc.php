@@ -24,6 +24,7 @@ import('plugins.generic.thoth.classes.Application.Synchronization.AbstractSynchr
 import('plugins.generic.thoth.classes.Application.Synchronization.ContributionSynchronizer');
 import('plugins.generic.thoth.classes.Application.Synchronization.LanguageSynchronizer');
 import('plugins.generic.thoth.classes.Application.Synchronization.PublicationSynchronizer');
+import('plugins.generic.thoth.classes.Application.Synchronization.SubjectSynchronizer');
 import('plugins.generic.thoth.classes.Application.Synchronization.SynchronizeLocations');
 import('plugins.generic.thoth.classes.Application.Synchronization.TitleSynchronizer');
 import('plugins.generic.thoth.classes.Application.Synchronization.WorkSynchronizer');
@@ -38,7 +39,6 @@ import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.notification.ThothNotification');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyBookMetadataSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyReferenceSynchronizer');
-import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacySubjectSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkRelationSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyAbstractMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyAbstractMetadataMapper');
@@ -49,6 +49,8 @@ import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyLanguageMetadat
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyLocationMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyPublicationMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyPublicationMetadataMapper');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacySubjectMetadataGateway');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacySubjectMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyTitleMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyTitleMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyWorkMetadataGateway');
@@ -59,6 +61,7 @@ import('plugins.generic.thoth.classes.Presentation.Api.SynchronizeMetadataContro
 import('plugins.generic.thoth.classes.Presentation.Api.UnlinkWorkController');
 import('plugins.generic.thoth.classes.schema.ThothSchema');
 import('plugins.generic.thoth.classes.services.ThothCatalogFilesCacheService');
+import('plugins.generic.thoth.classes.services.ThothSubjectClassifier');
 import('plugins.generic.thoth.classes.services.ThothWorkLinkService');
 import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.templateFilters.ThothCatalogFilesTemplateFilter');
@@ -87,6 +90,7 @@ class ThothPlugin extends GenericPlugin
                     $abstractService = ThothService::abstract();
                     $contributionService = ThothService::contribution();
                     $languageService = ThothService::language();
+                    $subjectService = ThothService::subject();
                     $titleService = ThothService::title();
 
                     return [
@@ -124,7 +128,10 @@ class ThothPlugin extends GenericPlugin
                             new LegacyLanguageMetadataGateway($languageService->repository),
                             new LegacyLanguageMetadataMapper()
                         ),
-                        new LegacySubjectSynchronizer(ThothService::subject()),
+                        new SubjectSynchronizer(
+                            new LegacySubjectMetadataGateway($subjectService->repository),
+                            new LegacySubjectMetadataMapper(new ThothSubjectClassifier())
+                        ),
                         new LegacyReferenceSynchronizer(ThothService::reference()),
                         new LegacyWorkRelationSynchronizer(ThothService::workRelation()),
                     ];
