@@ -19,11 +19,7 @@ final class LegacyWorkRelationMetadataGateway implements WorkRelationMetadataGat
 
     public function create(WorkId $workId, array $desiredRelation): void
     {
-        $relatedWorkId = $this->chapterService->register(
-            $desiredRelation['chapter'],
-            $desiredRelation['imprintId'],
-            $desiredRelation['work']
-        );
+        $relatedWorkId = $this->chapterService->create($desiredRelation['chapterState'])->toString();
         $this->repository->add($this->repository->new([
             'relatorWorkId' => $workId->toString(),
             'relatedWorkId' => $relatedWorkId,
@@ -34,12 +30,10 @@ final class LegacyWorkRelationMetadataGateway implements WorkRelationMetadataGat
 
     public function updateRelatedWork(array $desiredRelation, array $remoteRelation): bool
     {
-        return $this->chapterService->update(
-            $desiredRelation['chapter'],
-            $remoteRelation['relatedWork'],
-            $desiredRelation['imprintId'],
-            $desiredRelation['work']
-        );
+        return $this->chapterService->synchronize(
+            $desiredRelation['chapterState'],
+            new WorkId($remoteRelation['relatedWork']['workId'])
+        )->hasWarnings();
     }
 
     public function updateOrdinal(array $remoteRelation, int $ordinal): void
@@ -56,6 +50,6 @@ final class LegacyWorkRelationMetadataGateway implements WorkRelationMetadataGat
     public function delete(string $workRelationId, string $relatedWorkId): void
     {
         $this->repository->delete($workRelationId);
-        $this->chapterService->delete($relatedWorkId);
+        $this->chapterService->delete(new WorkId($relatedWorkId));
     }
 }

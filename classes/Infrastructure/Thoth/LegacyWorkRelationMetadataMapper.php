@@ -2,12 +2,13 @@
 
 namespace APP\plugins\generic\thoth\classes\Infrastructure\Thoth;
 
+use APP\plugins\generic\thoth\classes\Application\Synchronization\ChapterSynchronizationState;
 use APP\plugins\generic\thoth\classes\Contracts\WorkRelationMetadataMapper;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 
 final class LegacyWorkRelationMetadataMapper implements WorkRelationMetadataMapper
 {
-    public function __construct(private object $chapterDao, private object $chapterService)
+    public function __construct(private object $chapterDao, private object $chapterMapper)
     {
     }
 
@@ -16,15 +17,18 @@ final class LegacyWorkRelationMetadataMapper implements WorkRelationMetadataMapp
         $relations = [];
         $chapters = $this->chapterDao->getByPublicationId($publication->getId())->toArray();
         foreach ($chapters as $chapter) {
-            $work = $this->chapterService->getDesiredWork($chapter, $imprintId);
+            $chapterState = new ChapterSynchronizationState(
+                $chapter,
+                $imprintId,
+                $publication->getData('locale')
+            );
+            $work = $this->chapterMapper->fromPublication($chapterState);
             $relations[] = [
                 'relationOrdinal' => (int) $chapter->getSequence() + 1,
-                'doi' => $work->getDoi(),
-                'landingPage' => $work->getLandingPage(),
+                'doi' => $work['doi'] ?? null,
+                'landingPage' => $work['landingPage'] ?? null,
                 'title' => $chapter->getLocalizedFullTitle(),
-                'chapter' => $chapter,
-                'work' => $work,
-                'imprintId' => $imprintId,
+                'chapterState' => $chapterState,
             ];
         }
         return $relations;
