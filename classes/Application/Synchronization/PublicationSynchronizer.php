@@ -24,6 +24,7 @@ final class PublicationSynchronizer implements DomainSynchronizer
     public function __construct(
         private PublicationMetadataGateway $gateway,
         private PublicationMetadataMapper $mapper,
+        private SynchronizeLocations $locations,
         ?PublicationMatcher $matcher = null,
         ?PublicationDiff $diff = null
     ) {
@@ -44,12 +45,17 @@ final class PublicationSynchronizer implements DomainSynchronizer
                 $workId,
                 $match['remote']['publicationId'],
                 $match['desired'],
-                $match['remote'],
                 $this->diff->hasChanges($match['remote'], $match['desired'])
+            );
+            $this->locations->synchronize(
+                $match['remote']['publicationId'],
+                $match['desired']['locations'] ?? [],
+                $match['remote']['locations'] ?? []
             );
         }
         foreach ($plan['creates'] as $desiredPublication) {
-            $this->gateway->create($workId, $desiredPublication);
+            $publicationId = $this->gateway->create($workId, $desiredPublication);
+            $this->locations->synchronize($publicationId, $desiredPublication['locations'] ?? [], []);
         }
 
         if ($snapshot['workStatus'] === self::ACTIVE && $plan['deletes'] !== []) {

@@ -6,6 +6,8 @@ require_once __DIR__ . '/../../../../vendor/autoload.php';
 
 use APP\plugins\generic\thoth\classes\Application\Exception\InvalidRemoteMetadata;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\PublicationSynchronizer;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeLocations;
+use APP\plugins\generic\thoth\classes\Contracts\LocationMetadataGateway;
 use APP\plugins\generic\thoth\classes\Contracts\PublicationMetadataGateway;
 use APP\plugins\generic\thoth\classes\Contracts\PublicationMetadataMapper;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
@@ -38,11 +40,11 @@ final class PublicationSynchronizerTest extends PKPTestCase
             'publications' => [$remote],
         ]);
         $gateway->expects($this->once())->method('update')
-            ->with($this->workId(), 'publication-id', $desired, $remote, false);
+            ->with($this->workId(), 'publication-id', $desired, false);
         $gateway->expects($this->never())->method('create');
         $gateway->expects($this->never())->method('delete');
 
-        $result = (new PublicationSynchronizer($gateway, $mapper))->synchronize($publication, $this->workId());
+        $result = $this->synchronizer($gateway, $mapper)->synchronize($publication, $this->workId());
 
         $this->assertFalse($result->hasWarnings());
     }
@@ -59,11 +61,12 @@ final class PublicationSynchronizerTest extends PKPTestCase
             'workStatus' => 'FORTHCOMING',
             'publications' => [$remote],
         ]);
-        $gateway->expects($this->once())->method('create')->with($this->workId(), $desired);
+        $gateway->expects($this->once())->method('create')->with($this->workId(), $desired)
+            ->willReturn('created-publication-id');
         $gateway->expects($this->never())->method('update');
         $gateway->expects($this->once())->method('delete')->with('publication-id');
 
-        $result = (new PublicationSynchronizer($gateway, $mapper))->synchronize(new stdClass(), $this->workId());
+        $result = $this->synchronizer($gateway, $mapper)->synchronize(new stdClass(), $this->workId());
 
         $this->assertFalse($result->hasWarnings());
     }
@@ -82,7 +85,7 @@ final class PublicationSynchronizerTest extends PKPTestCase
         $gateway->expects($this->never())->method('update');
         $gateway->expects($this->never())->method('delete');
 
-        $result = (new PublicationSynchronizer($gateway, $mapper))->synchronize(new stdClass(), $this->workId());
+        $result = $this->synchronizer($gateway, $mapper)->synchronize(new stdClass(), $this->workId());
 
         $this->assertSame(self::DELETION_WARNING, $result->getWarnings()[0]->getMessageKey());
     }
@@ -110,7 +113,49 @@ final class PublicationSynchronizerTest extends PKPTestCase
 
         $this->expectException(InvalidRemoteMetadata::class);
 
-        (new PublicationSynchronizer($gateway, $mapper))->synchronize(new stdClass(), $this->workId());
+        $this->synchronizer($gateway, $mapper)->synchronize(new stdClass(), $this->workId());
+    }
+
+    public function testItDelegatesMatchedPublicationLocationsToTheLocationSynchronizer(): void
+    {
+        $desiredLocation = [
+            'landingPage' => 'https://publisher.example/new',
+            'fullTextUrl' => 'https://publisher.example/book.pdf',
+            'locationPlatform' => 'OTHER',
+        ];
+        $remoteLocation = [
+            'locationId' => 'location-id',
+            'landingPage' => 'https://publisher.example/old',
+            'fullTextUrl' => 'https://publisher.example/book.pdf',
+            'locationPlatform' => 'OTHER',
+            'canonical' => true,
+        ];
+        $desired = $this->desiredPublication(['locations' => [$desiredLocation]]);
+        $remote = $this->remotePublication(['locations' => [$remoteLocation]]);
+        $mapper = $this->createConfiguredMock(PublicationMetadataMapper::class, [
+            'fromPublication' => [$desired],
+        ]);
+        $gateway = $this->createMock(PublicationMetadataGateway::class);
+        $gateway->method('snapshot')->willReturn([
+            'workStatus' => 'FORTHCOMING',
+            'publications' => [$remote],
+        ]);
+        $gateway->expects($this->once())->method('update')
+            ->with($this->workId(), 'publication-id', $desired, false);
+        $locationGateway = $this->createMock(LocationMetadataGateway::class);
+        $locationGateway->expects($this->once())->method('update')->with(
+            'publication-id',
+            'location-id',
+            $desiredLocation + ['canonical' => true]
+        );
+
+        $result = (new PublicationSynchronizer(
+            $gateway,
+            $mapper,
+            new SynchronizeLocations($locationGateway)
+        ))->synchronize(new stdClass(), $this->workId());
+
+        $this->assertFalse($result->hasWarnings());
     }
 
     public function testItRejectsAnIncompleteRemoteSnapshotBeforeMutating(): void
@@ -128,7 +173,7 @@ final class PublicationSynchronizerTest extends PKPTestCase
 
         $this->expectException(InvalidRemoteMetadata::class);
 
-        (new PublicationSynchronizer($gateway, $mapper))->synchronize(new stdClass(), $this->workId());
+        $this->synchronizer($gateway, $mapper)->synchronize(new stdClass(), $this->workId());
     }
 
     private function desiredPublication(array $overrides = []): array
@@ -162,5 +207,16 @@ final class PublicationSynchronizerTest extends PKPTestCase
     private function workId(): WorkId
     {
         return new WorkId(self::WORK_ID);
+    }
+
+    private function synchronizer(
+        PublicationMetadataGateway $gateway,
+        PublicationMetadataMapper $mapper
+    ): PublicationSynchronizer {
+        return new PublicationSynchronizer(
+            $gateway,
+            $mapper,
+            new SynchronizeLocations($this->createMock(LocationMetadataGateway::class))
+        );
     }
 }

@@ -25,6 +25,7 @@ use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\AbstractSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\ContributionSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\PublicationSynchronizer;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeLocations;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\TitleSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkSynchronizer;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
@@ -40,6 +41,7 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadat
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyContributionMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyContributionMetadataMapper;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyLocationMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyPublicationMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyPublicationMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyTitleMetadataGateway;
@@ -100,7 +102,10 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                         ),
                         new PublicationSynchronizer(
                             new LegacyPublicationMetadataGateway(ThothService::publication()),
-                            new LegacyPublicationMetadataMapper(ThothService::publication())
+                            new LegacyPublicationMetadataMapper(ThothService::publication()),
+                            new SynchronizeLocations(
+                                new LegacyLocationMetadataGateway(ThothService::location()->repository)
+                            )
                         ),
                         new LegacyLanguageSynchronizer(ThothService::language()),
                         new LegacySubjectSynchronizer(ThothService::subject()),
