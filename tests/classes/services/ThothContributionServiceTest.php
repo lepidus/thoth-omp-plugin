@@ -268,6 +268,44 @@ class ThothContributionServiceTest extends PKPTestCase
         ]]);
     }
 
+    public function testUpdateContributionSkipsEquivalentContributionPatch()
+    {
+        $author = $this->createAuthor('Jane Doe');
+        $repository = $this->getMockBuilder(ThothContributionRepository::class)
+            ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
+            ->setMethods(['edit'])
+            ->getMock();
+        $repository->expects($this->never())->method('edit');
+        $contributorRepository = $this->getMockBuilder(ThothContributorRepository::class)
+            ->setConstructorArgs([$this->getMockBuilder(ThothClient::class)->getMock()])
+            ->getMock();
+        $contributorService = $this->createMock(ThothContributorService::class);
+        $contributorService->expects($this->once())->method('update')->with($author, 'contributor-id');
+        $biographyService = $this->createMock(ThothBiographyService::class);
+        $biographyService->expects($this->once())->method('updateByAuthor');
+        $affiliationService = $this->createMock(ThothAffiliationService::class);
+        $affiliationService->expects($this->once())->method('update');
+        $service = new ThothContributionService(
+            $this->createMock(ThothContributionFactory::class),
+            $repository,
+            $contributorRepository,
+            $contributorService,
+            $biographyService,
+            $affiliationService
+        );
+        $contribution = new ThothContribution([
+            'contributionId' => 'contribution-id',
+            'workId' => 'work-id',
+        ]);
+
+        $service->updateContribution($author, $contribution, [
+            'contributionId' => 'contribution-id',
+            'contributorId' => 'contributor-id',
+            'biographies' => [],
+            'affiliations' => [],
+        ], false);
+    }
+
     private function createAuthor($fullName, $orcid = null, $rorId = null, $biography = null)
     {
         $author = $this->getMockBuilder(Author::class)

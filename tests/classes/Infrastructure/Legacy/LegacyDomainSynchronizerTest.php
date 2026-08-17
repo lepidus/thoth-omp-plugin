@@ -5,7 +5,6 @@ require_once(__DIR__ . '/../../../../vendor/autoload.php');
 import('lib.pkp.tests.PKPTestCase');
 import('plugins.generic.thoth.classes.Contracts.DomainSynchronizer');
 import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyContributionSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyBookMetadataSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyLanguageSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationSynchronizer');
@@ -14,7 +13,6 @@ import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacySubjectSynchro
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkRelationSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkSynchronizer');
 import('plugins.generic.thoth.classes.services.ThothBookService');
-import('plugins.generic.thoth.classes.services.ThothContributionService');
 import('plugins.generic.thoth.classes.services.ThothLanguageService');
 import('plugins.generic.thoth.classes.services.ThothPublicationService');
 import('plugins.generic.thoth.classes.services.ThothReferenceService');
@@ -61,19 +59,6 @@ class LegacyDomainSynchronizerTest extends PKPTestCase
         $this->assertSame($publication, $service->publication);
         $this->assertSame(self::WORK_ID, $service->workId);
         $this->assertSame('book.warning', $result->getWarnings()[0]->getMessageKey());
-    }
-
-    public function testContributionSynchronizerDelegatesWithoutWarnings(): void
-    {
-        $publication = new stdClass();
-        $service = $this->createMock(ThothContributionService::class);
-        $service->expects($this->once())
-            ->method('synchronizeByPublication')
-            ->with($publication, self::WORK_ID);
-
-        $this->assertEmptyResult(
-            (new LegacyContributionSynchronizer($service))->synchronize($publication, $this->workId())
-        );
     }
 
     public function testPublicationSynchronizerTranslatesSkippedDeletionWarning(): void

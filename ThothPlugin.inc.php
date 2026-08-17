@@ -21,6 +21,7 @@ require_once(__DIR__ . '/vendor/autoload.php');
 import('lib.pkp.classes.plugins.GenericPlugin');
 import('plugins.generic.thoth.classes.api.ThothEndpoint');
 import('plugins.generic.thoth.classes.Application.Synchronization.AbstractSynchronizer');
+import('plugins.generic.thoth.classes.Application.Synchronization.ContributionSynchronizer');
 import('plugins.generic.thoth.classes.Application.Synchronization.TitleSynchronizer');
 import('plugins.generic.thoth.classes.Application.Synchronization.WorkSynchronizer');
 import('plugins.generic.thoth.classes.Bootstrap.ThothCompositionRoot');
@@ -32,7 +33,6 @@ import('plugins.generic.thoth.classes.facades.ThothService');
 import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.notification.ThothNotification');
-import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyContributionSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyBookMetadataSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyLanguageSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationSynchronizer');
@@ -41,6 +41,8 @@ import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacySubjectSynchro
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkRelationSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyAbstractMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyAbstractMetadataMapper');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyContributionMetadataGateway');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyContributionMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyTitleMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyTitleMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyWorkMetadataGateway');
@@ -77,6 +79,7 @@ class ThothPlugin extends GenericPlugin
                 function (): array {
                     $bookService = ThothService::book();
                     $abstractService = ThothService::abstract();
+                    $contributionService = ThothService::contribution();
                     $titleService = ThothService::title();
 
                     return [
@@ -99,7 +102,10 @@ class ThothPlugin extends GenericPlugin
                             new LegacyAbstractMetadataMapper($abstractService->factory)
                         ),
                         new LegacyBookMetadataSynchronizer($bookService),
-                        new LegacyContributionSynchronizer(ThothService::contribution()),
+                        new ContributionSynchronizer(
+                            new LegacyContributionMetadataGateway($contributionService),
+                            new LegacyContributionMetadataMapper($contributionService)
+                        ),
                         new LegacyPublicationSynchronizer(ThothService::publication()),
                         new LegacyLanguageSynchronizer(ThothService::language()),
                         new LegacySubjectSynchronizer(ThothService::subject()),
