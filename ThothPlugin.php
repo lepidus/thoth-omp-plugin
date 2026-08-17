@@ -30,13 +30,13 @@ use APP\plugins\generic\thoth\classes\Application\Synchronization\ReferenceSynch
 use APP\plugins\generic\thoth\classes\Application\Synchronization\SubjectSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeLocations;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\TitleSynchronizer;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkRelationSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkSynchronizer;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\facades\ThothService;
 use APP\plugins\generic\thoth\classes\hooks\HookRegistrant;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookMetadataSynchronizer;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkRelationSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyContributionMetadataGateway;
@@ -54,6 +54,8 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyTitleMetadataGa
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyTitleMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkMetadataMapper;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkRelationMetadataGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkRelationMetadataMapper;
 use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
@@ -86,6 +88,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                     $referenceService = ThothService::reference();
                     $subjectService = ThothService::subject();
                     $titleService = ThothService::title();
+                    $workRelationService = ThothService::workRelation();
 
                     return [
                         new WorkSynchronizer(
@@ -130,7 +133,16 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                             new LegacyReferenceMetadataGateway($referenceService->repository),
                             new LegacyReferenceMetadataMapper(DAORegistry::getDAO('CitationDAO'))
                         ),
-                        new LegacyWorkRelationSynchronizer(ThothService::workRelation()),
+                        new WorkRelationSynchronizer(
+                            new LegacyWorkRelationMetadataGateway(
+                                $workRelationService->repository,
+                                $workRelationService->chapterService
+                            ),
+                            new LegacyWorkRelationMetadataMapper(
+                                DAORegistry::getDAO('ChapterDAO'),
+                                $workRelationService->chapterService
+                            )
+                        ),
                     ];
                 },
                 Repo::publication(),
