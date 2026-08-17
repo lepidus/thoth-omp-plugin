@@ -1,17 +1,18 @@
 <?php
 
 import('plugins.generic.thoth.classes.Contracts.WorkRelationMetadataMapper');
+import('plugins.generic.thoth.classes.Application.Synchronization.ChapterSynchronizationState');
 import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
 
 final class LegacyWorkRelationMetadataMapper implements WorkRelationMetadataMapper
 {
     private object $chapterDao;
-    private object $chapterService;
+    private object $chapterMapper;
 
-    public function __construct(object $chapterDao, object $chapterService)
+    public function __construct(object $chapterDao, object $chapterMapper)
     {
         $this->chapterDao = $chapterDao;
-        $this->chapterService = $chapterService;
+        $this->chapterMapper = $chapterMapper;
     }
 
     public function fromPublication(object $publication, WorkId $workId, string $imprintId): array
@@ -19,15 +20,18 @@ final class LegacyWorkRelationMetadataMapper implements WorkRelationMetadataMapp
         $relations = [];
         $chapters = $this->chapterDao->getByPublicationId($publication->getId())->toArray();
         foreach ($chapters as $chapter) {
-            $work = $this->chapterService->getDesiredWork($chapter, $imprintId);
+            $chapterState = new ChapterSynchronizationState(
+                $chapter,
+                $imprintId,
+                $publication->getData('locale')
+            );
+            $work = $this->chapterMapper->fromPublication($chapterState);
             $relations[] = [
                 'relationOrdinal' => (int) $chapter->getSequence() + 1,
-                'doi' => $work->getDoi(),
-                'landingPage' => $work->getLandingPage(),
+                'doi' => $work['doi'] ?? null,
+                'landingPage' => $work['landingPage'] ?? null,
                 'title' => $chapter->getLocalizedFullTitle(),
-                'chapter' => $chapter,
-                'work' => $work,
-                'imprintId' => $imprintId,
+                'chapterState' => $chapterState,
             ];
         }
         return $relations;

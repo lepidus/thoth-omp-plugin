@@ -3,7 +3,10 @@
 require_once __DIR__ . '/../../../../vendor/autoload.php';
 
 import('lib.pkp.tests.PKPTestCase');
+import('plugins.generic.thoth.classes.Application.Synchronization.ChapterSynchronizationState');
 import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
+import('plugins.generic.thoth.classes.Domain.Result.SynchronizationResult');
+import('plugins.generic.thoth.classes.Domain.Result.SynchronizationWarning');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyWorkRelationMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyWorkRelationMetadataMapper');
 
@@ -16,76 +19,77 @@ final class WorkRelationMetadataAdaptersTest extends PKPTestCase
     public function testMapperBuildsDesiredRelationsFromPublicationChapters(): void
     {
         $chapter = new WorkRelationChapter(1.0, 'Chapter title');
-        $work = new WorkRelationDesiredWork('https://doi.org/10.1234/chapter', 'https://example.test/chapter');
-        $chapterService = new RecordingChapterService($work);
+        $chapterMapper = new RecordingChapterWorkMapper([
+            'doi' => 'https://doi.org/10.1234/chapter',
+            'landingPage' => 'https://example.test/chapter',
+        ]);
         $mapper = new LegacyWorkRelationMetadataMapper(
             new WorkRelationChapterDao([$chapter]),
-            $chapterService
+            $chapterMapper
         );
 
         $relations = $mapper->fromPublication(
-            new WorkRelationPublication(42),
+            new WorkRelationPublication(42, 'pt_BR'),
             new WorkId(self::WORK_ID),
             'imprint-id'
         );
 
-        $this->assertSame([[$chapter, 'imprint-id']], $chapterService->desiredWorkCalls);
+        $this->assertCount(1, $chapterMapper->states);
+        $this->assertSame($chapter, $chapterMapper->states[0]->getChapter());
+        $this->assertSame('imprint-id', $chapterMapper->states[0]->getImprintId());
+        $this->assertSame('pt_BR', $chapterMapper->states[0]->getLocale());
         $this->assertSame(2, $relations[0]['relationOrdinal']);
         $this->assertSame('https://doi.org/10.1234/chapter', $relations[0]['doi']);
         $this->assertSame('https://example.test/chapter', $relations[0]['landingPage']);
         $this->assertSame('Chapter title', $relations[0]['title']);
-        $this->assertSame($chapter, $relations[0]['chapter']);
-        $this->assertSame($work, $relations[0]['work']);
-        $this->assertSame('imprint-id', $relations[0]['imprintId']);
+        $this->assertSame($chapterMapper->states[0], $relations[0]['chapterState']);
     }
 
     public function testGatewayDelegatesSnapshotAndRequestLocalMutations(): void
     {
         $snapshot = ['imprintId' => 'imprint-id', 'relations' => []];
         $repository = new RecordingWorkRelationRepository($snapshot);
-        $chapterService = new RecordingChapterService(new WorkRelationDesiredWork(null, null));
-        $chapterService->updateResult = true;
-        $gateway = new LegacyWorkRelationMetadataGateway($repository, $chapterService);
+        $chapterSynchronizer = new RecordingNestedChapterSynchronizer();
+        $chapterSynchronizer->warning = true;
+        $gateway = new LegacyWorkRelationMetadataGateway($repository, $chapterSynchronizer);
         $workId = new WorkId(self::WORK_ID);
         $chapter = new WorkRelationChapter(0.0, 'Chapter');
-        $work = new WorkRelationDesiredWork(null, null);
+        $chapterState = new ChapterSynchronizationState($chapter, 'imprint-id', 'en');
         $desired = [
             'relationOrdinal' => 1,
-            'chapter' => $chapter,
-            'work' => $work,
-            'imprintId' => 'imprint-id',
+            'chapterState' => $chapterState,
         ];
         $remote = [
             'workRelationId' => 'relation-id',
             'relatorWorkId' => self::WORK_ID,
-            'relatedWorkId' => 'chapter-id',
+            'relatedWorkId' => '8b9f66e9-e663-4d96-91a9-a9c47563fa2f',
             'relationType' => RelationType::HAS_CHILD,
             'relationOrdinal' => 2,
-            'relatedWork' => ['workId' => 'chapter-id'],
+            'relatedWork' => ['workId' => '8b9f66e9-e663-4d96-91a9-a9c47563fa2f'],
         ];
 
         $this->assertSame($snapshot, $gateway->snapshot($workId));
         $this->assertTrue($gateway->updateRelatedWork($desired, $remote));
         $gateway->updateOrdinal($remote, 3);
         $gateway->create($workId, $desired);
-        $gateway->delete('obsolete-relation', 'obsolete-work');
+        $gateway->delete('obsolete-relation', '00649420-6264-494a-acb6-94b2d4668aa6');
 
         $this->assertSame([
-            ['update', $chapter, $remote['relatedWork'], 'imprint-id', $work],
-            ['register', $chapter, 'imprint-id', $work],
-            ['delete', 'obsolete-work'],
-        ], $chapterService->mutationCalls);
+            ['synchronize', $chapterState, '8b9f66e9-e663-4d96-91a9-a9c47563fa2f'],
+            ['create', $chapterState],
+            ['delete', '00649420-6264-494a-acb6-94b2d4668aa6'],
+        ], $chapterSynchronizer->calls);
         $this->assertSame([
             ['update', [
                 'workRelationId' => 'relation-id',
                 'relatorWorkId' => self::WORK_ID,
-                'relatedWorkId' => 'chapter-id',
+                'relatedWorkId' => '8b9f66e9-e663-4d96-91a9-a9c47563fa2f',
                 'relationType' => RelationType::HAS_CHILD,
                 'relationOrdinal' => 3,
             ]],
             ['create', [
                 'relatorWorkId' => self::WORK_ID,
-                'relatedWorkId' => 'new-chapter-id',
+                'relatedWorkId' => 'f5ef15f6-c1ad-4876-862d-77fcc69ee2d7',
                 'relationType' => RelationType::HAS_CHILD,
                 'relationOrdinal' => 1,
             ]],
@@ -97,10 +101,17 @@ final class WorkRelationMetadataAdaptersTest extends PKPTestCase
 final class WorkRelationPublication
 {
     private int $id;
+    private string $locale;
 
-    public function __construct(int $id)
+    public function __construct(int $id, string $locale)
     {
         $this->id = $id;
+        $this->locale = $locale;
+    }
+
+    public function getData(string $key): ?string
+    {
+        return $key === 'locale' ? $this->locale : null;
     }
 
     public function getId(): int
@@ -131,25 +142,20 @@ final class WorkRelationChapter
     }
 }
 
-final class WorkRelationDesiredWork
+final class RecordingChapterWorkMapper
 {
-    private ?string $doi;
-    private ?string $landingPage;
+    public array $states = [];
+    private array $metadata;
 
-    public function __construct(?string $doi, ?string $landingPage)
+    public function __construct(array $metadata)
     {
-        $this->doi = $doi;
-        $this->landingPage = $landingPage;
+        $this->metadata = $metadata;
     }
 
-    public function getDoi(): ?string
+    public function fromPublication(object $state): array
     {
-        return $this->doi;
-    }
-
-    public function getLandingPage(): ?string
-    {
-        return $this->landingPage;
+        $this->states[] = $state;
+        return $this->metadata;
     }
 }
 
@@ -183,39 +189,28 @@ final class WorkRelationChapterCollection
     }
 }
 
-final class RecordingChapterService
+final class RecordingNestedChapterSynchronizer
 {
-    public array $desiredWorkCalls = [];
-    public array $mutationCalls = [];
-    public bool $updateResult = false;
-    private WorkRelationDesiredWork $work;
+    public array $calls = [];
+    public bool $warning = false;
 
-    public function __construct(WorkRelationDesiredWork $work)
+    public function synchronize(object $state, WorkId $workId): SynchronizationResult
     {
-        $this->work = $work;
+        $this->calls[] = ['synchronize', $state, $workId->toString()];
+        return $this->warning
+            ? new SynchronizationResult(new SynchronizationWarning('warning'))
+            : new SynchronizationResult();
     }
 
-    public function getDesiredWork(object $chapter, string $imprintId): WorkRelationDesiredWork
+    public function create(object $state): WorkId
     {
-        $this->desiredWorkCalls[] = [$chapter, $imprintId];
-        return $this->work;
+        $this->calls[] = ['create', $state];
+        return new WorkId('f5ef15f6-c1ad-4876-862d-77fcc69ee2d7');
     }
 
-    public function update(object $chapter, array $remoteWork, string $imprintId, object $work): bool
+    public function delete(WorkId $workId): void
     {
-        $this->mutationCalls[] = ['update', $chapter, $remoteWork, $imprintId, $work];
-        return $this->updateResult;
-    }
-
-    public function register(object $chapter, string $imprintId, object $work): string
-    {
-        $this->mutationCalls[] = ['register', $chapter, $imprintId, $work];
-        return 'new-chapter-id';
-    }
-
-    public function delete(string $workId): void
-    {
-        $this->mutationCalls[] = ['delete', $workId];
+        $this->calls[] = ['delete', $workId->toString()];
     }
 }
 

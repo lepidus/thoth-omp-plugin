@@ -37,6 +37,9 @@ class ThothWorkRepository
         'license',
         'copyrightHolder',
         'landingPage',
+        'pageInterval',
+        'firstPage',
+        'lastPage',
         'coverUrl',
         'titles' => [
             'titleId',

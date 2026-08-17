@@ -21,6 +21,7 @@ require_once(__DIR__ . '/vendor/autoload.php');
 import('lib.pkp.classes.plugins.GenericPlugin');
 import('plugins.generic.thoth.classes.api.ThothEndpoint');
 import('plugins.generic.thoth.classes.Application.Synchronization.AbstractSynchronizer');
+import('plugins.generic.thoth.classes.Application.Synchronization.ChapterSynchronizer');
 import('plugins.generic.thoth.classes.Application.Synchronization.ContributionSynchronizer');
 import('plugins.generic.thoth.classes.Application.Synchronization.LanguageSynchronizer');
 import('plugins.generic.thoth.classes.Application.Synchronization.PublicationSynchronizer');
@@ -42,6 +43,12 @@ import('plugins.generic.thoth.classes.notification.ThothNotification');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyBookMetadataSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyAbstractMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyAbstractMetadataMapper');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterAbstractMetadataMapper');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterContributionMetadataMapper');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterMetadataGateway');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterPublicationMetadataMapper');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterTitleMetadataMapper');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterWorkMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyContributionMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyContributionMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyLanguageMetadataGateway');
@@ -92,12 +99,49 @@ class ThothPlugin extends GenericPlugin
                 function (): array {
                     $bookService = ThothService::book();
                     $abstractService = ThothService::abstract();
+                    $chapterService = ThothService::chapter();
                     $contributionService = ThothService::contribution();
                     $languageService = ThothService::language();
                     $referenceService = ThothService::reference();
                     $subjectService = ThothService::subject();
                     $titleService = ThothService::title();
                     $workRelationService = ThothService::workRelation();
+                    $chapterWorkMapper = new LegacyChapterWorkMetadataMapper($chapterService->factory);
+                    $chapterSynchronizer = new ChapterSynchronizer(
+                        new LegacyChapterMetadataGateway($chapterService->repository),
+                        $chapterWorkMapper,
+                        new WorkSynchronizer(
+                            new LegacyWorkMetadataGateway($chapterService->repository),
+                            $chapterWorkMapper
+                        ),
+                        [
+                            new TitleSynchronizer(
+                                new LegacyTitleMetadataGateway(
+                                    $chapterService->repository,
+                                    $titleService->repository
+                                ),
+                                new LegacyChapterTitleMetadataMapper($titleService->factory)
+                            ),
+                            new AbstractSynchronizer(
+                                new LegacyAbstractMetadataGateway(
+                                    $chapterService->repository,
+                                    $abstractService->repository
+                                ),
+                                new LegacyChapterAbstractMetadataMapper($abstractService->factory)
+                            ),
+                            new ContributionSynchronizer(
+                                new LegacyContributionMetadataGateway($contributionService),
+                                new LegacyChapterContributionMetadataMapper($contributionService)
+                            ),
+                            new PublicationSynchronizer(
+                                new LegacyPublicationMetadataGateway(ThothService::publication()),
+                                new LegacyChapterPublicationMetadataMapper(ThothService::publication()),
+                                new SynchronizeLocations(
+                                    new LegacyLocationMetadataGateway(ThothService::location()->repository)
+                                )
+                            ),
+                        ]
+                    );
 
                     return [
                         new WorkSynchronizer(
@@ -145,11 +189,11 @@ class ThothPlugin extends GenericPlugin
                         new WorkRelationSynchronizer(
                             new LegacyWorkRelationMetadataGateway(
                                 $workRelationService->repository,
-                                $workRelationService->chapterService
+                                $chapterSynchronizer
                             ),
                             new LegacyWorkRelationMetadataMapper(
                                 DAORegistry::getDAO('ChapterDAO'),
-                                $workRelationService->chapterService
+                                $chapterWorkMapper
                             )
                         ),
                     ];
