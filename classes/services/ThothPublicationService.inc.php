@@ -88,18 +88,26 @@ class ThothPublicationService
 
     public function synchronizeByPublication($publication, $thothWorkId)
     {
-        $submissionFiles = $this->getBookSubmissionFiles($publication);
-        $publicationFormats = DAORegistry::getDAO('PublicationFormatDAO')
-            ->getByPublicationId($publication->getId());
+        [$publicationFormats, $submissionFilesByPublicationFormat] = $this->getBookPublicationData($publication);
         $thothWork = $this->repository->getByWorkId($thothWorkId);
 
         return $this->update(
             $publicationFormats,
             $thothWorkId,
             $thothWork['publications'],
-            $this->getSubmissionFilesByPublicationFormat($submissionFiles),
+            $submissionFilesByPublicationFormat,
             $thothWork['workStatus']
         );
+    }
+
+    public function getBookPublicationData($publication): array
+    {
+        $submissionFiles = $this->getBookSubmissionFiles($publication);
+
+        return [
+            DAORegistry::getDAO('PublicationFormatDAO')->getByPublicationId($publication->getId()),
+            $this->getSubmissionFilesByPublicationFormat($submissionFiles),
+        ];
     }
 
     public function update(

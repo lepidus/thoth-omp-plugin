@@ -20,12 +20,12 @@ use APP\core\Application;
 use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\AbstractSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\ContributionSynchronizer;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\PublicationSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\TitleSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkSynchronizer;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookMetadataSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyLanguageSynchronizer;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyReferenceSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubjectSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkRelationSynchronizer;
@@ -33,6 +33,8 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadat
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyContributionMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyContributionMetadataMapper;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyPublicationMetadataGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyPublicationMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyTitleMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyTitleMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkMetadataGateway;
@@ -111,7 +113,10 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                             new LegacyContributionMetadataGateway($contributionService),
                             new LegacyContributionMetadataMapper($contributionService)
                         ),
-                        new LegacyPublicationSynchronizer(ThothService::publication()),
+                        new PublicationSynchronizer(
+                            new LegacyPublicationMetadataGateway(ThothService::publication()),
+                            new LegacyPublicationMetadataMapper(ThothService::publication())
+                        ),
                         new LegacyLanguageSynchronizer(ThothService::language()),
                         new LegacySubjectSynchronizer(ThothService::subject()),
                         new LegacyReferenceSynchronizer(ThothService::reference()),
