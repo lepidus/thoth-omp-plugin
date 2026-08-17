@@ -26,6 +26,7 @@ use APP\plugins\generic\thoth\classes\Application\Synchronization\AbstractSynchr
 use APP\plugins\generic\thoth\classes\Application\Synchronization\ContributionSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\LanguageSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\PublicationSynchronizer;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\SubjectSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeLocations;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\TitleSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkSynchronizer;
@@ -35,7 +36,6 @@ use APP\plugins\generic\thoth\classes\facades\ThothService;
 use APP\plugins\generic\thoth\classes\hooks\HookRegistrant;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookMetadataSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyReferenceSynchronizer;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubjectSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkRelationSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataMapper;
@@ -46,6 +46,8 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyLanguageMetadat
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyLocationMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyPublicationMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyPublicationMetadataMapper;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacySubjectMetadataGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacySubjectMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyTitleMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyTitleMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkMetadataGateway;
@@ -56,6 +58,7 @@ use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
+use APP\plugins\generic\thoth\classes\services\ThothSubjectClassifier;
 use APP\plugins\generic\thoth\classes\services\ThothWorkLinkService;
 use PKP\core\JSONMessage;
 use PKP\core\PKPContainer;
@@ -77,6 +80,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                     $abstractService = ThothService::abstract();
                     $contributionService = ThothService::contribution();
                     $languageService = ThothService::language();
+                    $subjectService = ThothService::subject();
                     $titleService = ThothService::title();
 
                     return [
@@ -114,7 +118,10 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                             new LegacyLanguageMetadataGateway($languageService->repository),
                             new LegacyLanguageMetadataMapper()
                         ),
-                        new LegacySubjectSynchronizer(ThothService::subject()),
+                        new SubjectSynchronizer(
+                            new LegacySubjectMetadataGateway($subjectService->repository),
+                            new LegacySubjectMetadataMapper(new ThothSubjectClassifier())
+                        ),
                         new LegacyReferenceSynchronizer(ThothService::reference()),
                         new LegacyWorkRelationSynchronizer(ThothService::workRelation()),
                     ];
