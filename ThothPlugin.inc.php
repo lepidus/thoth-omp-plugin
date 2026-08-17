@@ -20,6 +20,7 @@ require_once(__DIR__ . '/vendor/autoload.php');
 
 import('lib.pkp.classes.plugins.GenericPlugin');
 import('plugins.generic.thoth.classes.api.ThothEndpoint');
+import('plugins.generic.thoth.classes.Application.Synchronization.TitleSynchronizer');
 import('plugins.generic.thoth.classes.Application.Synchronization.WorkSynchronizer');
 import('plugins.generic.thoth.classes.Bootstrap.ThothCompositionRoot');
 import('plugins.generic.thoth.classes.components.forms.config.CatalogEntryFormConfig');
@@ -37,6 +38,8 @@ import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationSyn
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyReferenceSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacySubjectSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkRelationSynchronizer');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyTitleMetadataGateway');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyTitleMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyWorkMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyWorkMetadataMapper');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
@@ -70,11 +73,19 @@ class ThothPlugin extends GenericPlugin
                 },
                 function (): array {
                     $bookService = ThothService::book();
+                    $titleService = ThothService::title();
 
                     return [
                         new WorkSynchronizer(
                             new LegacyWorkMetadataGateway($bookService->repository),
                             new LegacyWorkMetadataMapper($bookService->factory)
+                        ),
+                        new TitleSynchronizer(
+                            new LegacyTitleMetadataGateway(
+                                $bookService->repository,
+                                $titleService->repository
+                            ),
+                            new LegacyTitleMetadataMapper($titleService->factory)
                         ),
                         new LegacyBookMetadataSynchronizer($bookService),
                         new LegacyContributionSynchronizer(ThothService::contribution()),

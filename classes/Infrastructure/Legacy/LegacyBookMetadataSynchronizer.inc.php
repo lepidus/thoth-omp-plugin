@@ -16,7 +16,7 @@ final class LegacyBookMetadataSynchronizer implements DomainSynchronizer
 
     public function synchronize(object $desiredState, WorkId $workId): SynchronizationResult
     {
-        $warning = $this->service->synchronizeRelatedMetadata($desiredState, $workId->toString());
+        $warning = $this->service->synchronizeAbstractsAndFrontcover($desiredState, $workId->toString());
 
         return $warning
             ? new SynchronizationResult(new SynchronizationWarning($warning))
