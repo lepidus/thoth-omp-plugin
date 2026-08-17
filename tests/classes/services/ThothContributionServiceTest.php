@@ -273,6 +273,44 @@ class ThothContributionServiceTest extends PKPTestCase
         ]]);
     }
 
+    public function testUpdateContributionSkipsEquivalentContributionPatch(): void
+    {
+        $author = $this->createAuthor('Jane Doe');
+        $repository = $this->getMockBuilder(ThothContributionRepository::class)
+            ->setConstructorArgs([$this->createMock(ThothClient::class)])
+            ->onlyMethods(['edit'])
+            ->getMock();
+        $repository->expects($this->never())->method('edit');
+        $contributorRepository = $this->getMockBuilder(ThothContributorRepository::class)
+            ->setConstructorArgs([$this->createMock(ThothClient::class)])
+            ->getMock();
+        $contributorService = $this->createMock(ThothContributorService::class);
+        $contributorService->expects($this->once())->method('update')->with($author, 'contributor-id');
+        $biographyService = $this->createMock(ThothBiographyService::class);
+        $biographyService->expects($this->once())->method('updateByAuthor');
+        $affiliationService = $this->createMock(ThothAffiliationService::class);
+        $affiliationService->expects($this->once())->method('updateByAuthor');
+        $service = new ThothContributionService(
+            $this->createMock(ThothContributionFactory::class),
+            $repository,
+            $contributorRepository,
+            $contributorService,
+            $biographyService,
+            $affiliationService
+        );
+        $contribution = new ThothContribution([
+            'contributionId' => 'contribution-id',
+            'workId' => 'work-id',
+        ]);
+
+        $service->updateContribution($author, $contribution, [
+            'contributionId' => 'contribution-id',
+            'contributorId' => 'contributor-id',
+            'biographies' => [],
+            'affiliations' => [],
+        ], false);
+    }
+
     private function createAuthor(string $fullName, ?string $orcid = null): Author
     {
         [$givenName, $familyName] = array_pad(explode(' ', $fullName, 2), 2, '');
