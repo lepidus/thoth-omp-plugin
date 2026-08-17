@@ -42,6 +42,9 @@ class ThothWorkRepository
         'titles' => [
             'titleId',
             'localeCode',
+            'fullTitle',
+            'title',
+            'subtitle',
             'canonical',
         ],
         'abstracts' => [
