@@ -49,6 +49,7 @@ class ThothWorkRepository
         'abstracts' => [
             'abstractId',
             'localeCode',
+            'content',
             'abstractType',
             'canonical',
         ],

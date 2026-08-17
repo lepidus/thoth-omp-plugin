@@ -129,11 +129,8 @@ class ThothBookService
             : null;
     }
 
-    public function synchronizeAbstractsAndFrontcover($publication, $thothBookId, $oldThothBook = null)
+    public function synchronizeFrontcover($publication, $thothBookId)
     {
-        $oldThothBook = $oldThothBook ?? $this->repository->get($thothBookId);
-        $this->updateAbstracts($publication, $thothBookId, $oldThothBook);
-
         return $this->frontcoverService
             ? $this->frontcoverService->sync($publication, $thothBookId)
             : null;

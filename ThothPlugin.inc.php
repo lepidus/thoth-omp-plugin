@@ -20,6 +20,7 @@ require_once(__DIR__ . '/vendor/autoload.php');
 
 import('lib.pkp.classes.plugins.GenericPlugin');
 import('plugins.generic.thoth.classes.api.ThothEndpoint');
+import('plugins.generic.thoth.classes.Application.Synchronization.AbstractSynchronizer');
 import('plugins.generic.thoth.classes.Application.Synchronization.TitleSynchronizer');
 import('plugins.generic.thoth.classes.Application.Synchronization.WorkSynchronizer');
 import('plugins.generic.thoth.classes.Bootstrap.ThothCompositionRoot');
@@ -38,6 +39,8 @@ import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationSyn
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyReferenceSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacySubjectSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkRelationSynchronizer');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyAbstractMetadataGateway');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyAbstractMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyTitleMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyTitleMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyWorkMetadataGateway');
@@ -73,6 +76,7 @@ class ThothPlugin extends GenericPlugin
                 },
                 function (): array {
                     $bookService = ThothService::book();
+                    $abstractService = ThothService::abstract();
                     $titleService = ThothService::title();
 
                     return [
@@ -86,6 +90,13 @@ class ThothPlugin extends GenericPlugin
                                 $titleService->repository
                             ),
                             new LegacyTitleMetadataMapper($titleService->factory)
+                        ),
+                        new AbstractSynchronizer(
+                            new LegacyAbstractMetadataGateway(
+                                $bookService->repository,
+                                $abstractService->repository
+                            ),
+                            new LegacyAbstractMetadataMapper($abstractService->factory)
                         ),
                         new LegacyBookMetadataSynchronizer($bookService),
                         new LegacyContributionSynchronizer(ThothService::contribution()),
