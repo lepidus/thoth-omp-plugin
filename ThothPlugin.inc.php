@@ -18,6 +18,7 @@
 
 use APP\core\Application;
 use APP\facades\Repo;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\AbstractSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\TitleSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkSynchronizer;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
@@ -28,6 +29,8 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationSyn
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyReferenceSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubjectSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkRelationSynchronizer;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyTitleMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyTitleMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkMetadataGateway;
@@ -78,6 +81,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                 },
                 function (): array {
                     $bookService = ThothService::book();
+                    $abstractService = ThothService::abstract();
                     $titleService = ThothService::title();
 
                     return [
@@ -91,6 +95,13 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                                 $titleService->repository
                             ),
                             new LegacyTitleMetadataMapper($titleService->factory)
+                        ),
+                        new AbstractSynchronizer(
+                            new LegacyAbstractMetadataGateway(
+                                $bookService->repository,
+                                $abstractService->repository
+                            ),
+                            new LegacyAbstractMetadataMapper($abstractService->factory)
                         ),
                         new LegacyBookMetadataSynchronizer($bookService),
                         new LegacyContributionSynchronizer(ThothService::contribution()),

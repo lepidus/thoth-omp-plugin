@@ -50,7 +50,7 @@ class LegacyDomainSynchronizerTest extends PKPTestCase
             public $publication;
             public $workId;
 
-            public function synchronizeAbstractsAndFrontcover($publication, $workId)
+            public function synchronizeFrontcover($publication, $workId)
             {
                 $this->publication = $publication;
                 $this->workId = $workId;
