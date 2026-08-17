@@ -24,6 +24,7 @@ import('plugins.generic.thoth.classes.Application.Synchronization.AbstractSynchr
 import('plugins.generic.thoth.classes.Application.Synchronization.ContributionSynchronizer');
 import('plugins.generic.thoth.classes.Application.Synchronization.LanguageSynchronizer');
 import('plugins.generic.thoth.classes.Application.Synchronization.PublicationSynchronizer');
+import('plugins.generic.thoth.classes.Application.Synchronization.ReferenceSynchronizer');
 import('plugins.generic.thoth.classes.Application.Synchronization.SubjectSynchronizer');
 import('plugins.generic.thoth.classes.Application.Synchronization.SynchronizeLocations');
 import('plugins.generic.thoth.classes.Application.Synchronization.TitleSynchronizer');
@@ -38,7 +39,6 @@ import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.notification.ThothNotification');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyBookMetadataSynchronizer');
-import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyReferenceSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkRelationSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyAbstractMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyAbstractMetadataMapper');
@@ -49,6 +49,8 @@ import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyLanguageMetadat
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyLocationMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyPublicationMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyPublicationMetadataMapper');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyReferenceMetadataGateway');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyReferenceMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacySubjectMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacySubjectMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyTitleMetadataGateway');
@@ -90,6 +92,7 @@ class ThothPlugin extends GenericPlugin
                     $abstractService = ThothService::abstract();
                     $contributionService = ThothService::contribution();
                     $languageService = ThothService::language();
+                    $referenceService = ThothService::reference();
                     $subjectService = ThothService::subject();
                     $titleService = ThothService::title();
 
@@ -132,7 +135,10 @@ class ThothPlugin extends GenericPlugin
                             new LegacySubjectMetadataGateway($subjectService->repository),
                             new LegacySubjectMetadataMapper(new ThothSubjectClassifier())
                         ),
-                        new LegacyReferenceSynchronizer(ThothService::reference()),
+                        new ReferenceSynchronizer(
+                            new LegacyReferenceMetadataGateway($referenceService->repository),
+                            new LegacyReferenceMetadataMapper(DAORegistry::getDAO('CitationDAO'))
+                        ),
                         new LegacyWorkRelationSynchronizer(ThothService::workRelation()),
                     ];
                 },
