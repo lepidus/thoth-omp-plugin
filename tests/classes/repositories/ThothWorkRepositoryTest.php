@@ -85,6 +85,9 @@ class ThothWorkRepositoryTest extends PKPTestCase
                     'titles' => [
                         'titleId',
                         'localeCode',
+                        'fullTitle',
+                        'title',
+                        'subtitle',
                         'canonical',
                     ],
                     'abstracts' => [

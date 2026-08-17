@@ -122,6 +122,14 @@ class ThothBookService
         return $this->frontcoverService?->sync($publication, $thothBookId);
     }
 
+    public function synchronizeAbstractsAndFrontcover($publication, string $thothBookId, $oldThothBook = null)
+    {
+        $oldThothBook = $oldThothBook ?? $this->repository->get($thothBookId);
+        $this->updateAbstracts($publication, $thothBookId, $oldThothBook);
+
+        return $this->frontcoverService?->sync($publication, $thothBookId);
+    }
+
     private function getPatchWorkData($thothBook): array
     {
         return array_intersect_key($thothBook->toArray(), self::PATCH_WORK_FIELDS);
@@ -138,6 +146,14 @@ class ThothBookService
             $oldThothBookData['titles'] ?? [],
             $locale
         );
+        $this->updateAbstracts($publication, $thothBookId, $oldThothBook);
+    }
+
+    private function updateAbstracts($publication, string $thothBookId, $oldThothBook): void
+    {
+        $oldThothBookData = $oldThothBook->toArray();
+        $locale = $publication->getData('locale');
+
         $this->abstractService->updateByPublication(
             $publication,
             $thothBookId,

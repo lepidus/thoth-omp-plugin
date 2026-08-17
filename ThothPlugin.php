@@ -22,6 +22,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use APP\core\Application;
 use APP\facades\Repo;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\TitleSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkSynchronizer;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use APP\plugins\generic\thoth\classes\container\ThothContainer;
@@ -34,6 +35,8 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationSyn
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyReferenceSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubjectSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkRelationSynchronizer;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyTitleMetadataGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyTitleMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkMetadataMapper;
 use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
@@ -60,11 +63,19 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                 fn (): object => ThothContainer::getInstance()->get('bookRegistrationService'),
                 function (): array {
                     $bookService = ThothService::book();
+                    $titleService = ThothService::title();
 
                     return [
                         new WorkSynchronizer(
                             new LegacyWorkMetadataGateway($bookService->repository),
                             new LegacyWorkMetadataMapper($bookService->factory)
+                        ),
+                        new TitleSynchronizer(
+                            new LegacyTitleMetadataGateway(
+                                $bookService->repository,
+                                $titleService->repository
+                            ),
+                            new LegacyTitleMetadataMapper($titleService->factory)
                         ),
                         new LegacyBookMetadataSynchronizer($bookService),
                         new LegacyContributionSynchronizer(ThothService::contribution()),
