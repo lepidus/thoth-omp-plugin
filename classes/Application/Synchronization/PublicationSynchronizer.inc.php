@@ -1,6 +1,7 @@
 <?php
 
 import('plugins.generic.thoth.classes.Application.Exception.InvalidRemoteMetadata');
+import('plugins.generic.thoth.classes.Application.Synchronization.SynchronizeLocations');
 import('plugins.generic.thoth.classes.Contracts.DomainSynchronizer');
 import('plugins.generic.thoth.classes.Contracts.PublicationMetadataGateway');
 import('plugins.generic.thoth.classes.Contracts.PublicationMetadataMapper');
@@ -20,15 +21,18 @@ final class PublicationSynchronizer implements DomainSynchronizer
     private PublicationMatcher $matcher;
     private PublicationMetadataGateway $gateway;
     private PublicationMetadataMapper $mapper;
+    private SynchronizeLocations $locations;
 
     public function __construct(
         PublicationMetadataGateway $gateway,
         PublicationMetadataMapper $mapper,
+        SynchronizeLocations $locations,
         ?PublicationMatcher $matcher = null,
         ?PublicationDiff $diff = null
     ) {
         $this->gateway = $gateway;
         $this->mapper = $mapper;
+        $this->locations = $locations;
         $this->diff = $diff ?? new PublicationDiff();
         $this->matcher = $matcher ?? new PublicationMatcher($this->diff);
     }
@@ -46,12 +50,17 @@ final class PublicationSynchronizer implements DomainSynchronizer
                 $workId,
                 $match['remote']['publicationId'],
                 $match['desired'],
-                $match['remote'],
                 $this->diff->hasChanges($match['remote'], $match['desired'])
+            );
+            $this->locations->synchronize(
+                $match['remote']['publicationId'],
+                $match['desired']['locations'] ?? [],
+                $match['remote']['locations'] ?? []
             );
         }
         foreach ($plan['creates'] as $desiredPublication) {
-            $this->gateway->create($workId, $desiredPublication);
+            $publicationId = $this->gateway->create($workId, $desiredPublication);
+            $this->locations->synchronize($publicationId, $desiredPublication['locations'] ?? [], []);
         }
 
         if ($snapshot['workStatus'] === self::ACTIVE && $plan['deletes'] !== []) {

@@ -26,18 +26,17 @@ final class LegacyPublicationMetadataGateway implements PublicationMetadataGatew
         return $this->service->repository->getByWorkId($workId->toString());
     }
 
-    public function create(WorkId $workId, array $metadata): void
+    public function create(WorkId $workId, array $metadata): string
     {
         $publication = $this->newPublication($workId, $metadata);
-        $publicationId = $this->service->repository->add($publication);
-        $this->synchronizeLocations($metadata, $publicationId, []);
+
+        return $this->service->repository->add($publication);
     }
 
     public function update(
         WorkId $workId,
         string $publicationId,
         array $metadata,
-        array $remotePublication,
         bool $metadataChanged
     ): void {
         $publication = $this->newPublication($workId, $metadata);
@@ -45,7 +44,6 @@ final class LegacyPublicationMetadataGateway implements PublicationMetadataGatew
         if ($metadataChanged) {
             $this->service->repository->edit($publication);
         }
-        $this->synchronizeLocations($metadata, $publicationId, $remotePublication['locations'] ?? []);
     }
 
     public function delete(string $publicationId): void
@@ -61,13 +59,4 @@ final class LegacyPublicationMetadataGateway implements PublicationMetadataGatew
         return $publication;
     }
 
-    private function synchronizeLocations(array $metadata, string $publicationId, array $remoteLocations): void
-    {
-        $metadata['publicationFormat']->setData('thothPublicationId', $publicationId);
-        $this->service->locationService->update(
-            $publicationId,
-            $metadata['locations'] ?? [],
-            $remoteLocations
-        );
-    }
 }

@@ -13,7 +13,7 @@ final class PublicationMetadataAdaptersTest extends PKPTestCase
 {
     private const WORK_ID = '4c64863b-ce51-4cf5-bedf-0dd911147f6d';
 
-    public function testMapperKeepsOnlyDesiredMetadataAndRequestLocalCollaborators(): void
+    public function testMapperKeepsOnlyDesiredPublicationAndLocationMetadata(): void
     {
         $publicationFormat = $this->publicationFormat();
         $submissionFile = new \stdClass();
@@ -73,15 +73,14 @@ final class PublicationMetadataAdaptersTest extends PKPTestCase
             $this->workId()
         );
 
-        $this->assertSame($publicationFormat, $mapped[0]['publicationFormat']);
-        $this->assertSame([$location], $mapped[0]['locations']);
+        $this->assertSame([$location->getAllData()], $mapped[0]['locations']);
         $this->assertSame('PDF', $mapped[0]['publicationType']);
         $this->assertSame('978-3-16-148410-0', $mapped[0]['isbn']);
         $this->assertArrayNotHasKey('publicationId', $mapped[0]);
         $this->assertArrayNotHasKey('workId', $mapped[0]);
     }
 
-    public function testGatewayUsesRemoteIdsOnlyForCurrentPublicationAndLocationMutations(): void
+    public function testGatewayUsesRemoteIdsOnlyForCurrentPublicationMutations(): void
     {
         $repository = new class () {
             public array $added = [];
@@ -115,28 +114,16 @@ final class PublicationMetadataAdaptersTest extends PKPTestCase
                 $this->deleted[] = $publicationId;
             }
         };
-        $locationService = new class () {
-            public array $updates = [];
-
-            public function update(string $publicationId, array $desired, array $remote): void
-            {
-                $this->updates[] = [$publicationId, $desired, $remote];
-            }
-        };
-        $service = new class ($repository, $locationService) {
+        $service = new class ($repository) {
             public $repository;
-            public $locationService;
 
-            public function __construct($repository, $locationService)
+            public function __construct($repository)
             {
                 $this->repository = $repository;
-                $this->locationService = $locationService;
             }
         };
-        $format = $this->publicationFormat();
         $desiredLocation = new PatchLocation(['fullTextUrl' => 'https://example.com/book.pdf']);
         $metadata = [
-            'publicationFormat' => $format,
             'publicationType' => 'PDF',
             'isbn' => null,
             'locations' => [$desiredLocation],
@@ -144,12 +131,11 @@ final class PublicationMetadataAdaptersTest extends PKPTestCase
         $gateway = new LegacyPublicationMetadataGateway($service);
 
         $this->assertSame('FORTHCOMING', $gateway->snapshot($this->workId())['workStatus']);
-        $gateway->create($this->workId(), $metadata);
+        $this->assertSame('new-publication-id', $gateway->create($this->workId(), $metadata));
         $gateway->update(
             $this->workId(),
             'existing-publication-id',
             $metadata,
-            ['locations' => [['locationId' => 'remote-location-id']]],
             true
         );
         $gateway->delete('obsolete-publication-id');
@@ -158,10 +144,6 @@ final class PublicationMetadataAdaptersTest extends PKPTestCase
         $this->assertSame('existing-publication-id', $repository->edited[0]->getPublicationId());
         $this->assertSame(self::WORK_ID, $repository->edited[0]->getWorkId());
         $this->assertSame(['obsolete-publication-id'], $repository->deleted);
-        $this->assertSame('new-publication-id', $locationService->updates[0][0]);
-        $this->assertSame('existing-publication-id', $locationService->updates[1][0]);
-        $this->assertSame('remote-location-id', $locationService->updates[1][2][0]['locationId']);
-        $this->assertSame('existing-publication-id', $format->thothPublicationId);
     }
 
     private function publicationFormat(): object
