@@ -78,6 +78,9 @@ class ThothWorkRepositoryTest extends PKPTestCase
                 'license',
                 'copyrightHolder',
                 'landingPage',
+                'pageInterval',
+                'firstPage',
+                'lastPage',
                 'coverUrl',
                 'titles' => [
                     'titleId',

@@ -393,7 +393,7 @@ class ThothPublicationService
         return $submissionFilesByPublicationFormat;
     }
 
-    private function getChapterPublicationData($chapter)
+    public function getChapterPublicationData($chapter)
     {
         $publication = Repo::publication()->get($chapter->getData('publicationId'));
         $submissionFiles = iterator_to_array(
