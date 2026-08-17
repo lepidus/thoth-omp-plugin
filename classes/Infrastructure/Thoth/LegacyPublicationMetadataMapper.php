@@ -38,9 +38,11 @@ final class LegacyPublicationMetadataMapper implements PublicationMetadataMapper
                     ->getAllData(),
                 self::MUTABLE_FIELDS
             );
-            $metadata['publicationFormat'] = $publicationFormat;
-            $metadata['locations'] = $this->service->locationService
-                ->getDesiredByPublicationFormat($publicationFormat, $files);
+            $locations = $this->service->locationService->getDesiredByPublicationFormat($publicationFormat, $files);
+            $metadata['locations'] = array_values(array_map(
+                fn (object $location): array => $location->getAllData(),
+                $locations
+            ));
             $publications[] = $metadata;
         }
 
