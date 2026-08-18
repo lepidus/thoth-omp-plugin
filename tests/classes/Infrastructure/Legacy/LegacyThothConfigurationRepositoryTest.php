@@ -40,6 +40,46 @@ class LegacyThothConfigurationRepositoryTest extends PKPTestCase
         $this->assertSame('', $configuration->token());
     }
 
+    public function testEncryptsTokenAndPersistsTypedConfiguration()
+    {
+        $updates = [];
+        $pluginSettingsDao = new class ($updates) {
+            public $updates;
+
+            public function __construct(array &$updates)
+            {
+                $this->updates = &$updates;
+            }
+
+            public function updateSetting($contextId, $pluginName, $settingName, $value, $type)
+            {
+                $this->updates[] = [$contextId, $pluginName, $settingName, $value, $type];
+            }
+        };
+        $repository = new LegacyThothConfigurationRepository(
+            $pluginSettingsDao,
+            new class () {
+                public function textIsEncrypted($value)
+                {
+                    return false;
+                }
+
+                public function encryptString($value)
+                {
+                    return 'encrypted-' . $value;
+                }
+            }
+        );
+
+        $repository->save(7, new ThothConfiguration(true, 'https://api.example.test', 'plain-token'));
+
+        $this->assertSame([
+            [7, 'ThothPlugin', 'token', 'encrypted-plain-token', 'string'],
+            [7, 'ThothPlugin', 'customThothApi', '1', 'string'],
+            [7, 'ThothPlugin', 'customThothApiUrl', 'https://api.example.test', 'string'],
+        ], $updates);
+    }
+
     private function getPluginSettingsDao(array $settings)
     {
         return new class ($settings) {

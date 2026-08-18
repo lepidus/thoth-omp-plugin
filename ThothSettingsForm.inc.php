@@ -15,11 +15,12 @@
  * @brief Form for managers to modify Thoth plugin settings
  */
 
-use ThothApi\Exception\QueryException;
-use ThothApi\GraphQL\Client;
-
 import('lib.pkp.classes.form.Form');
+import('plugins.generic.thoth.classes.Application.Configuration.SaveThothConfiguration');
+import('plugins.generic.thoth.classes.Domain.Configuration.ThothConfiguration');
 import('plugins.generic.thoth.classes.encryption.DataEncryption');
+import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyThothConfigurationRepository');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.ThothConfigurationVerifier');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 import('plugins.generic.thoth.classes.security.ThothApiUrlValidator');
 
@@ -28,6 +29,9 @@ class ThothSettingsForm extends Form
     private $contextId;
 
     private $plugin;
+    private ThothConfigurationRepository $configurationRepository;
+    private ThothConfigurationVerifier $configurationVerifier;
+    private SaveThothConfiguration $saveConfiguration;
 
     private const SETTINGS = [
         'token',
@@ -35,16 +39,29 @@ class ThothSettingsForm extends Form
         'customThothApiUrl',
     ];
 
-    public function __construct($plugin, $contextId)
-    {
+    public function __construct(
+        $plugin,
+        $contextId,
+        $configurationRepository = null,
+        $configurationVerifier = null,
+        $saveConfiguration = null
+    ) {
         $this->contextId = $contextId;
         $this->plugin = $plugin;
+        $this->configurationRepository = $configurationRepository ?: new LegacyThothConfigurationRepository();
+        $this->configurationVerifier = $configurationVerifier
+            ?: new ThothConfigurationVerifier(new ThothApiUrlValidator());
+        $this->saveConfiguration = $saveConfiguration ?: new SaveThothConfiguration(
+            $this->configurationRepository,
+            function (int $savedContextId): void {
+                (new ThothMeCacheService())->flush($savedContextId);
+            }
+        );
 
         $encryption = new DataEncryption();
         $template = $encryption->secretConfigExists() ? 'settingsForm.tpl' : 'tokenError.tpl';
         parent::__construct($plugin->getTemplateResource($template));
 
-        $form = $this;
         $this->addCheck(new FormValidatorCustom(
             $this,
             'customThothApiUrl',
@@ -67,7 +84,7 @@ class ThothSettingsForm extends Form
                 if (!$this->getData('customThothApi') || !trim($customThothApiUrl)) {
                     return true;
                 }
-                return (new ThothApiUrlValidator())->isSafe(trim($customThothApiUrl));
+                return $this->configurationVerifier->isApiUrlSafe(trim($customThothApiUrl));
             }
         ));
 
@@ -80,7 +97,7 @@ class ThothSettingsForm extends Form
                 if (!$this->getData('customThothApi')) {
                     return true;
                 }
-                return $this->validateCustomThothApiUrl(trim($customThothApiUrl));
+                return $this->configurationVerifier->isApiReachable(trim($customThothApiUrl));
             }
         ));
 
@@ -89,25 +106,12 @@ class ThothSettingsForm extends Form
             'token',
             'required',
             'plugins.generic.thoth.settings.invalidCredentials',
-            function ($token) use ($form) {
-                $httpConfig = [];
-                if ($this->getData('customThothApi') && $this->getData('customThothApiUrl')) {
-                    $customThothApiUrl = trim($this->getData('customThothApiUrl'));
-                    if (!(new ThothApiUrlValidator())->isSafe($customThothApiUrl)) {
-                        return false;
-                    }
-                    $httpConfig['base_uri'] = $customThothApiUrl;
-                    $httpConfig['allow_redirects'] = false;
-                }
-
-                $client = new Client($httpConfig);
-
-                try {
-                    $client->setToken(trim($token))->me();
-                } catch (QueryException $e) {
-                    return false;
-                }
-                return true;
+            function ($token) {
+                return $this->configurationVerifier->hasValidCredentials(new ThothConfiguration(
+                    (bool) $this->getData('customThothApi'),
+                    trim((string) $this->getData('customThothApiUrl')),
+                    trim((string) $token)
+                ));
             }
         ));
 
@@ -117,24 +121,10 @@ class ThothSettingsForm extends Form
 
     public function initData()
     {
-        $encryption = new DataEncryption();
-
-        foreach (self::SETTINGS as $setting) {
-            if ($setting == 'token') {
-                $token = $this->plugin->getSetting($this->contextId, $setting);
-                if ($encryption->secretConfigExists() && $token) {
-                    try {
-                        $this->_data[$setting] = $encryption->decryptString($token);
-                    } catch (Exception $e) {
-                        $this->_data[$setting] = '';
-                    }
-                } else {
-                    $this->_data[$setting] = null;
-                }
-                continue;
-            }
-            $this->_data[$setting] = $this->plugin->getSetting($this->contextId, $setting);
-        }
+        $configuration = $this->configurationRepository->get($this->contextId);
+        $this->setData('token', $configuration->token());
+        $this->setData('customThothApi', $configuration->usesCustomApi());
+        $this->setData('customThothApiUrl', $configuration->customApiUrl());
     }
 
     public function readInputData()
@@ -151,39 +141,11 @@ class ThothSettingsForm extends Form
 
     public function execute(...$functionArgs)
     {
-        $this->encryptToken();
-        foreach (self::SETTINGS as $setting) {
-            $this->plugin->updateSetting($this->contextId, $setting, trim($this->getData($setting)), 'string');
-        }
-        (new ThothMeCacheService())->flush($this->contextId);
+        $this->saveConfiguration->execute($this->contextId, new ThothConfiguration(
+            (bool) $this->getData('customThothApi'),
+            trim((string) $this->getData('customThothApiUrl')),
+            trim((string) $this->getData('token'))
+        ));
         parent::execute(...$functionArgs);
-    }
-
-    private function encryptToken()
-    {
-        $encryption = new DataEncryption();
-        $token = trim($this->getData('token'));
-
-        if (!$encryption->textIsEncrypted($token)) {
-            $encryptedToken = $encryption->encryptString($token);
-            $this->setData('token', $encryptedToken);
-        }
-    }
-
-    private function validateCustomThothApiUrl($customThothApiUrl)
-    {
-        if (!(new ThothApiUrlValidator())->isSafe($customThothApiUrl)) {
-            return false;
-        }
-
-        try {
-            (new Client([
-                'base_uri' => $customThothApiUrl,
-                'allow_redirects' => false,
-            ]))->publisherCount();
-            return true;
-        } catch (Exception $e) {
-            return false;
-        }
     }
 }

@@ -27,6 +27,24 @@ final class LegacyThothConfigurationRepository implements ThothConfigurationRepo
         );
     }
 
+    public function save(int $contextId, ThothConfiguration $configuration): void
+    {
+        $pluginSettingsDao = $this->getPluginSettingsDao();
+        $token = $configuration->token();
+        if (!$this->getEncryption()->textIsEncrypted($token)) {
+            $token = $this->getEncryption()->encryptString($token);
+        }
+
+        $settings = [
+            'token' => $token,
+            'customThothApi' => $configuration->usesCustomApi() ? '1' : '',
+            'customThothApiUrl' => $configuration->customApiUrl(),
+        ];
+        foreach ($settings as $settingName => $value) {
+            $pluginSettingsDao->updateSetting($contextId, 'ThothPlugin', $settingName, $value, 'string');
+        }
+    }
+
     private function getPluginSettingsDao()
     {
         if ($this->pluginSettingsDao !== null) {
