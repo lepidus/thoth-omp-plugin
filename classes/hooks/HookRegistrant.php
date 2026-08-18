@@ -19,6 +19,7 @@ namespace APP\plugins\generic\thoth\classes\hooks;
 use APP\core\Application;
 use APP\plugins\generic\thoth\classes\api\ThothEndpoint;
 use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
+use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadPublicationFile;
 use APP\plugins\generic\thoth\classes\components\forms\config\CatalogEntryFormConfig;
 use APP\plugins\generic\thoth\classes\components\forms\config\ContributorFormConfig;
 use APP\plugins\generic\thoth\classes\components\forms\config\PublishFormConfig;
@@ -49,6 +50,7 @@ class HookRegistrant
     private UnlinkWorkController $unlinkWorkController;
     private UploadFeatureVideoController $uploadFeatureVideoController;
     private GetCatalogFiles $getCatalogFiles;
+    private UploadPublicationFile $uploadPublicationFile;
     private PublicationPublishListener $publicationPublishListener;
 
     public function __construct(
@@ -59,6 +61,7 @@ class HookRegistrant
         UnlinkWorkController $unlinkWorkController,
         UploadFeatureVideoController $uploadFeatureVideoController,
         GetCatalogFiles $getCatalogFiles,
+        UploadPublicationFile $uploadPublicationFile,
         PublicationPublishListener $publicationPublishListener
     ) {
         $this->plugin = $plugin;
@@ -68,6 +71,7 @@ class HookRegistrant
         $this->unlinkWorkController = $unlinkWorkController;
         $this->uploadFeatureVideoController = $uploadFeatureVideoController;
         $this->getCatalogFiles = $getCatalogFiles;
+        $this->uploadPublicationFile = $uploadPublicationFile;
         $this->publicationPublishListener = $publicationPublishListener;
     }
 
@@ -135,7 +139,11 @@ class HookRegistrant
     private function registerTemplateHooks(): void
     {
         $thothMenuHandler = new ThothMenuHandler();
-        $thothPageHandler = new ThothPageHandler($this->plugin, $this->getCatalogFiles);
+        $thothPageHandler = new ThothPageHandler(
+            $this->plugin,
+            $this->getCatalogFiles,
+            $this->uploadPublicationFile
+        );
         $publicationFormatGridModifier = new PublicationFormatGridModifier($this->plugin);
         $publicationFormatGridModifier->register();
 

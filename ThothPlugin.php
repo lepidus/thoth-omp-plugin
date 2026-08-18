@@ -23,6 +23,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 use APP\core\Application;
 use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
+use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadPublicationFile;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\AbstractSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\ChapterSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\ContributionSynchronizer;
@@ -212,6 +213,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                 PKPContainer::getInstance()->make(UnlinkWorkController::class),
                 PKPContainer::getInstance()->make(UploadFeatureVideoController::class),
                 PKPContainer::getInstance()->make(GetCatalogFiles::class),
+                PKPContainer::getInstance()->make(UploadPublicationFile::class),
                 PKPContainer::getInstance()->make(PublicationPublishListener::class)
             );
             $hookRegistrant->register();

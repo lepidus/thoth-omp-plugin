@@ -20,6 +20,7 @@ use APP\core\Application;
 use APP\facades\Repo;
 use APP\handler\Handler;
 use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
+use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadPublicationFile;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use APP\plugins\generic\thoth\classes\facades\ThothRepository;
 use APP\plugins\generic\thoth\classes\facades\ThothService;
@@ -44,8 +45,10 @@ class UploadThothFileHandler extends Handler
 
     public $plugin;
 
-    public function __construct(private GetCatalogFiles $getCatalogFiles)
-    {
+    public function __construct(
+        private GetCatalogFiles $getCatalogFiles,
+        private UploadPublicationFile $uploadPublicationFile
+    ) {
         parent::__construct();
 
         $this->addRoleAssignment(
@@ -96,7 +99,8 @@ class UploadThothFileHandler extends Handler
             $contextId,
             $publicationId,
             $representationId,
-            $thothWorkId
+            $thothWorkId,
+            $this->uploadPublicationFile
         );
         $form->initData();
         $form->setData('missingCdnWritePermissionAlert', !$this->canUploadFiles());
@@ -148,7 +152,8 @@ class UploadThothFileHandler extends Handler
             $request->getContext()->getId(),
             (int) $request->getUserVar('publicationId'),
             (int) $request->getUserVar('representationId'),
-            $request->getUserVar('thothWorkId')
+            $request->getUserVar('thothWorkId'),
+            $this->uploadPublicationFile
         );
         $form->readInputData();
 
