@@ -1,5 +1,6 @@
 <?php
 
+import('plugins.generic.thoth.classes.Application.Catalog.GetCatalogFiles');
 import('plugins.generic.thoth.classes.Application.Registration.RegisterBook');
 import('plugins.generic.thoth.classes.Application.Exception.ExternalFailureReporter');
 import('plugins.generic.thoth.classes.Application.HostedAssets.UploadFeatureVideo');
@@ -7,6 +8,7 @@ import('plugins.generic.thoth.classes.Application.Synchronization.SynchronizeMet
 import('plugins.generic.thoth.classes.Application.Work.GetWorkStatus');
 import('plugins.generic.thoth.classes.Application.Work.UnlinkWork');
 import('plugins.generic.thoth.classes.Contracts.BookRegistrar');
+import('plugins.generic.thoth.classes.Contracts.CatalogFileGateway');
 import('plugins.generic.thoth.classes.Contracts.FeatureVideoCache');
 import('plugins.generic.thoth.classes.Contracts.FeatureVideoUploader');
 import('plugins.generic.thoth.classes.Contracts.NotificationPublisher');
@@ -24,6 +26,7 @@ import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationRea
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacySubmissionLinkRepository');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyTemporaryVideoFileRepository');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkGateway');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyCatalogFileGateway');
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
 import('plugins.generic.thoth.classes.Presentation.Api.RegisterBookController');
@@ -38,6 +41,7 @@ final class ThothCompositionRoot
     private $bookRegistrationServiceFactory;
     private $metadataSynchronizersFactory;
     private $featureVideoServiceFactory;
+    private $catalogFileRepositoryFactory;
     private object $publicationRepository;
     private object $submissionRepository;
     private object $request;
@@ -48,6 +52,7 @@ final class ThothCompositionRoot
         callable $bookRegistrationServiceFactory,
         callable $metadataSynchronizersFactory,
         callable $featureVideoServiceFactory,
+        callable $catalogFileRepositoryFactory,
         object $publicationRepository,
         object $submissionRepository,
         object $request,
@@ -57,6 +62,7 @@ final class ThothCompositionRoot
         $this->bookRegistrationServiceFactory = $bookRegistrationServiceFactory;
         $this->metadataSynchronizersFactory = $metadataSynchronizersFactory;
         $this->featureVideoServiceFactory = $featureVideoServiceFactory;
+        $this->catalogFileRepositoryFactory = $catalogFileRepositoryFactory;
         $this->publicationRepository = $publicationRepository;
         $this->submissionRepository = $submissionRepository;
         $this->request = $request;
@@ -65,6 +71,12 @@ final class ThothCompositionRoot
 
     public function register(object $container): void
     {
+        $container->bind(CatalogFileGateway::class, function (): CatalogFileGateway {
+            return new LegacyCatalogFileGateway(($this->catalogFileRepositoryFactory)());
+        });
+        $container->bind(GetCatalogFiles::class, function ($container): GetCatalogFiles {
+            return new GetCatalogFiles($container->make(CatalogFileGateway::class));
+        });
         $container->bind(FeatureVideoUploader::class, function (): FeatureVideoUploader {
             return new LegacyFeatureVideoUploader(($this->featureVideoServiceFactory)());
         });

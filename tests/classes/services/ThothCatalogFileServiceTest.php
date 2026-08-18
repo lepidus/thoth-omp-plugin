@@ -10,7 +10,9 @@ require_once(__DIR__ . '/../../../vendor/autoload.php');
  * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
  *
  * @class ThothCatalogFileServiceTest
+ *
  * @ingroup plugins_generic_thoth_tests
+ *
  * @see ThothCatalogFileService
  *
  * @brief Test class for the ThothCatalogFileService class
@@ -19,10 +21,41 @@ require_once(__DIR__ . '/../../../vendor/autoload.php');
 use ThothApi\GraphQL\Schemas\File as ThothFile;
 
 import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.services.ThothCatalogFileService');
+import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyCatalogFileGateway');
 
 class ThothCatalogFileServiceTest extends PKPTestCase
 {
+    public function testGetsAndFormatsFilesForTheRequestedWork(): void
+    {
+        $file = new ThothFile([
+            'cdnUrl' => 'https://example.thoth.pub/book.pdf',
+            'objectKey' => 'book.pdf',
+        ]);
+        $repository = new class ($file) {
+            public string $workId = '';
+            private object $file;
+
+            public function __construct(object $file)
+            {
+                $this->file = $file;
+            }
+
+            public function getFilesByWorkId(string $workId): array
+            {
+                $this->workId = $workId;
+                return [$this->file];
+            }
+        };
+
+        $files = (new LegacyCatalogFileGateway($repository))->getByWorkId(
+            new WorkId('11111111-1111-4111-8111-111111111111')
+        );
+
+        self::assertSame('11111111-1111-4111-8111-111111111111', $repository->workId);
+        self::assertSame('https://example.thoth.pub/book.pdf', $files[0]['url']);
+    }
+
     public function testFormatFileReturnsPublicCatalogFileData()
     {
         $file = new ThothFile([
@@ -30,7 +63,7 @@ class ThothCatalogFileServiceTest extends PKPTestCase
             'mimeType' => 'application/pdf',
             'objectKey' => '10.12345/book.pdf',
         ]);
-        $service = new ThothCatalogFileService(new class () {
+        $service = new LegacyCatalogFileGateway(new class () {
         });
 
         $formattedFile = $service->formatFile($file);
@@ -50,7 +83,7 @@ class ThothCatalogFileServiceTest extends PKPTestCase
             'mimeType' => 'application/pdf',
             'objectKey' => '10.12345/book.pdf',
         ]);
-        $service = new ThothCatalogFileService(new class () {
+        $service = new LegacyCatalogFileGateway(new class () {
         });
 
         $formattedFile = $service->formatFile([
@@ -67,7 +100,7 @@ class ThothCatalogFileServiceTest extends PKPTestCase
             'mimeType' => 'application/pdf',
             'objectKey' => '10.12345/book.pdf',
         ]);
-        $service = new ThothCatalogFileService(new class () {
+        $service = new LegacyCatalogFileGateway(new class () {
         });
 
         $formattedFile = $service->formatFile($file);
@@ -85,7 +118,7 @@ class ThothCatalogFileServiceTest extends PKPTestCase
             'mimeType' => 'application/pdf',
             'objectKey' => 'book.pdf',
         ]);
-        $service = new ThothCatalogFileService(new class () {
+        $service = new LegacyCatalogFileGateway(new class () {
         });
 
         $formattedFile = $service->formatFile($file);

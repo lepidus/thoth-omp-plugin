@@ -2,6 +2,7 @@
 
 import('lib.pkp.tests.PKPTestCase');
 import('plugins.generic.thoth.classes.Bootstrap.ThothCompositionRoot');
+import('plugins.generic.thoth.classes.Application.Catalog.GetCatalogFiles');
 import('plugins.generic.thoth.classes.Application.Registration.RegisterBook');
 import('plugins.generic.thoth.classes.Application.Exception.ExternalFailureReporter');
 import('plugins.generic.thoth.classes.Application.HostedAssets.UploadFeatureVideo');
@@ -10,6 +11,7 @@ import('plugins.generic.thoth.classes.Application.Work.GetWorkStatus');
 import('plugins.generic.thoth.classes.Application.Work.UnlinkWork');
 import('plugins.generic.thoth.classes.Contracts.NotificationPublisher');
 import('plugins.generic.thoth.classes.Contracts.BookRegistrar');
+import('plugins.generic.thoth.classes.Contracts.CatalogFileGateway');
 import('plugins.generic.thoth.classes.Contracts.FeatureVideoCache');
 import('plugins.generic.thoth.classes.Contracts.FeatureVideoUploader');
 import('plugins.generic.thoth.classes.Contracts.PluginLogger');
@@ -26,6 +28,7 @@ import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationRea
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacySubmissionLinkRepository');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyTemporaryVideoFileRepository');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkGateway');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyCatalogFileGateway');
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
 import('plugins.generic.thoth.classes.Presentation.Api.RegisterBookController');
@@ -54,6 +57,7 @@ class ThothCompositionRootTest extends PKPTestCase
             function () use ($featureVideoService): object {
                 return $featureVideoService;
             },
+            fn (): object => new stdClass(),
             new stdClass(),
             new stdClass(),
             new stdClass(),
@@ -63,6 +67,8 @@ class ThothCompositionRootTest extends PKPTestCase
         $root->register($container);
 
         $this->assertFalse($workLinkServiceResolved);
+        $this->assertInstanceOf(LegacyCatalogFileGateway::class, $container->make(CatalogFileGateway::class));
+        $this->assertInstanceOf(GetCatalogFiles::class, $container->make(GetCatalogFiles::class));
         $this->assertInstanceOf(LegacyWorkGateway::class, $container->make(WorkGateway::class));
         $this->assertInstanceOf(LegacyFeatureVideoUploader::class, $container->make(FeatureVideoUploader::class));
         $this->assertInstanceOf(LegacyFeatureVideoCache::class, $container->make(FeatureVideoCache::class));

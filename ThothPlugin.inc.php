@@ -37,6 +37,7 @@ import('plugins.generic.thoth.classes.components.forms.config.CatalogEntryFormCo
 import('plugins.generic.thoth.classes.components.forms.config.PublishFormConfig');
 import('plugins.generic.thoth.classes.formModifiers.AuthorFormModifier');
 import('plugins.generic.thoth.classes.formModifiers.PublicationFormatFormModifier');
+import('plugins.generic.thoth.classes.facades.ThothRepo');
 import('plugins.generic.thoth.classes.facades.ThothService');
 import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
@@ -204,6 +205,9 @@ class ThothPlugin extends GenericPlugin
                 },
                 function (): object {
                     return ThothContainer::getInstance()->get('featureVideoService');
+                },
+                function (): object {
+                    return ThothRepo::publication();
                 },
                 DAORegistry::getDAO('PublicationDAO'),
                 DAORegistry::getDAO('SubmissionDAO'),

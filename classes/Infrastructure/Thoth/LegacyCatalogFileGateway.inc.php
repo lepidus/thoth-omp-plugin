@@ -1,40 +1,26 @@
 <?php
 
-/**
- * @file plugins/generic/thoth/classes/services/ThothCatalogFileService.inc.php
- *
- * Copyright (c) 2024-2026 Lepidus Tecnologia
- * Copyright (c) 2024-2026 Thoth
- * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
- *
- * @class ThothCatalogFileService
- * @ingroup plugins_generic_thoth
- *
- * @brief Service to format Thoth files for the public catalog page.
- */
+import('plugins.generic.thoth.classes.Contracts.CatalogFileGateway');
+import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
 
-class ThothCatalogFileService
+final class LegacyCatalogFileGateway implements CatalogFileGateway
 {
-    private $publicationRepository;
+    private object $publicationRepository;
 
-    public function __construct($publicationRepository)
+    public function __construct(object $publicationRepository)
     {
         $this->publicationRepository = $publicationRepository;
     }
 
-    public function getFilesByWorkId($thothWorkId)
+    public function getByWorkId(WorkId $workId): array
     {
-        if (!$thothWorkId) {
-            return [];
-        }
-
         return array_values(array_filter(array_map(
             [$this, 'formatFile'],
-            $this->publicationRepository->getFilesByWorkId($thothWorkId)
+            $this->publicationRepository->getFilesByWorkId($workId->toString())
         )));
     }
 
-    public function formatFile($file)
+    public function formatFile($file): ?array
     {
         $publicationType = null;
         if (is_array($file)) {
@@ -48,23 +34,13 @@ class ThothCatalogFileService
 
         return [
             'url' => $file->getCdnUrl(),
-            'label' => $this->getFileLabel($file),
+            'label' => $file->getObjectKey() ?: __('common.download'),
             'mimeType' => $file->getMimeType(),
             'publicationType' => $publicationType,
         ];
     }
 
-    private function getFileLabel($file)
-    {
-        $objectKey = $file->getObjectKey();
-        if ($objectKey) {
-            return $objectKey;
-        }
-
-        return __('common.download');
-    }
-
-    private function isSafeCdnUrl($url)
+    private function isSafeCdnUrl($url): bool
     {
         if (!is_string($url) || filter_var($url, FILTER_VALIDATE_URL) === false) {
             return false;
