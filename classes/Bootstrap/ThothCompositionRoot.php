@@ -2,6 +2,7 @@
 
 namespace APP\plugins\generic\thoth\classes\Bootstrap;
 
+use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
 use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
 use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadFeatureVideo;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
@@ -9,6 +10,7 @@ use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeMet
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
+use APP\plugins\generic\thoth\classes\Contracts\CatalogFileGateway;
 use APP\plugins\generic\thoth\classes\Contracts\FeatureVideoCache;
 use APP\plugins\generic\thoth\classes\Contracts\FeatureVideoUploader;
 use APP\plugins\generic\thoth\classes\Contracts\NotificationPublisher;
@@ -26,6 +28,7 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationRea
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyTemporaryVideoFileRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyCatalogFileGateway;
 use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
@@ -41,6 +44,7 @@ final class ThothCompositionRoot
         private $bookRegistrationServiceFactory,
         private $metadataSynchronizersFactory,
         private $featureVideoServiceFactory,
+        private $catalogFileRepositoryFactory,
         private object $publicationRepository,
         private object $submissionRepository,
         private object $request,
@@ -50,6 +54,14 @@ final class ThothCompositionRoot
 
     public function register(object $container): void
     {
+        $container->bind(
+            CatalogFileGateway::class,
+            fn (): CatalogFileGateway => new LegacyCatalogFileGateway(($this->catalogFileRepositoryFactory)())
+        );
+        $container->bind(
+            GetCatalogFiles::class,
+            fn ($container): GetCatalogFiles => new GetCatalogFiles($container->make(CatalogFileGateway::class))
+        );
         $container->bind(
             FeatureVideoUploader::class,
             fn (): FeatureVideoUploader => new LegacyFeatureVideoUploader(($this->featureVideoServiceFactory)())

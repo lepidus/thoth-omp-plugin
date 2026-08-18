@@ -18,6 +18,7 @@ namespace APP\plugins\generic\thoth\classes\hooks;
 
 use APP\core\Application;
 use APP\plugins\generic\thoth\classes\api\ThothEndpoint;
+use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
 use APP\plugins\generic\thoth\classes\components\forms\config\CatalogEntryFormConfig;
 use APP\plugins\generic\thoth\classes\components\forms\config\ContributorFormConfig;
 use APP\plugins\generic\thoth\classes\components\forms\config\PublishFormConfig;
@@ -47,6 +48,7 @@ class HookRegistrant
     private SynchronizeMetadataController $synchronizeMetadataController;
     private UnlinkWorkController $unlinkWorkController;
     private UploadFeatureVideoController $uploadFeatureVideoController;
+    private GetCatalogFiles $getCatalogFiles;
     private PublicationPublishListener $publicationPublishListener;
 
     public function __construct(
@@ -56,6 +58,7 @@ class HookRegistrant
         SynchronizeMetadataController $synchronizeMetadataController,
         UnlinkWorkController $unlinkWorkController,
         UploadFeatureVideoController $uploadFeatureVideoController,
+        GetCatalogFiles $getCatalogFiles,
         PublicationPublishListener $publicationPublishListener
     ) {
         $this->plugin = $plugin;
@@ -64,6 +67,7 @@ class HookRegistrant
         $this->synchronizeMetadataController = $synchronizeMetadataController;
         $this->unlinkWorkController = $unlinkWorkController;
         $this->uploadFeatureVideoController = $uploadFeatureVideoController;
+        $this->getCatalogFiles = $getCatalogFiles;
         $this->publicationPublishListener = $publicationPublishListener;
     }
 
@@ -131,7 +135,7 @@ class HookRegistrant
     private function registerTemplateHooks(): void
     {
         $thothMenuHandler = new ThothMenuHandler();
-        $thothPageHandler = new ThothPageHandler($this->plugin);
+        $thothPageHandler = new ThothPageHandler($this->plugin, $this->getCatalogFiles);
         $publicationFormatGridModifier = new PublicationFormatGridModifier($this->plugin);
         $publicationFormatGridModifier->register();
 

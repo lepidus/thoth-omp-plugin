@@ -22,6 +22,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use APP\core\Application;
 use APP\facades\Repo;
+use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\AbstractSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\ChapterSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\ContributionSynchronizer;
@@ -36,6 +37,7 @@ use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkRelationSy
 use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkSynchronizer;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use APP\plugins\generic\thoth\classes\container\ThothContainer;
+use APP\plugins\generic\thoth\classes\facades\ThothRepository;
 use APP\plugins\generic\thoth\classes\facades\ThothService;
 use APP\plugins\generic\thoth\classes\hooks\HookRegistrant;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataGateway;
@@ -194,6 +196,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                     ];
                 },
                 fn (): object => ThothContainer::getInstance()->get('featureVideoService'),
+                fn (): object => ThothRepository::publication(),
                 Repo::publication(),
                 Repo::submission(),
                 Application::get()->getRequest(),
@@ -208,6 +211,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                 PKPContainer::getInstance()->make(SynchronizeMetadataController::class),
                 PKPContainer::getInstance()->make(UnlinkWorkController::class),
                 PKPContainer::getInstance()->make(UploadFeatureVideoController::class),
+                PKPContainer::getInstance()->make(GetCatalogFiles::class),
                 PKPContainer::getInstance()->make(PublicationPublishListener::class)
             );
             $hookRegistrant->register();

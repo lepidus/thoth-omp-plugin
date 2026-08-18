@@ -19,17 +19,23 @@ namespace APP\plugins\generic\thoth\classes\handlers\pages;
 use APP\core\Application;
 use APP\facades\Repo;
 use APP\handler\Handler;
+use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
+use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use APP\plugins\generic\thoth\classes\facades\ThothRepository;
 use APP\plugins\generic\thoth\classes\factories\ThothPublicationFactory;
 use APP\plugins\generic\thoth\classes\formatters\DoiFormatter;
 use APP\plugins\generic\thoth\classes\services\ThothCatalogFilesCacheService;
-use APP\plugins\generic\thoth\classes\services\ThothCatalogFileService;
 use Exception;
 use PKP\core\JSONMessage;
 use PKP\db\DAORegistry;
 
 class ThothCatalogFilesHandler extends Handler
 {
+    public function __construct(private GetCatalogFiles $getCatalogFiles)
+    {
+        parent::__construct();
+    }
+
     public function catalogFiles($args, $request)
     {
         $submissionId = (int) $request->getUserVar('submissionId');
@@ -42,13 +48,12 @@ class ThothCatalogFilesHandler extends Handler
             return new JSONMessage(false);
         }
 
-        $catalogFileService = new ThothCatalogFileService(ThothRepository::publication());
-        $catalogFiles = $this->getCachedCatalogFiles($submission, $publication, $catalogFileService);
+        $catalogFiles = $this->getCachedCatalogFiles($submission, $publication);
 
         return new JSONMessage(true, $catalogFiles);
     }
 
-    private function getCachedCatalogFiles($submission, $publication, $catalogFileService): array
+    private function getCachedCatalogFiles($submission, $publication): array
     {
         $cacheService = new ThothCatalogFilesCacheService();
         $catalogFiles = $cacheService->get($publication->getId());
@@ -57,13 +62,13 @@ class ThothCatalogFilesHandler extends Handler
             return $catalogFiles;
         }
 
-        $catalogFiles = $this->getCatalogFiles($submission, $publication, $catalogFileService);
+        $catalogFiles = $this->assembleCatalogFiles($submission, $publication);
         $cacheService->set($publication->getId(), $catalogFiles);
 
         return $catalogFiles;
     }
 
-    private function getCatalogFiles($submission, $publication, $catalogFileService): array
+    private function assembleCatalogFiles($submission, $publication): array
     {
         $catalogFiles = [
             'monograph' => [],
@@ -72,7 +77,7 @@ class ThothCatalogFilesHandler extends Handler
 
         try {
             $catalogFiles['monograph'] = $this->addRepresentationIds(
-                $catalogFileService->getFilesByWorkId($submission->getData('thothWorkId')),
+                $this->getCatalogFiles->execute($this->toWorkId($submission->getData('thothWorkId'))),
                 $publication
             );
         } catch (Exception $e) {
@@ -81,7 +86,7 @@ class ThothCatalogFilesHandler extends Handler
 
         $chapters = DAORegistry::getDAO('ChapterDAO')->getByPublicationId($publication->getId())->toAssociativeArray();
         foreach ($chapters as $chapter) {
-            $chapterFiles = $this->getChapterFiles($chapter, $catalogFileService);
+            $chapterFiles = $this->getChapterFiles($chapter);
             if (!empty($chapterFiles)) {
                 $catalogFiles['chapters'][$chapter->getId()] = $chapterFiles;
             }
@@ -104,7 +109,7 @@ class ThothCatalogFilesHandler extends Handler
         return $publication->getData('status') === STATUS_PUBLISHED;
     }
 
-    private function getChapterFiles($chapter, $catalogFileService): array
+    private function getChapterFiles($chapter): array
     {
         $doi = $chapter->getStoredPubId('doi');
         if (!$doi) {
@@ -117,7 +122,7 @@ class ThothCatalogFilesHandler extends Handler
                 return [];
             }
 
-            return $catalogFileService->getFilesByWorkId($this->getThothWorkId($thothChapter));
+            return $this->getCatalogFiles->execute($this->toWorkId($this->getThothWorkId($thothChapter)));
         } catch (Exception $e) {
             error_log($e->getMessage());
             return [];
@@ -200,5 +205,10 @@ class ThothCatalogFilesHandler extends Handler
     private function getThothWorkId($thothWork)
     {
         return is_object($thothWork) ? $thothWork->getWorkId() : $thothWork;
+    }
+
+    private function toWorkId($workId): ?WorkId
+    {
+        return $workId ? new WorkId($workId) : null;
     }
 }

@@ -16,6 +16,7 @@
 
 namespace APP\plugins\generic\thoth\classes\hooks;
 
+use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
 use APP\plugins\generic\thoth\classes\handlers\fileUpload\UploadThothFileHandler;
 use APP\plugins\generic\thoth\classes\handlers\modal\RegisterHandler;
 use APP\plugins\generic\thoth\classes\handlers\pages\ThothCatalogFilesHandler;
@@ -25,10 +26,12 @@ use PKP\plugins\GenericPlugin;
 class ThothPageHandler
 {
     private GenericPlugin $plugin;
+    private GetCatalogFiles $getCatalogFiles;
 
-    public function __construct(GenericPlugin $plugin)
+    public function __construct(GenericPlugin $plugin, GetCatalogFiles $getCatalogFiles)
     {
         $this->plugin = $plugin;
+        $this->getCatalogFiles = $getCatalogFiles;
     }
 
     public function addHandlers($hookName, $args): bool
@@ -48,7 +51,7 @@ class ThothPageHandler
         }
 
         if ($op === 'catalogFiles') {
-            $handler = new ThothCatalogFilesHandler();
+            $handler = new ThothCatalogFilesHandler($this->getCatalogFiles);
             return true;
         }
 
@@ -58,7 +61,7 @@ class ThothPageHandler
             'saveUploadThothPublicationFile',
             'viewThothPublicationFormatFiles',
         ])) {
-            $handler = new UploadThothFileHandler();
+            $handler = new UploadThothFileHandler($this->getCatalogFiles);
             return true;
         }
 

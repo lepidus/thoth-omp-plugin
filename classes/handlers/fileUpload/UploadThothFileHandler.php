@@ -19,12 +19,13 @@ namespace APP\plugins\generic\thoth\classes\handlers\fileUpload;
 use APP\core\Application;
 use APP\facades\Repo;
 use APP\handler\Handler;
+use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
+use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use APP\plugins\generic\thoth\classes\facades\ThothRepository;
 use APP\plugins\generic\thoth\classes\facades\ThothService;
 use APP\plugins\generic\thoth\classes\factories\ThothPublicationFactory;
 use APP\plugins\generic\thoth\classes\formatters\DoiFormatter;
 use APP\plugins\generic\thoth\classes\handlers\fileUpload\form\UploadThothPublicationFileForm;
-use APP\plugins\generic\thoth\classes\services\ThothCatalogFileService;
 use APP\template\TemplateManager;
 use Exception;
 use PKP\core\JSONMessage;
@@ -43,7 +44,7 @@ class UploadThothFileHandler extends Handler
 
     public $plugin;
 
-    public function __construct()
+    public function __construct(private GetCatalogFiles $getCatalogFiles)
     {
         parent::__construct();
 
@@ -198,11 +199,10 @@ class UploadThothFileHandler extends Handler
             return [];
         }
 
-        $catalogFileService = new ThothCatalogFileService(ThothRepository::publication());
         $thothFiles = [];
 
         $monographFile = $this->getFileByPublicationType(
-            $catalogFileService->getFilesByWorkId($submission->getData('thothWorkId')),
+            $this->getCatalogFiles->execute($this->toWorkId($submission->getData('thothWorkId'))),
             $publicationType
         );
         if ($monographFile) {
@@ -217,7 +217,7 @@ class UploadThothFileHandler extends Handler
 
         $chapters = DAORegistry::getDAO('ChapterDAO')->getByPublicationId($publication->getId())->toAssociativeArray();
         foreach ($chapters as $chapter) {
-            $chapterFile = $this->getChapterFileByPublicationType($chapter, $catalogFileService, $publicationType);
+            $chapterFile = $this->getChapterFileByPublicationType($chapter, $publicationType);
             if ($chapterFile) {
                 $thothFiles[] = [
                     'component' => __(
@@ -270,7 +270,7 @@ class UploadThothFileHandler extends Handler
         return null;
     }
 
-    private function getChapterFileByPublicationType($chapter, $catalogFileService, $publicationType)
+    private function getChapterFileByPublicationType($chapter, $publicationType)
     {
         $doi = $chapter->getStoredPubId('doi');
         if (!$doi) {
@@ -284,7 +284,7 @@ class UploadThothFileHandler extends Handler
             }
 
             return $this->getFileByPublicationType(
-                $catalogFileService->getFilesByWorkId($this->getThothWorkId($thothChapter)),
+                $this->getCatalogFiles->execute($this->toWorkId($this->getThothWorkId($thothChapter))),
                 $publicationType
             );
         } catch (Exception $e) {
@@ -317,5 +317,10 @@ class UploadThothFileHandler extends Handler
     private function getThothWorkId($thothWork)
     {
         return is_object($thothWork) ? $thothWork->getWorkId() : $thothWork;
+    }
+
+    private function toWorkId($workId): ?WorkId
+    {
+        return $workId ? new WorkId($workId) : null;
     }
 }
