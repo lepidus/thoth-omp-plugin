@@ -52,6 +52,7 @@ class HookRegistrant
     private GetCatalogFiles $getCatalogFiles;
     private UploadPublicationFile $uploadPublicationFile;
     private PublicationPublishListener $publicationPublishListener;
+    private PublicationEditListener $publicationEditListener;
 
     public function __construct(
         GenericPlugin $plugin,
@@ -62,7 +63,8 @@ class HookRegistrant
         UploadFeatureVideoController $uploadFeatureVideoController,
         GetCatalogFiles $getCatalogFiles,
         UploadPublicationFile $uploadPublicationFile,
-        PublicationPublishListener $publicationPublishListener
+        PublicationPublishListener $publicationPublishListener,
+        PublicationEditListener $publicationEditListener
     ) {
         $this->plugin = $plugin;
         $this->getWorkStatusController = $getWorkStatusController;
@@ -73,6 +75,7 @@ class HookRegistrant
         $this->getCatalogFiles = $getCatalogFiles;
         $this->uploadPublicationFile = $uploadPublicationFile;
         $this->publicationPublishListener = $publicationPublishListener;
+        $this->publicationEditListener = $publicationEditListener;
     }
 
     public function register(): void
@@ -120,8 +123,7 @@ class HookRegistrant
         Hook::add('Publication::validatePublish', $this->publicationPublishListener->validate(...));
         Hook::add('Publication::publish', $this->publicationPublishListener->registerThothBook(...));
 
-        $publicationEditListener = new PublicationEditListener();
-        Hook::add('Publication::edit', $publicationEditListener->updateThothBook(...));
+        Hook::add('Publication::edit', $this->publicationEditListener->updateThothBook(...));
     }
 
     private function registerEndpoints(): void

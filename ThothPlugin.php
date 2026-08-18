@@ -92,6 +92,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
             $compositionRoot = new ThothCompositionRoot(
                 fn (): object => new ThothWorkLinkService(ThothContainer::getInstance()->get('workRepository')),
                 fn (): object => ThothContainer::getInstance()->get('bookRegistrationService'),
+                fn (): object => ThothService::book(),
                 function (): array {
                     $bookService = ThothService::book();
                     $abstractService = ThothService::abstract();
@@ -214,7 +215,8 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                 PKPContainer::getInstance()->make(UploadFeatureVideoController::class),
                 PKPContainer::getInstance()->make(GetCatalogFiles::class),
                 PKPContainer::getInstance()->make(UploadPublicationFile::class),
-                PKPContainer::getInstance()->make(PublicationPublishListener::class)
+                PKPContainer::getInstance()->make(PublicationPublishListener::class),
+                PKPContainer::getInstance()->make(PublicationEditListener::class)
             );
             $hookRegistrant->register();
         }

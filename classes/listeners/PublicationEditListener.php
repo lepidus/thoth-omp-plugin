@@ -16,90 +16,44 @@
 
 namespace APP\plugins\generic\thoth\classes\listeners;
 
-use APP\facades\Repo;
-use APP\plugins\generic\thoth\classes\facades\ThothService;
-use APP\plugins\generic\thoth\classes\notification\ThothNotification;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\UpdatePublicationAfterEdit;
+use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
 use ThothApi\Exception\QueryException;
 
 class PublicationEditListener
 {
-    private const CATALOG_ENTRY_FIELDS = [
-        'datePublished',
-        'seriesId',
-        'seriesPosition',
-        'categoryIds',
-        'urlPath',
-        'coverImage',
-        'place',
-        'pageCount',
-        'imageCount',
-        'thothUploadFrontcover',
-    ];
-
-    private $submissionRepository;
-    private $bookService;
-    private $notification;
-
-    public function __construct($submissionRepository = null, $bookService = null, $notification = null)
-    {
-        $this->submissionRepository = $submissionRepository;
-        $this->bookService = $bookService;
-        $this->notification = $notification;
+    public function __construct(
+        private UpdatePublicationAfterEdit $updatePublication,
+        private object $submissionRepository,
+        private object $notification
+    ) {
     }
 
     public function updateThothBook($hookName, $args)
     {
         $publication = $args[0];
-        $params = $args[2];
-        if (!$this->isMetadataEdit($params)) {
-            return false;
-        }
-
+        $submissionId = new SubmissionId($publication->getData('submissionId'));
         $request = $args[3];
-        $submissionRepository = $this->submissionRepository ?: Repo::submission();
-        $submission = $submissionRepository->get($publication->getData('submissionId'));
-
-        $thothBookId = $submission->getData('thothWorkId');
-        if ($thothBookId === null) {
+        try {
+            $result = $this->updatePublication->execute($publication, $submissionId, $args[2]);
+        } catch (QueryException $e) {
+            $submission = $this->submissionRepository->get($submissionId->toInt());
+            $this->notification->notifyError($request, $submission, $e);
             return false;
         }
 
-        $bookService = $this->bookService ?: ThothService::book();
-        $notification = $this->notification ?: new ThothNotification();
-        try {
-            $warning = $bookService->update(
-                $publication,
-                $thothBookId,
-                $this->isTitleAbstractEdit($params)
-            );
-            if (!$this->isDoiAssignment($params)) {
-                $notification->notifySuccess($request, $submission);
-            }
-            if ($warning) {
-                $notification->notifyWarning($request, $submission, $warning);
-            }
-        } catch (QueryException $e) {
-            $notification->notifyError($request, $submission, $e);
+        if (!$result->wasUpdated()) {
+            return false;
+        }
+
+        $submission = $this->submissionRepository->get($submissionId->toInt());
+        if ($result->shouldNotifySuccess()) {
+            $this->notification->notifySuccess($request, $submission);
+        }
+        foreach ($result->getWarnings() as $warning) {
+            $this->notification->notifyWarning($request, $submission, $warning->getMessageKey());
         }
 
         return false;
-    }
-
-    private function isDoiAssignment($params): bool
-    {
-        unset($params['id']);
-        return count($params) === 1 && array_key_exists('doiId', $params);
-    }
-
-    private function isTitleAbstractEdit($params): bool
-    {
-        return (bool) array_intersect(['prefix', 'title', 'subtitle', 'abstract'], array_keys($params));
-    }
-
-    private function isMetadataEdit($params): bool
-    {
-        return $this->isDoiAssignment($params)
-            || $this->isTitleAbstractEdit($params)
-            || (bool) array_intersect(self::CATALOG_ENTRY_FIELDS, array_keys($params));
     }
 }

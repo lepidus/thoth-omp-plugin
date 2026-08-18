@@ -8,8 +8,10 @@ use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadFeatureVide
 use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadPublicationFile;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeMetadata;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\UpdatePublicationAfterEdit;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
+use APP\plugins\generic\thoth\classes\Contracts\BookMetadataUpdater;
 use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
 use APP\plugins\generic\thoth\classes\Contracts\CatalogFileCache;
 use APP\plugins\generic\thoth\classes\Contracts\CatalogFileGateway;
@@ -34,8 +36,10 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubmissionLink
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyTemporaryPublicationFileRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyTemporaryVideoFileRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyBookMetadataUpdater;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyCatalogFileGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyPublicationFileUploader;
+use APP\plugins\generic\thoth\classes\listeners\PublicationEditListener;
 use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
@@ -50,6 +54,7 @@ final class ThothCompositionRoot
     public function __construct(
         private $workLinkServiceFactory,
         private $bookRegistrationServiceFactory,
+        private $bookServiceFactory,
         private $metadataSynchronizersFactory,
         private $featureVideoServiceFactory,
         private $catalogFileRepositoryFactory,
@@ -123,6 +128,10 @@ final class ThothCompositionRoot
             fn (): BookRegistrar => ($this->bookRegistrationServiceFactory)()
         );
         $container->bind(
+            BookMetadataUpdater::class,
+            fn (): BookMetadataUpdater => new LegacyBookMetadataUpdater(($this->bookServiceFactory)())
+        );
+        $container->bind(
             PublicationReader::class,
             fn (): PublicationReader => new LegacyPublicationReader($this->publicationRepository)
         );
@@ -165,6 +174,21 @@ final class ThothCompositionRoot
                 $this->notification,
                 $container->make(BookRegistrationPolicy::class),
                 $container->make(ExternalFailureReporter::class)
+            )
+        );
+        $container->bind(
+            UpdatePublicationAfterEdit::class,
+            fn ($container): UpdatePublicationAfterEdit => new UpdatePublicationAfterEdit(
+                $container->make(SubmissionLinkRepository::class),
+                $container->make(BookMetadataUpdater::class)
+            )
+        );
+        $container->bind(
+            PublicationEditListener::class,
+            fn ($container): PublicationEditListener => new PublicationEditListener(
+                $container->make(UpdatePublicationAfterEdit::class),
+                $this->submissionRepository,
+                $this->notification
             )
         );
         $container->bind(

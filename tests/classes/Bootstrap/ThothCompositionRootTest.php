@@ -8,9 +8,11 @@ use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadFeatureVide
 use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadPublicationFile;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeMetadata;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\UpdatePublicationAfterEdit;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
+use APP\plugins\generic\thoth\classes\Contracts\BookMetadataUpdater;
 use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
 use APP\plugins\generic\thoth\classes\Contracts\CatalogFileCache;
 use APP\plugins\generic\thoth\classes\Contracts\CatalogFileGateway;
@@ -35,8 +37,10 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubmissionLink
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyTemporaryPublicationFileRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyTemporaryVideoFileRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyBookMetadataUpdater;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyCatalogFileGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyPublicationFileUploader;
+use APP\plugins\generic\thoth\classes\listeners\PublicationEditListener;
 use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
@@ -59,6 +63,7 @@ class ThothCompositionRootTest extends PKPTestCase
                 return new \stdClass();
             },
             fn (): object => $bookRegistrar,
+            fn (): object => new \stdClass(),
             fn (): array => [],
             fn (): object => $featureVideoService,
             fn (): object => new \stdClass(),
@@ -92,6 +97,7 @@ class ThothCompositionRootTest extends PKPTestCase
         );
         $this->assertInstanceOf(UploadFeatureVideo::class, $container->make(UploadFeatureVideo::class));
         $this->assertSame($bookRegistrar, $container->make(BookRegistrar::class));
+        $this->assertInstanceOf(LegacyBookMetadataUpdater::class, $container->make(BookMetadataUpdater::class));
         $this->assertTrue($workLinkServiceResolved);
         $this->assertInstanceOf(LegacyPublicationReader::class, $container->make(PublicationReader::class));
         $this->assertInstanceOf(
@@ -110,6 +116,8 @@ class ThothCompositionRootTest extends PKPTestCase
             PublicationPublishListener::class,
             $container->make(PublicationPublishListener::class)
         );
+        $this->assertInstanceOf(UpdatePublicationAfterEdit::class, $container->make(UpdatePublicationAfterEdit::class));
+        $this->assertInstanceOf(PublicationEditListener::class, $container->make(PublicationEditListener::class));
         $this->assertInstanceOf(UnlinkWork::class, $container->make(UnlinkWork::class));
         $this->assertInstanceOf(
             GetWorkStatusController::class,
