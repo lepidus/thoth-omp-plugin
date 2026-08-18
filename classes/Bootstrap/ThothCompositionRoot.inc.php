@@ -2,32 +2,41 @@
 
 import('plugins.generic.thoth.classes.Application.Registration.RegisterBook');
 import('plugins.generic.thoth.classes.Application.Exception.ExternalFailureReporter');
+import('plugins.generic.thoth.classes.Application.HostedAssets.UploadFeatureVideo');
 import('plugins.generic.thoth.classes.Application.Synchronization.SynchronizeMetadata');
 import('plugins.generic.thoth.classes.Application.Work.GetWorkStatus');
 import('plugins.generic.thoth.classes.Application.Work.UnlinkWork');
 import('plugins.generic.thoth.classes.Contracts.BookRegistrar');
+import('plugins.generic.thoth.classes.Contracts.FeatureVideoCache');
+import('plugins.generic.thoth.classes.Contracts.FeatureVideoUploader');
 import('plugins.generic.thoth.classes.Contracts.NotificationPublisher');
 import('plugins.generic.thoth.classes.Contracts.PluginLogger');
 import('plugins.generic.thoth.classes.Contracts.PublicationReader');
 import('plugins.generic.thoth.classes.Contracts.SubmissionLinkRepository');
+import('plugins.generic.thoth.classes.Contracts.TemporaryVideoFileRepository');
 import('plugins.generic.thoth.classes.Contracts.WorkGateway');
 import('plugins.generic.thoth.classes.Domain.Registration.BookRegistrationPolicy');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyNotificationPublisher');
+import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyFeatureVideoCache');
+import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyFeatureVideoUploader');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPluginLogger');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationReader');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacySubmissionLinkRepository');
+import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyTemporaryVideoFileRepository');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkGateway');
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
 import('plugins.generic.thoth.classes.Presentation.Api.RegisterBookController');
 import('plugins.generic.thoth.classes.Presentation.Api.SynchronizeMetadataController');
 import('plugins.generic.thoth.classes.Presentation.Api.UnlinkWorkController');
+import('plugins.generic.thoth.classes.services.ThothFeatureVideoCacheService');
 
 final class ThothCompositionRoot
 {
     private $workLinkServiceFactory;
     private $bookRegistrationServiceFactory;
     private $metadataSynchronizersFactory;
+    private $featureVideoServiceFactory;
     private object $publicationRepository;
     private object $submissionRepository;
     private object $request;
@@ -37,6 +46,7 @@ final class ThothCompositionRoot
         callable $workLinkServiceFactory,
         callable $bookRegistrationServiceFactory,
         callable $metadataSynchronizersFactory,
+        callable $featureVideoServiceFactory,
         object $publicationRepository,
         object $submissionRepository,
         object $request,
@@ -45,6 +55,7 @@ final class ThothCompositionRoot
         $this->workLinkServiceFactory = $workLinkServiceFactory;
         $this->bookRegistrationServiceFactory = $bookRegistrationServiceFactory;
         $this->metadataSynchronizersFactory = $metadataSynchronizersFactory;
+        $this->featureVideoServiceFactory = $featureVideoServiceFactory;
         $this->publicationRepository = $publicationRepository;
         $this->submissionRepository = $submissionRepository;
         $this->request = $request;
@@ -53,6 +64,22 @@ final class ThothCompositionRoot
 
     public function register(object $container): void
     {
+        $container->bind(FeatureVideoUploader::class, function (): FeatureVideoUploader {
+            return new LegacyFeatureVideoUploader(($this->featureVideoServiceFactory)());
+        });
+        $container->bind(FeatureVideoCache::class, function (): FeatureVideoCache {
+            return new LegacyFeatureVideoCache(new ThothFeatureVideoCacheService());
+        });
+        $container->bind(TemporaryVideoFileRepository::class, function (): TemporaryVideoFileRepository {
+            return new LegacyTemporaryVideoFileRepository();
+        });
+        $container->bind(UploadFeatureVideo::class, function ($container): UploadFeatureVideo {
+            return new UploadFeatureVideo(
+                $container->make(TemporaryVideoFileRepository::class),
+                $container->make(FeatureVideoUploader::class),
+                $container->make(FeatureVideoCache::class)
+            );
+        });
         $container->singleton(BookRegistrationPolicy::class, function (): BookRegistrationPolicy {
             return new BookRegistrationPolicy();
         });

@@ -201,6 +201,9 @@ class ThothPlugin extends GenericPlugin
                         ),
                     ];
                 },
+                function (): object {
+                    return ThothContainer::getInstance()->get('featureVideoService');
+                },
                 DAORegistry::getDAO('PublicationDAO'),
                 DAORegistry::getDAO('SubmissionDAO'),
                 Application::get()->getRequest(),
