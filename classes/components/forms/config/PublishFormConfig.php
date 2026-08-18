@@ -18,7 +18,7 @@ namespace APP\plugins\generic\thoth\classes\components\forms\config;
 
 use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\components\forms\ThothValidationMessageFormatter;
-use APP\plugins\generic\thoth\classes\facades\ThothService;
+use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\submission\Submission;
 use Exception;
 use ThothApi\GraphQL\Enums\WorkType;
@@ -66,12 +66,12 @@ class PublishFormConfig
 
     protected function validatePublication($publication): array
     {
-        return ThothService::book()->validate($publication);
+        return ThothContainer::getInstance()->get('bookService')->validate($publication);
     }
 
     protected function getImprints(): array
     {
-        return ThothService::me()->getImprints();
+        return ThothContainer::getInstance()->get('meService')->getImprints();
     }
 
     private function addFields($form, $imprints, $workType)

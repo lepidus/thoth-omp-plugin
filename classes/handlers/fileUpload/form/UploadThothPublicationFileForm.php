@@ -21,8 +21,8 @@ use APP\facades\Repo;
 use APP\i18n\AppLocale;
 use APP\notification\NotificationManager;
 use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadPublicationFile;
+use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
-use APP\plugins\generic\thoth\classes\facades\ThothRepository;
 use APP\plugins\generic\thoth\classes\formatters\DoiFormatter;
 use APP\template\TemplateManager;
 use Exception;
@@ -193,7 +193,7 @@ class UploadThothPublicationFileForm extends Form
 
         $chapterDoi = DoiFormatter::resolveUrl($chapter->getStoredPubId('doi'));
         try {
-            $thothChapter = ThothRepository::chapter()->getByDoi($chapterDoi);
+            $thothChapter = ThothContainer::getInstance()->get('chapterRepository')->getByDoi($chapterDoi);
             if (is_null($thothChapter)) {
                 $this->addError(
                     'submissionComponentId',

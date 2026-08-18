@@ -19,8 +19,7 @@ namespace APP\plugins\generic\thoth\classes\api;
 use APP\core\Application;
 use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\components\forms\FeatureVideoForm;
-use APP\plugins\generic\thoth\classes\facades\ThothRepository;
-use APP\plugins\generic\thoth\classes\facades\ThothService;
+use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
@@ -238,13 +237,14 @@ class ThothEndpoint implements HasAuthorizationPolicy
             'temporaryFiles'
         );
         try {
+            $workRepository = ThothContainer::getInstance()->get('workRepository');
             $existingVideo = $submission->getData('thothWorkId')
-                ? ThothRepository::work()->getFeatureVideo($submission->getData('thothWorkId'))
+                ? $workRepository->getFeatureVideo($submission->getData('thothWorkId'))
                 : null;
             $form = new FeatureVideoForm(
                 $featureVideoUrl,
                 $temporaryFilesUrl,
-                ThothService::me()->hasCdnWritePermission(),
+                ThothContainer::getInstance()->get('meService')->hasCdnWritePermission(),
                 (bool) $existingVideo
             );
         } catch (\Throwable $exception) {
@@ -292,7 +292,7 @@ class ThothEndpoint implements HasAuthorizationPolicy
         }
 
         try {
-            if (!ThothService::me()->hasCdnWritePermission()) {
+            if (!ThothContainer::getInstance()->get('meService')->hasCdnWritePermission()) {
                 return response()->json(
                     ['video' => [__('plugins.generic.thoth.fileUpload.error.missingCdnWritePermission')]],
                     Response::HTTP_FORBIDDEN

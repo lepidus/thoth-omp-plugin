@@ -21,9 +21,8 @@ use APP\facades\Repo;
 use APP\handler\Handler;
 use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
 use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadPublicationFile;
+use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
-use APP\plugins\generic\thoth\classes\facades\ThothRepository;
-use APP\plugins\generic\thoth\classes\facades\ThothService;
 use APP\plugins\generic\thoth\classes\factories\ThothPublicationFactory;
 use APP\plugins\generic\thoth\classes\formatters\DoiFormatter;
 use APP\plugins\generic\thoth\classes\handlers\fileUpload\form\UploadThothPublicationFileForm;
@@ -283,7 +282,8 @@ class UploadThothFileHandler extends Handler
         }
 
         try {
-            $thothChapter = ThothRepository::chapter()->getByDoi(DoiFormatter::resolveUrl($doi));
+            $chapterRepository = ThothContainer::getInstance()->get('chapterRepository');
+            $thothChapter = $chapterRepository->getByDoi(DoiFormatter::resolveUrl($doi));
             if (!$thothChapter) {
                 return null;
             }
@@ -312,7 +312,7 @@ class UploadThothFileHandler extends Handler
     private function canUploadFiles(): bool
     {
         try {
-            return ThothService::me()->hasCdnWritePermission();
+            return ThothContainer::getInstance()->get('meService')->hasCdnWritePermission();
         } catch (Exception $e) {
             error_log($e->getMessage());
             return false;

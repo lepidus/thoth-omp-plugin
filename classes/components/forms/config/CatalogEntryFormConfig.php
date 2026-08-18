@@ -17,7 +17,7 @@
 namespace APP\plugins\generic\thoth\classes\components\forms\config;
 
 use APP\facades\Repo;
-use APP\plugins\generic\thoth\classes\facades\ThothService;
+use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use Exception;
 use PKP\components\forms\FieldOptions;
 use PKP\components\forms\FieldText;
@@ -74,7 +74,7 @@ class CatalogEntryFormConfig
     protected function canUploadFiles(): bool
     {
         try {
-            return ThothService::me()->hasCdnWritePermission();
+            return ThothContainer::getInstance()->get('meService')->hasCdnWritePermission();
         } catch (Exception $e) {
             error_log($e->getMessage());
             return false;

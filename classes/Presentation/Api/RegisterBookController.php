@@ -7,11 +7,10 @@ use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
 use APP\plugins\generic\thoth\classes\Application\Exception\ExternalServiceFailure;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
+use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\ImprintId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
-use APP\plugins\generic\thoth\classes\facades\ThothRepository;
-use APP\plugins\generic\thoth\classes\facades\ThothService;
 use APP\plugins\generic\thoth\classes\notification\ThothNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as IlluminateRequest;
@@ -71,7 +70,7 @@ final class RegisterBookController
         $publication = $submission->getCurrentPublication();
         $failure = ['id' => $submission->getId(), 'errors' => []];
         try {
-            $failure['errors'] = ThothService::book()->validate($publication);
+            $failure['errors'] = ThothContainer::getInstance()->get('bookService')->validate($publication);
         } catch (\Exception $exception) {
             $failure['errors'][] = __('plugins.generic.thoth.connectionError');
         }
@@ -117,7 +116,7 @@ final class RegisterBookController
             return response()->json($failure, Response::HTTP_BAD_REQUEST);
         }
 
-        $thothWork = ThothRepository::work()->get($result->getWorkId()->toString());
+        $thothWork = ThothContainer::getInstance()->get('workRepository')->get($result->getWorkId()->toString());
         $submission = Repo::submission()->get($submissionId);
         $userGroups = UserGroup::withContextIds($submission->getData('contextId'))->get();
         $genreDao = DAORegistry::getDAO('GenreDAO');
