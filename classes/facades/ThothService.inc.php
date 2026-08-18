@@ -64,11 +64,6 @@ class ThothService
         return ThothContainer::getInstance()->get('locationService');
     }
 
-    public static function metadataSynchronization()
-    {
-        return ThothContainer::getInstance()->get('metadataSynchronizationService');
-    }
-
     public static function publication()
     {
         return ThothContainer::getInstance()->get('publicationService');
