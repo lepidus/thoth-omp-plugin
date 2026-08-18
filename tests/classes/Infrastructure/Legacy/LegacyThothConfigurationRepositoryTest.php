@@ -3,6 +3,7 @@
 namespace APP\plugins\generic\thoth\tests\classes\Infrastructure\Legacy;
 
 use APP\plugins\generic\thoth\classes\Contracts\ThothConfigurationRepository;
+use APP\plugins\generic\thoth\classes\Domain\Configuration\ThothConfiguration;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyThothConfigurationRepository;
 use Exception;
 use PKP\tests\PKPTestCase;
@@ -40,6 +41,46 @@ class LegacyThothConfigurationRepositoryTest extends PKPTestCase
         $this->assertFalse($configuration->usesCustomApi());
         $this->assertSame('', $configuration->customApiUrl());
         $this->assertSame('', $configuration->token());
+    }
+
+    public function testEncryptsTokenAndPersistsTypedConfiguration(): void
+    {
+        $updates = [];
+        $pluginSettingsDao = new class ($updates) {
+            public array $updates;
+
+            public function __construct(array &$updates)
+            {
+                $this->updates = &$updates;
+            }
+
+            public function updateSetting($contextId, $pluginName, $settingName, $value, $type): void
+            {
+                $this->updates[] = [$contextId, $pluginName, $settingName, $value, $type];
+            }
+        };
+        $repository = new LegacyThothConfigurationRepository(
+            $pluginSettingsDao,
+            new class () {
+                public function textIsEncrypted($value): bool
+                {
+                    return false;
+                }
+
+                public function encryptString($value): string
+                {
+                    return 'encrypted-' . $value;
+                }
+            }
+        );
+
+        $repository->save(7, new ThothConfiguration(true, 'https://api.example.test', 'plain-token'));
+
+        $this->assertSame([
+            [7, 'ThothPlugin', 'token', 'encrypted-plain-token', 'string'],
+            [7, 'ThothPlugin', 'customThothApi', '1', 'string'],
+            [7, 'ThothPlugin', 'customThothApiUrl', 'https://api.example.test', 'string'],
+        ], $updates);
     }
 
     private function getPluginSettingsDao(array $settings)
