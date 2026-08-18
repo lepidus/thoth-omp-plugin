@@ -31,6 +31,7 @@ use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\UploadFeatureVideoController;
 use APP\plugins\generic\thoth\classes\services\ThothFeatureVideoCacheService;
 
 final class ThothCompositionRoot
@@ -162,6 +163,12 @@ final class ThothCompositionRoot
             UnlinkWorkController::class,
             fn ($container): UnlinkWorkController => new UnlinkWorkController(
                 $container->make(UnlinkWork::class)
+            )
+        );
+        $container->bind(
+            UploadFeatureVideoController::class,
+            fn ($container): UploadFeatureVideoController => new UploadFeatureVideoController(
+                $container->make(UploadFeatureVideo::class)
             )
         );
     }

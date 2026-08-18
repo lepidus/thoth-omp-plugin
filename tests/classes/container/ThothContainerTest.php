@@ -19,7 +19,6 @@
 namespace APP\plugins\generic\thoth\tests\classes\container;
 
 use APP\plugins\generic\thoth\classes\container\ThothContainer;
-use APP\plugins\generic\thoth\classes\facades\ThothService;
 use PKP\tests\PKPTestCase;
 
 class ThothContainerTest extends PKPTestCase
@@ -51,13 +50,4 @@ class ThothContainerTest extends PKPTestCase
         $this->assertEquals('bar', $fooBar);
     }
 
-    public function testFeatureVideoSubmissionFacadeUsesContainerBinding(): void
-    {
-        $service = new \stdClass();
-        ThothContainer::getInstance()->set('featureVideoSubmissionService', function () use ($service) {
-            return $service;
-        });
-
-        $this->assertSame($service, ThothService::featureVideoSubmission());
-    }
 }

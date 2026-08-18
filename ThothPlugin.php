@@ -70,6 +70,7 @@ use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\UploadFeatureVideoController;
 use APP\plugins\generic\thoth\classes\services\ThothSubjectClassifier;
 use APP\plugins\generic\thoth\classes\services\ThothWorkLinkService;
 use PKP\core\JSONMessage;
@@ -206,6 +207,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                 PKPContainer::getInstance()->make(RegisterBookController::class),
                 PKPContainer::getInstance()->make(SynchronizeMetadataController::class),
                 PKPContainer::getInstance()->make(UnlinkWorkController::class),
+                PKPContainer::getInstance()->make(UploadFeatureVideoController::class),
                 PKPContainer::getInstance()->make(PublicationPublishListener::class)
             );
             $hookRegistrant->register();

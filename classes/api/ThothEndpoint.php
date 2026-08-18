@@ -25,10 +25,10 @@ use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\UploadFeatureVideoController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as IlluminateRequest;
 use Illuminate\Http\Response;
-use InvalidArgumentException;
 use PKP\core\PKPBaseController;
 use PKP\core\PKPRequest;
 use PKP\handler\APIHandler;
@@ -42,7 +42,8 @@ class ThothEndpoint implements HasAuthorizationPolicy
         private readonly GetWorkStatusController $getWorkStatusController,
         private readonly RegisterBookController $registerBookController,
         private readonly SynchronizeMetadataController $synchronizeMetadataController,
-        private readonly UnlinkWorkController $unlinkWorkController
+        private readonly UnlinkWorkController $unlinkWorkController,
+        private readonly UploadFeatureVideoController $uploadFeatureVideoController
     ) {
     }
 
@@ -298,18 +299,6 @@ class ThothEndpoint implements HasAuthorizationPolicy
                 );
             }
 
-            $metadata = ThothService::featureVideoSubmission()->upload(
-                $submission,
-                $title,
-                $temporaryFileId,
-                (int) $user->getId()
-            );
-            return response()->json($metadata, Response::HTTP_OK);
-        } catch (InvalidArgumentException $exception) {
-            return response()->json(
-                ['video' => [__('plugins.generic.thoth.featureVideo.invalidFile')]],
-                Response::HTTP_BAD_REQUEST
-            );
         } catch (\Throwable $exception) {
             error_log($exception->getMessage());
             return response()->json(
@@ -317,6 +306,13 @@ class ThothEndpoint implements HasAuthorizationPolicy
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }
+
+        return $this->uploadFeatureVideoController->upload(
+            $submission,
+            $title,
+            $temporaryFileId,
+            (int) $user->getId()
+        );
     }
 
 }

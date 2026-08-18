@@ -29,6 +29,7 @@ use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\UploadFeatureVideoController;
 use APP\plugins\generic\thoth\classes\schema\ThothSchema;
 use APP\plugins\generic\thoth\classes\services\ThothCatalogFilesCacheService;
 use APP\plugins\generic\thoth\classes\templateFilters\ThothCatalogFilesTemplateFilter;
@@ -45,6 +46,7 @@ class HookRegistrant
     private RegisterBookController $registerBookController;
     private SynchronizeMetadataController $synchronizeMetadataController;
     private UnlinkWorkController $unlinkWorkController;
+    private UploadFeatureVideoController $uploadFeatureVideoController;
     private PublicationPublishListener $publicationPublishListener;
 
     public function __construct(
@@ -53,6 +55,7 @@ class HookRegistrant
         RegisterBookController $registerBookController,
         SynchronizeMetadataController $synchronizeMetadataController,
         UnlinkWorkController $unlinkWorkController,
+        UploadFeatureVideoController $uploadFeatureVideoController,
         PublicationPublishListener $publicationPublishListener
     ) {
         $this->plugin = $plugin;
@@ -60,6 +63,7 @@ class HookRegistrant
         $this->registerBookController = $registerBookController;
         $this->synchronizeMetadataController = $synchronizeMetadataController;
         $this->unlinkWorkController = $unlinkWorkController;
+        $this->uploadFeatureVideoController = $uploadFeatureVideoController;
         $this->publicationPublishListener = $publicationPublishListener;
     }
 
@@ -118,7 +122,8 @@ class HookRegistrant
             $this->getWorkStatusController,
             $this->registerBookController,
             $this->synchronizeMetadataController,
-            $this->unlinkWorkController
+            $this->unlinkWorkController,
+            $this->uploadFeatureVideoController
         );
         Hook::add('APIHandler::endpoints::_submissions', $endpoint->addEndpoints(...));
     }

@@ -26,7 +26,6 @@ use APP\plugins\generic\thoth\classes\factories\ThothContributorFactory;
 use APP\plugins\generic\thoth\classes\factories\ThothLocationFactory;
 use APP\plugins\generic\thoth\classes\factories\ThothPublicationFactory;
 use APP\plugins\generic\thoth\classes\factories\ThothTitleFactory;
-use APP\plugins\generic\thoth\classes\services\FeatureVideoSubmissionService;
 use APP\plugins\generic\thoth\classes\services\ThothAbstractService;
 use APP\plugins\generic\thoth\classes\services\ThothAffiliationService;
 use APP\plugins\generic\thoth\classes\services\ThothBiographyService;
@@ -118,10 +117,6 @@ class ThothServiceProvider implements ContainerProvider
             'featureVideoRepository',
             'featureVideoFileUploadRepository',
             'fileUploadService',
-        ]);
-
-        $container->singletonClass('featureVideoSubmissionService', FeatureVideoSubmissionService::class, [
-            'featureVideoService',
         ]);
 
         $container->singletonClass('frontcoverService', ThothFrontcoverService::class, [
