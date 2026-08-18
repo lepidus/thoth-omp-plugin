@@ -75,6 +75,7 @@ import('plugins.generic.thoth.classes.components.forms.config.CatalogEntryFormCo
 import('plugins.generic.thoth.classes.components.forms.config.PublishFormConfig');
 import('plugins.generic.thoth.classes.components.forms.config.ContributorFormConfig');
 import('plugins.generic.thoth.classes.formModifiers.PublicationFormatFormModifier');
+import('plugins.generic.thoth.classes.facades.ThothRepo');
 import('plugins.generic.thoth.classes.facades.ThothService');
 import('plugins.generic.thoth.classes.templateFilters.PublicationFormatTemplateFilter');
 import('plugins.generic.thoth.classes.templateFilters.ThothSectionTemplateFilter');
@@ -210,6 +211,9 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                 },
                 function (): object {
                     return ThothContainer::getInstance()->get('featureVideoService');
+                },
+                function (): object {
+                    return ThothRepo::publication();
                 },
                 Repo::publication(),
                 Repo::submission(),

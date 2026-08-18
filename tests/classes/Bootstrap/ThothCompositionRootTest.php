@@ -2,6 +2,7 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\Bootstrap;
 
+use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
 use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
 use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadFeatureVideo;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
@@ -10,6 +11,7 @@ use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
+use APP\plugins\generic\thoth\classes\Contracts\CatalogFileGateway;
 use APP\plugins\generic\thoth\classes\Contracts\FeatureVideoCache;
 use APP\plugins\generic\thoth\classes\Contracts\FeatureVideoUploader;
 use APP\plugins\generic\thoth\classes\Contracts\NotificationPublisher;
@@ -27,6 +29,7 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationRea
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubmissionLinkRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyTemporaryVideoFileRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyCatalogFileGateway;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
@@ -57,6 +60,7 @@ class ThothCompositionRootTest extends PKPTestCase
             function () use ($featureVideoService): object {
                 return $featureVideoService;
             },
+            fn (): object => new stdClass(),
             new stdClass(),
             new stdClass(),
             new stdClass(),
@@ -66,6 +70,8 @@ class ThothCompositionRootTest extends PKPTestCase
         $root->register($container);
 
         $this->assertFalse($workLinkServiceResolved);
+        $this->assertInstanceOf(LegacyCatalogFileGateway::class, $container->make(CatalogFileGateway::class));
+        $this->assertInstanceOf(GetCatalogFiles::class, $container->make(GetCatalogFiles::class));
         $this->assertInstanceOf(LegacyWorkGateway::class, $container->make(WorkGateway::class));
         $this->assertInstanceOf(LegacyFeatureVideoUploader::class, $container->make(FeatureVideoUploader::class));
         $this->assertInstanceOf(LegacyFeatureVideoCache::class, $container->make(FeatureVideoCache::class));

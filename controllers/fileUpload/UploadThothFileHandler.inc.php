@@ -15,14 +15,16 @@
  */
 
 use APP\facades\Repo;
+use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
+use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use PKP\core\JSONMessage;
+use PKP\core\PKPContainer;
 use PKP\security\Role;
 
 import('classes.handler.Handler');
 import('plugins.generic.thoth.classes.facades.ThothRepo');
 import('plugins.generic.thoth.classes.factories.ThothPublicationFactory');
 import('plugins.generic.thoth.classes.formatters.DoiFormatter');
-import('plugins.generic.thoth.classes.services.ThothCatalogFileService');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class UploadThothFileHandler extends Handler
@@ -202,11 +204,11 @@ class UploadThothFileHandler extends Handler
             return [];
         }
 
-        $catalogFileService = new ThothCatalogFileService(ThothRepo::publication());
+        $catalogFileService = PKPContainer::getInstance()->make(GetCatalogFiles::class);
         $thothFiles = [];
 
         $monographFile = $this->getFileByPublicationType(
-            $catalogFileService->getFilesByWorkId($submission->getData('thothWorkId')),
+            $catalogFileService->execute($this->toWorkId($submission->getData('thothWorkId'))),
             $publicationType
         );
         if ($monographFile) {
@@ -279,7 +281,7 @@ class UploadThothFileHandler extends Handler
             }
 
             return $this->getFileByPublicationType(
-                $catalogFileService->getFilesByWorkId($this->getThothWorkId($thothChapter)),
+                $catalogFileService->execute($this->toWorkId($this->getThothWorkId($thothChapter))),
                 $publicationType
             );
         } catch (Exception $e) {
@@ -314,5 +316,10 @@ class UploadThothFileHandler extends Handler
     private function getThothWorkId($thothWork)
     {
         return is_object($thothWork) ? $thothWork->getWorkId() : $thothWork;
+    }
+
+    private function toWorkId($workId): ?WorkId
+    {
+        return $workId ? new WorkId($workId) : null;
     }
 }
