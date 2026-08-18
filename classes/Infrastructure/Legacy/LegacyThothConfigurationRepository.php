@@ -12,11 +12,13 @@ final class LegacyThothConfigurationRepository implements ThothConfigurationRepo
 {
     private $pluginSettingsDao;
     private $decryptToken;
+    private $encryptToken;
 
-    public function __construct($pluginSettingsDao = null, $decryptToken = null)
+    public function __construct($pluginSettingsDao = null, $decryptToken = null, $encryptToken = null)
     {
         $this->pluginSettingsDao = $pluginSettingsDao;
         $this->decryptToken = $decryptToken;
+        $this->encryptToken = $encryptToken;
     }
 
     public function get(int $contextId): ThothConfiguration
@@ -29,6 +31,19 @@ final class LegacyThothConfigurationRepository implements ThothConfigurationRepo
             (string) ($pluginSettingsDao->getSetting($contextId, 'ThothPlugin', 'customThothApiUrl') ?? ''),
             $this->decryptToken($token)
         );
+    }
+
+    public function save(int $contextId, ThothConfiguration $configuration): void
+    {
+        $pluginSettingsDao = $this->getPluginSettingsDao();
+        $settings = [
+            'token' => $this->encryptToken($configuration->token()),
+            'customThothApi' => $configuration->usesCustomApi() ? '1' : '',
+            'customThothApiUrl' => $configuration->customApiUrl(),
+        ];
+        foreach ($settings as $settingName => $value) {
+            $pluginSettingsDao->updateSetting($contextId, 'ThothPlugin', $settingName, $value, 'string');
+        }
     }
 
     private function getPluginSettingsDao()
@@ -55,5 +70,14 @@ final class LegacyThothConfigurationRepository implements ThothConfigurationRepo
         } catch (DecryptException $exception) {
             return '';
         }
+    }
+
+    private function encryptToken(string $token): string
+    {
+        if ($this->encryptToken !== null) {
+            return call_user_func($this->encryptToken, $token);
+        }
+
+        return Crypt::encrypt($token);
     }
 }

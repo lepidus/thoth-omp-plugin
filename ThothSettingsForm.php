@@ -18,17 +18,17 @@
 
 namespace APP\plugins\generic\thoth;
 
+use APP\plugins\generic\thoth\classes\Application\Configuration\SaveThothConfiguration;
+use APP\plugins\generic\thoth\classes\Contracts\ThothConfigurationRepository;
+use APP\plugins\generic\thoth\classes\Domain\Configuration\ThothConfiguration;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyThothConfigurationRepository;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\ThothConfigurationVerifier;
 use APP\plugins\generic\thoth\classes\security\ThothApiUrlValidator;
 use APP\template\TemplateManager;
-use GuzzleHttp\Exception\GuzzleException;
-use Illuminate\Contracts\Encryption\DecryptException;
-use Illuminate\Support\Facades\Crypt;
 use PKP\form\Form;
 use PKP\form\validation\FormValidatorCSRF;
 use PKP\form\validation\FormValidatorCustom;
 use PKP\form\validation\FormValidatorPost;
-use ThothApi\Exception\QueryException;
-use ThothApi\GraphQL\Client;
 
 require_once(dirname(__FILE__) . '/vendor/autoload.php');
 
@@ -40,10 +40,21 @@ class ThothSettingsForm extends Form
         'customThothApiUrl',
     ];
 
+    private ThothConfigurationRepository $configurationRepository;
+    private ThothConfigurationVerifier $configurationVerifier;
+    private SaveThothConfiguration $saveConfiguration;
+
     public function __construct(
         private ThothPlugin $plugin,
-        private int $contextId
+        private int $contextId,
+        ?ThothConfigurationRepository $configurationRepository = null,
+        ?ThothConfigurationVerifier $configurationVerifier = null,
+        ?SaveThothConfiguration $saveConfiguration = null
     ) {
+        $this->configurationRepository = $configurationRepository ?: new LegacyThothConfigurationRepository();
+        $this->configurationVerifier = $configurationVerifier
+            ?: new ThothConfigurationVerifier(new ThothApiUrlValidator());
+        $this->saveConfiguration = $saveConfiguration ?: new SaveThothConfiguration($this->configurationRepository);
         parent::__construct($plugin->getTemplateResource('settingsForm.tpl'));
 
         $this->addCheck(new FormValidatorPost($this));
@@ -72,7 +83,7 @@ class ThothSettingsForm extends Form
                     return true;
                 }
 
-                return (new ThothApiUrlValidator())->isSafe(trim($customThothApiUrl));
+                return $this->configurationVerifier->isApiUrlSafe(trim($customThothApiUrl));
             }
         ));
 
@@ -85,7 +96,7 @@ class ThothSettingsForm extends Form
                 if (!$this->getData('customThothApi')) {
                     return true;
                 }
-                return $this->validateCustomThothApiUrl(trim($customThothApiUrl));
+                return $this->configurationVerifier->isApiReachable(trim($customThothApiUrl));
             }
         ));
 
@@ -94,26 +105,20 @@ class ThothSettingsForm extends Form
             'token',
             'required',
             'plugins.generic.thoth.settings.invalidCredentials',
-            fn ($token) => $this->validateCredentials(trim($token))
+            fn ($token) => $this->configurationVerifier->hasValidCredentials(new ThothConfiguration(
+                (bool) $this->getData('customThothApi'),
+                trim((string) $this->getData('customThothApiUrl')),
+                trim((string) $token)
+            ))
         ));
     }
 
     public function initData(): void
     {
-        foreach (self::SETTINGS as $setting) {
-            $value = $this->plugin->getSetting($this->contextId, $setting);
-            if ($setting === 'token' && $value) {
-                try {
-                    $value = Crypt::decrypt($value);
-                } catch (DecryptException $exception) {
-                    $value = '';
-                }
-            }
-            $this->setData(
-                $setting,
-                $value
-            );
-        }
+        $configuration = $this->configurationRepository->get($this->contextId);
+        $this->setData('token', $configuration->token());
+        $this->setData('customThothApi', $configuration->usesCustomApi());
+        $this->setData('customThothApiUrl', $configuration->customApiUrl());
     }
 
     public function readInputData(): void
@@ -130,51 +135,11 @@ class ThothSettingsForm extends Form
 
     public function execute(...$functionArgs): void
     {
-        $this->setData('token', Crypt::encrypt(trim($this->getData('token'))));
-
-        foreach (self::SETTINGS as $setting) {
-            $this->plugin->updateSetting($this->contextId, $setting, trim($this->getData($setting)), 'string');
-        }
-
+        $this->saveConfiguration->execute($this->contextId, new ThothConfiguration(
+            (bool) $this->getData('customThothApi'),
+            trim((string) $this->getData('customThothApiUrl')),
+            trim((string) $this->getData('token'))
+        ));
         parent::execute(...$functionArgs);
-    }
-
-    private function validateCredentials(string $token): bool
-    {
-        $httpConfig = [];
-        if ($this->getData('customThothApi') && $this->getData('customThothApiUrl')) {
-            $customThothApiUrl = trim($this->getData('customThothApiUrl'));
-            if (!(new ThothApiUrlValidator())->isSafe($customThothApiUrl)) {
-                return false;
-            }
-            $httpConfig['base_uri'] = $customThothApiUrl;
-            $httpConfig['allow_redirects'] = false;
-        }
-
-        try {
-            (new Client($httpConfig))->setToken($token)->me();
-            return true;
-        } catch (QueryException) {
-            return false;
-        } catch (GuzzleException) {
-            return false;
-        }
-    }
-
-    private function validateCustomThothApiUrl(string $customThothApiUrl): bool
-    {
-        if (!(new ThothApiUrlValidator())->isSafe($customThothApiUrl)) {
-            return false;
-        }
-
-        try {
-            (new Client([
-                'base_uri' => $customThothApiUrl,
-                'allow_redirects' => false,
-            ]))->publisherCount();
-            return true;
-        } catch (GuzzleException) {
-            return false;
-        }
     }
 }
