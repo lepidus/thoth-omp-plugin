@@ -3,22 +3,29 @@
 namespace APP\plugins\generic\thoth\tests\classes\Bootstrap;
 
 use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
+use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadFeatureVideo;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeMetadata;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
+use APP\plugins\generic\thoth\classes\Contracts\FeatureVideoCache;
+use APP\plugins\generic\thoth\classes\Contracts\FeatureVideoUploader;
 use APP\plugins\generic\thoth\classes\Contracts\NotificationPublisher;
 use APP\plugins\generic\thoth\classes\Contracts\PluginLogger;
 use APP\plugins\generic\thoth\classes\Contracts\PublicationReader;
 use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
+use APP\plugins\generic\thoth\classes\Contracts\TemporaryVideoFileRepository;
 use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyFeatureVideoCache;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyFeatureVideoUploader;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyNotificationPublisher;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPluginLogger;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationReader;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubmissionLinkRepository;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyTemporaryVideoFileRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
 use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
@@ -34,6 +41,7 @@ class ThothCompositionRootTest extends PKPTestCase
     {
         $container = new Container();
         $workLinkServiceResolved = false;
+        $featureVideoService = new \stdClass();
         $bookRegistrar = $this->createMock(BookRegistrar::class);
         $root = new ThothCompositionRoot(
             function () use (&$workLinkServiceResolved): object {
@@ -42,6 +50,7 @@ class ThothCompositionRootTest extends PKPTestCase
             },
             fn (): object => $bookRegistrar,
             fn (): array => [],
+            fn (): object => $featureVideoService,
             new \stdClass(),
             new \stdClass(),
             new \stdClass(),
@@ -52,6 +61,13 @@ class ThothCompositionRootTest extends PKPTestCase
 
         $this->assertFalse($workLinkServiceResolved);
         $this->assertInstanceOf(LegacyWorkGateway::class, $container->make(WorkGateway::class));
+        $this->assertInstanceOf(LegacyFeatureVideoUploader::class, $container->make(FeatureVideoUploader::class));
+        $this->assertInstanceOf(LegacyFeatureVideoCache::class, $container->make(FeatureVideoCache::class));
+        $this->assertInstanceOf(
+            LegacyTemporaryVideoFileRepository::class,
+            $container->make(TemporaryVideoFileRepository::class)
+        );
+        $this->assertInstanceOf(UploadFeatureVideo::class, $container->make(UploadFeatureVideo::class));
         $this->assertSame($bookRegistrar, $container->make(BookRegistrar::class));
         $this->assertTrue($workLinkServiceResolved);
         $this->assertInstanceOf(LegacyPublicationReader::class, $container->make(PublicationReader::class));
