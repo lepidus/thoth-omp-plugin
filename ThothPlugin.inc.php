@@ -21,6 +21,7 @@ use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\AbstractSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\ChapterSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\ContributionSynchronizer;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\FrontcoverSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\LanguageSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\PublicationSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\ReferenceSynchronizer;
@@ -30,7 +31,6 @@ use APP\plugins\generic\thoth\classes\Application\Synchronization\TitleSynchroni
 use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkRelationSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkSynchronizer;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyBookMetadataSynchronizer;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyChapterAbstractMetadataMapper;
@@ -41,6 +41,7 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyChapterTitleMet
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyChapterWorkMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyContributionMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyContributionMetadataMapper;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyFrontcoverGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyLanguageMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyLanguageMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyLocationMetadataGateway;
@@ -168,7 +169,9 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                             ),
                             new LegacyAbstractMetadataMapper($abstractService->factory)
                         ),
-                        new LegacyBookMetadataSynchronizer($bookService),
+                        new FrontcoverSynchronizer(
+                            new LegacyFrontcoverGateway(ThothService::frontcover())
+                        ),
                         new ContributionSynchronizer(
                             new LegacyContributionMetadataGateway($contributionService),
                             new LegacyContributionMetadataMapper($contributionService)
