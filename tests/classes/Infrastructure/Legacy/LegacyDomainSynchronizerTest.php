@@ -5,7 +5,6 @@ require_once(__DIR__ . '/../../../../vendor/autoload.php');
 import('lib.pkp.tests.PKPTestCase');
 import('plugins.generic.thoth.classes.Contracts.DomainSynchronizer');
 import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyBookMetadataSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyLanguageSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyPublicationSynchronizer');
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyReferenceSynchronizer');
@@ -36,28 +35,6 @@ class LegacyDomainSynchronizerTest extends PKPTestCase
 
         $result = (new LegacyWorkSynchronizer($service))->synchronize($publication, $this->workId());
 
-        $this->assertSame('book.warning', $result->getWarnings()[0]->getMessageKey());
-    }
-
-    public function testBookMetadataSynchronizerPreservesPendingLegacyDomains(): void
-    {
-        $publication = new stdClass();
-        $service = new class () {
-            public $publication;
-            public $workId;
-
-            public function synchronizeFrontcover($publication, $workId)
-            {
-                $this->publication = $publication;
-                $this->workId = $workId;
-                return 'book.warning';
-            }
-        };
-
-        $result = (new LegacyBookMetadataSynchronizer($service))->synchronize($publication, $this->workId());
-
-        $this->assertSame($publication, $service->publication);
-        $this->assertSame(self::WORK_ID, $service->workId);
         $this->assertSame('book.warning', $result->getWarnings()[0]->getMessageKey());
     }
 
