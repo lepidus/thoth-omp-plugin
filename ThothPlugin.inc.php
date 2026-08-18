@@ -207,6 +207,9 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                         ),
                     ];
                 },
+                function (): object {
+                    return ThothContainer::getInstance()->get('featureVideoService');
+                },
                 Repo::publication(),
                 Repo::submission(),
                 Application::get()->getRequest(),
