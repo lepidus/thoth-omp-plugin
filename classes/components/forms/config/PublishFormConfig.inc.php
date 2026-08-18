@@ -18,9 +18,8 @@ use APP\facades\Repo;
 use APP\submission\Submission;
 use ThothApi\GraphQL\Enums\WorkType;
 
-import('plugins.generic.thoth.classes.facades.ThothService');
+import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.components.forms.ThothValidationMessageFormatter');
-import('plugins.generic.thoth.classes.facades.ThothRepo');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class PublishFormConfig
@@ -39,14 +38,14 @@ class PublishFormConfig
         }
 
         try {
-            $errors = ThothService::book()->validate($publication);
+            $errors = ThothContainer::getInstance()->get('bookService')->validate($publication);
 
             if (empty($errors)) {
-                $publishers = (new ThothMeCacheService(ThothRepo::me()))->getLinkedPublishers(
-                    $submission->getData('contextId')
-                );
+                $meRepository = ThothContainer::getInstance()->get('meRepository');
+                $publishers = (new ThothMeCacheService($meRepository))
+                    ->getLinkedPublishers($submission->getData('contextId'));
                 $publisherIds = array_column($publishers, 'publisherId');
-                $imprints = ThothRepo::imprint()->getMany([
+                $imprints = ThothContainer::getInstance()->get('imprintRepository')->getMany([
                     'publishers' => $publisherIds
                 ], [
                     'imprintId',

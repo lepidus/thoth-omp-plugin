@@ -13,7 +13,7 @@ use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
 use PKP\db\DAORegistry;
 
-import('plugins.generic.thoth.classes.facades.ThothService');
+import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.notification.ThothNotification');
 
 final class RegisterBookController
@@ -70,7 +70,7 @@ final class RegisterBookController
         $publication = $submission->getCurrentPublication();
         $failure = ['id' => $submissionId, 'errors' => []];
         try {
-            $failure['errors'] = \ThothService::book()->validate($publication);
+            $failure['errors'] = \ThothContainer::getInstance()->get('bookService')->validate($publication);
         } catch (\Exception $exception) {
             $failure['errors'][] = __('plugins.generic.thoth.connectionError');
         }

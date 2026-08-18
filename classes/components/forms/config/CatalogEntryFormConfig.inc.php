@@ -16,7 +16,7 @@
 
 use APP\facades\Repo;
 
-import('plugins.generic.thoth.classes.facades.ThothRepo');
+import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class CatalogEntryFormConfig
@@ -86,6 +86,7 @@ class CatalogEntryFormConfig
 
     protected function hasCdnWritePermission($contextId): bool
     {
-        return (new ThothMeCacheService(ThothRepo::me()))->hasCdnWritePermission($contextId);
+        $meRepository = ThothContainer::getInstance()->get('meRepository');
+        return (new ThothMeCacheService($meRepository))->hasCdnWritePermission($contextId);
     }
 }

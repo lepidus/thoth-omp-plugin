@@ -7,7 +7,7 @@ use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use Exception;
 use PKP\db\DAORegistry;
 
-import('plugins.generic.thoth.classes.facades.ThothRepo');
+import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.factories.ThothPublicationFactory');
 import('plugins.generic.thoth.classes.formatters.DoiFormatter');
 import('plugins.generic.thoth.classes.services.ThothFileUploadService');
@@ -29,7 +29,7 @@ final class LegacyPublicationFileUploader implements PublicationFileUploader
                 throw new Exception(__('plugins.generic.thoth.fileUpload.error.invalidSubmissionComponent'));
             }
 
-            $remoteChapterId = \ThothRepo::chapter()->getByDoi(
+            $remoteChapterId = \ThothContainer::getInstance()->get('chapterRepository')->getByDoi(
                 \DoiFormatter::resolveUrl($chapter->getStoredPubId('doi'))
             );
             $remoteWorkId = $remoteChapterId;
@@ -44,7 +44,7 @@ final class LegacyPublicationFileUploader implements PublicationFileUploader
         }
 
         $newPublication = (new \ThothPublicationFactory())->createFromPublicationFormat($publicationFormat);
-        $publicationRepository = \ThothRepo::publication();
+        $publicationRepository = \ThothContainer::getInstance()->get('publicationRepository');
         $remotePublicationId = $publicationRepository->getIdByType(
             $remoteWorkId,
             $newPublication->getPublicationType()
@@ -58,7 +58,7 @@ final class LegacyPublicationFileUploader implements PublicationFileUploader
             $remotePublicationId = $publicationRepository->add($newPublication);
         }
 
-        $uploadRepository = \ThothRepo::publicationFileUpload();
+        $uploadRepository = \ThothContainer::getInstance()->get('publicationFileUploadRepository');
         $newUpload = $uploadRepository->new();
         $newUpload->setPublicationId($remotePublicationId)
             ->setDeclaredExtension($file['extension'])

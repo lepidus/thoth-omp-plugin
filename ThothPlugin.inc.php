@@ -75,8 +75,7 @@ import('plugins.generic.thoth.classes.components.forms.config.CatalogEntryFormCo
 import('plugins.generic.thoth.classes.components.forms.config.PublishFormConfig');
 import('plugins.generic.thoth.classes.components.forms.config.ContributorFormConfig');
 import('plugins.generic.thoth.classes.formModifiers.PublicationFormatFormModifier');
-import('plugins.generic.thoth.classes.facades.ThothRepo');
-import('plugins.generic.thoth.classes.facades.ThothService');
+import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.templateFilters.PublicationFormatTemplateFilter');
 import('plugins.generic.thoth.classes.templateFilters.ThothSectionTemplateFilter');
 import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
@@ -106,18 +105,21 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                     return ThothContainer::getInstance()->get('bookRegistrationService');
                 },
                 function (): object {
-                    return ThothService::book();
+                    return ThothContainer::getInstance()->get('bookService');
                 },
                 function (): array {
-                    $bookService = ThothService::book();
-                    $abstractService = ThothService::abstract();
-                    $chapterService = ThothService::chapter();
-                    $contributionService = ThothService::contribution();
-                    $languageService = ThothService::language();
-                    $referenceService = ThothService::reference();
-                    $subjectService = ThothService::subject();
-                    $titleService = ThothService::title();
-                    $workRelationService = ThothService::workRelation();
+                    $bookService = ThothContainer::getInstance()->get('bookService');
+                    $abstractService = ThothContainer::getInstance()->get('abstractService');
+                    $chapterService = ThothContainer::getInstance()->get('chapterService');
+                    $contributionService = ThothContainer::getInstance()->get('contributionService');
+                    $languageService = ThothContainer::getInstance()->get('languageService');
+                    $referenceService = ThothContainer::getInstance()->get('referenceService');
+                    $subjectService = ThothContainer::getInstance()->get('subjectService');
+                    $titleService = ThothContainer::getInstance()->get('titleService');
+                    $workRelationService = ThothContainer::getInstance()->get('workRelationService');
+                    $publicationService = ThothContainer::getInstance()->get('publicationService');
+                    $locationService = ThothContainer::getInstance()->get('locationService');
+                    $frontcoverService = ThothContainer::getInstance()->get('frontcoverService');
                     $chapterWorkMapper = new LegacyChapterWorkMetadataMapper($chapterService->factory);
                     $chapterSynchronizer = new ChapterSynchronizer(
                         new LegacyChapterMetadataGateway($chapterService->repository),
@@ -146,10 +148,10 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                                 new LegacyChapterContributionMetadataMapper($contributionService)
                             ),
                             new PublicationSynchronizer(
-                                new LegacyPublicationMetadataGateway(ThothService::publication()),
-                                new LegacyChapterPublicationMetadataMapper(ThothService::publication()),
+                                new LegacyPublicationMetadataGateway($publicationService),
+                                new LegacyChapterPublicationMetadataMapper($publicationService),
                                 new SynchronizeLocations(
-                                    new LegacyLocationMetadataGateway(ThothService::location()->repository)
+                                    new LegacyLocationMetadataGateway($locationService->repository)
                                 )
                             ),
                         ]
@@ -175,17 +177,17 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                             new LegacyAbstractMetadataMapper($abstractService->factory)
                         ),
                         new FrontcoverSynchronizer(
-                            new LegacyFrontcoverGateway(ThothService::frontcover())
+                            new LegacyFrontcoverGateway($frontcoverService)
                         ),
                         new ContributionSynchronizer(
                             new LegacyContributionMetadataGateway($contributionService),
                             new LegacyContributionMetadataMapper($contributionService)
                         ),
                         new PublicationSynchronizer(
-                            new LegacyPublicationMetadataGateway(ThothService::publication()),
-                            new LegacyPublicationMetadataMapper(ThothService::publication()),
+                            new LegacyPublicationMetadataGateway($publicationService),
+                            new LegacyPublicationMetadataMapper($publicationService),
                             new SynchronizeLocations(
-                                new LegacyLocationMetadataGateway(ThothService::location()->repository)
+                                new LegacyLocationMetadataGateway($locationService->repository)
                             )
                         ),
                         new LanguageSynchronizer(
@@ -216,7 +218,7 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                     return ThothContainer::getInstance()->get('featureVideoService');
                 },
                 function (): object {
-                    return ThothRepo::publication();
+                    return ThothContainer::getInstance()->get('publicationRepository');
                 },
                 Repo::publication(),
                 Repo::submission(),
