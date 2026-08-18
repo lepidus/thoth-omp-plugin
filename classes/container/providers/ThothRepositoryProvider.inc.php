@@ -17,7 +17,7 @@
 require_once(__DIR__ . '/../../../vendor/autoload.php');
 
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyThothConfigurationRepository;
-use ThothApi\GraphQL\Client;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\ThothClientFactory;
 
 import('plugins.generic.thoth.classes.container.providers.ContainerProvider');
 import('plugins.generic.thoth.classes.factories.ThothBookFactory');
@@ -54,26 +54,16 @@ class ThothRepositoryProvider implements ContainerProvider
 {
     public function register($container)
     {
-        $container->singleton('config', function ($container) {
-            $contextId = Application::get()->getRequest()->getContext()->getId();
-            return (new LegacyThothConfigurationRepository())->get($contextId);
+        $container->singleton('clientFactory', function () {
+            return new ThothClientFactory(
+                new LegacyThothConfigurationRepository(),
+                new ThothApiUrlValidator()
+            );
         });
 
-        $container->singleton('client', function ($container) {
-            $config = $container->get('config');
-
-            $httpConfig = [];
-            if ($config->usesCustomApi() && $config->customApiUrl() !== '') {
-                $customThothApiUrl = trim($config->customApiUrl());
-                if (!(new ThothApiUrlValidator())->isSafe($customThothApiUrl)) {
-                    throw new UnexpectedValueException('Unsafe custom Thoth API URL');
-                }
-                $httpConfig['base_uri'] = $customThothApiUrl;
-                $httpConfig['allow_redirects'] = false;
-            }
-
-            $client = new Client($httpConfig);
-            return $client->setToken($config->token());
+        $container->set('client', function ($container) {
+            $contextId = Application::get()->getRequest()->getContext()->getId();
+            return $container->get('clientFactory')->create($contextId);
         });
 
         $container->singleton('meRepository', function ($container) {
