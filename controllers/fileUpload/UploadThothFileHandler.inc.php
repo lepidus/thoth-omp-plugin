@@ -18,7 +18,7 @@ import('classes.handler.Handler');
 import('plugins.generic.thoth.classes.Application.Catalog.GetCatalogFiles');
 import('plugins.generic.thoth.classes.Application.HostedAssets.UploadPublicationFile');
 import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.facades.ThothRepo');
+import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.factories.ThothPublicationFactory');
 import('plugins.generic.thoth.classes.formatters.DoiFormatter');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
@@ -273,7 +273,8 @@ class UploadThothFileHandler extends Handler
         }
 
         try {
-            $thothChapter = ThothRepo::chapter()->getByDoi(DoiFormatter::resolveUrl($doi));
+            $chapterRepository = ThothContainer::getInstance()->get('chapterRepository');
+            $thothChapter = $chapterRepository->getByDoi(DoiFormatter::resolveUrl($doi));
             if (!$thothChapter) {
                 return null;
             }
@@ -302,7 +303,7 @@ class UploadThothFileHandler extends Handler
     private function canUploadFiles($request)
     {
         try {
-            $cacheService = new ThothMeCacheService(ThothRepo::me());
+            $cacheService = new ThothMeCacheService(ThothContainer::getInstance()->get('meRepository'));
             $contextId = $request->getContext()->getId();
             return $cacheService->hasCdnWritePermission($contextId);
         } catch (Exception $e) {

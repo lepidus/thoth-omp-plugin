@@ -14,7 +14,7 @@
  * @brief Thoth endpoints for OMP API
  */
 
-import('plugins.generic.thoth.classes.facades.ThothRepo');
+import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
 import('plugins.generic.thoth.classes.Presentation.Api.RegisterBookController');
 import('plugins.generic.thoth.classes.Presentation.Api.SynchronizeMetadataController');
@@ -146,7 +146,7 @@ class ThothEndpoint
         }
 
         try {
-            $canUpload = (new ThothMeCacheService(ThothRepo::me()))
+            $canUpload = (new ThothMeCacheService(ThothContainer::getInstance()->get('meRepository')))
                 ->hasCdnWritePermission($context->getId());
             if (!$canUpload) {
                 return $response->withStatus(403)->withJson([

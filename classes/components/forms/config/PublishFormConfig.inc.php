@@ -8,6 +8,7 @@
  * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
  *
  * @class PublishFormConfig
+ *
  * @ingroup plugins_generic_thoth
  *
  * @brief Thoth config for publish form
@@ -15,9 +16,8 @@
 
 use ThothApi\GraphQL\Enums\WorkType;
 
-import('plugins.generic.thoth.classes.facades.ThothService');
+import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.components.forms.ThothValidationMessageFormatter');
-import('plugins.generic.thoth.classes.facades.ThothRepo');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class PublishFormConfig
@@ -36,14 +36,14 @@ class PublishFormConfig
         }
 
         try {
-            $errors = ThothService::book()->validate($publication);
+            $errors = ThothContainer::getInstance()->get('bookService')->validate($publication);
 
             if (empty($errors)) {
-                $publishers = (new ThothMeCacheService(ThothRepo::me()))->getLinkedPublishers(
-                    $submission->getData('contextId')
-                );
+                $meRepository = ThothContainer::getInstance()->get('meRepository');
+                $publishers = (new ThothMeCacheService($meRepository))
+                    ->getLinkedPublishers($submission->getData('contextId'));
                 $publisherIds = array_column($publishers, 'publisherId');
-                $imprints = ThothRepo::imprint()->getMany([
+                $imprints = ThothContainer::getInstance()->get('imprintRepository')->getMany([
                     'publishers' => $publisherIds
                 ], [
                     'imprintId',
@@ -83,14 +83,14 @@ class PublishFormConfig
             'value' => false,
             'groupId' => 'default',
         ]))
-        ->addField(new \PKP\components\forms\FieldSelect('thothImprintId', [
-            'label' => __('plugins.generic.thoth.imprint'),
-            'options' => $imprintOptions,
-            'required' => true,
-            'showWhen' => 'registerConfirmation',
-            'groupId' => 'default',
-            'value' => $imprintOptions[0]['value'] ?? null
-        ]));
+            ->addField(new \PKP\components\forms\FieldSelect('thothImprintId', [
+                'label' => __('plugins.generic.thoth.imprint'),
+                'options' => $imprintOptions,
+                'required' => true,
+                'showWhen' => 'registerConfirmation',
+                'groupId' => 'default',
+                'value' => $imprintOptions[0]['value'] ?? null
+            ]));
 
         if ($workType !== WORK_TYPE_AUTHORED_WORK) {
             return;

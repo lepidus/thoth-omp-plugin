@@ -8,12 +8,13 @@
  * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
  *
  * @class CatalogEntryFormConfig
+ *
  * @ingroup plugins_generic_thoth
  *
  * @brief Thoth config for catalog entry form
  */
 
-import('plugins.generic.thoth.classes.facades.ThothRepo');
+import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class CatalogEntryFormConfig
@@ -69,7 +70,7 @@ class CatalogEntryFormConfig
     {
         try {
             $submission = Services::get('submission')->get($publication->getData('submissionId'));
-            return (new ThothMeCacheService(ThothRepo::me()))->hasCdnWritePermission(
+            return (new ThothMeCacheService(ThothContainer::getInstance()->get('meRepository')))->hasCdnWritePermission(
                 $submission->getData('contextId')
             );
         } catch (Exception $e) {

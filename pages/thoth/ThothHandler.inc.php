@@ -2,6 +2,7 @@
 
 import('classes.handler.Handler');
 import('plugins.generic.thoth.classes.components.listPanels.ThothListPanel');
+import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class ThothHandler extends Handler
@@ -13,8 +14,8 @@ class ThothHandler extends Handler
         parent::__construct();
 
         $this->addRoleAssignment(
-            array(ROLE_ID_SUB_EDITOR, ROLE_ID_MANAGER),
-            array('index')
+            [ROLE_ID_SUB_EDITOR, ROLE_ID_MANAGER],
+            ['index']
         );
     }
 
@@ -45,9 +46,10 @@ class ThothHandler extends Handler
         $this->addStyles($request, $templateMgr, $plugin);
 
         try {
-            $publishers = (new ThothMeCacheService(ThothRepo::me()))->getLinkedPublishers($context->getId());
+            $meRepository = ThothContainer::getInstance()->get('meRepository');
+            $publishers = (new ThothMeCacheService($meRepository))->getLinkedPublishers($context->getId());
             $publisherIds = array_column($publishers, 'publisherId');
-            $imprints = ThothRepo::imprint()->getMany([
+            $imprints = ThothContainer::getInstance()->get('imprintRepository')->getMany([
                 'publishers' => $publisherIds
             ], [
                 'imprintId',

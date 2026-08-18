@@ -15,7 +15,7 @@
  */
 
 import('classes.file.PublicFileManager');
-import('plugins.generic.thoth.classes.facades.ThothRepo');
+import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class ThothFrontcoverService
@@ -140,8 +140,9 @@ class ThothFrontcoverService
     {
         try {
             $contextId = $this->getContextId($publication);
+            $meRepository = ThothContainer::getInstance()->get('meRepository');
             return $contextId
-                ? (new ThothMeCacheService(ThothRepo::me()))->hasCdnWritePermission($contextId)
+                ? (new ThothMeCacheService($meRepository))->hasCdnWritePermission($contextId)
                 : false;
         } catch (Throwable $exception) {
             return false;

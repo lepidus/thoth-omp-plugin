@@ -20,7 +20,7 @@ import('plugins.generic.thoth.classes.Application.Registration.RegisterBook');
 import('plugins.generic.thoth.classes.Domain.Identifier.ImprintId');
 import('plugins.generic.thoth.classes.Domain.Identifier.SubmissionId');
 import('plugins.generic.thoth.classes.Domain.Registration.BookRegistrationPolicy');
-import('plugins.generic.thoth.classes.facades.ThothService');
+import('plugins.generic.thoth.classes.container.ThothContainer');
 
 class PublicationPublishListener
 {
@@ -61,7 +61,7 @@ class PublicationPublishListener
         }
 
         try {
-            $metadataErrors = ThothService::book()->validate($args[1]);
+            $metadataErrors = ThothContainer::getInstance()->get('bookService')->validate($args[1]);
         } catch (Exception $exception) {
             $metadataErrors = [__('plugins.generic.thoth.connectionError')];
         }

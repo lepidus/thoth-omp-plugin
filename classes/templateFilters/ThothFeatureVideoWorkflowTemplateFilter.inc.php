@@ -8,13 +8,14 @@
  * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
  *
  * @class ThothFeatureVideoWorkflowTemplateFilter
+ *
  * @ingroup plugins_generic_thoth
  *
  * @brief Adds the featured video form to the legacy OMP workflow.
  */
 
 import('plugins.generic.thoth.classes.components.forms.FeatureVideoForm');
-import('plugins.generic.thoth.classes.facades.ThothRepo');
+import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class ThothFeatureVideoWorkflowTemplateFilter
@@ -89,7 +90,7 @@ class ThothFeatureVideoWorkflowTemplateFilter
     protected function hasExistingVideo($submission)
     {
         return (bool) ($submission->getData('thothWorkId')
-            ? ThothRepo::work()->getFeatureVideo($submission->getData('thothWorkId'))
+            ? ThothContainer::getInstance()->get('workRepository')->getFeatureVideo($submission->getData('thothWorkId'))
             : null);
     }
 
@@ -104,7 +105,7 @@ class ThothFeatureVideoWorkflowTemplateFilter
 
     protected function canUpload($request)
     {
-        return (new ThothMeCacheService(ThothRepo::me()))
+        return (new ThothMeCacheService(ThothContainer::getInstance()->get('meRepository')))
             ->hasCdnWritePermission($request->getContext()->getId());
     }
 }
