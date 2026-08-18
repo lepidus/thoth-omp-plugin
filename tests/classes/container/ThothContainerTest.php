@@ -18,7 +18,6 @@
 
 import('lib.pkp.tests.PKPTestCase');
 import('plugins.generic.thoth.classes.container.ThothContainer');
-import('plugins.generic.thoth.classes.facades.ThothService');
 
 class ThothContainerTest extends PKPTestCase
 {
@@ -49,12 +48,4 @@ class ThothContainerTest extends PKPTestCase
         $this->assertEquals('bar', $fooBar);
     }
 
-    public function testFeatureVideoSubmissionFacadeUsesContainerBinding(): void
-    {
-        $service = new stdClass();
-        ThothContainer::getInstance()->set('featureVideoSubmissionService', function () use ($service) {
-            return $service;
-        });
-        $this->assertSame($service, ThothService::featureVideoSubmission());
-    }
 }

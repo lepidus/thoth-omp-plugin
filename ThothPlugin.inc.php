@@ -61,6 +61,7 @@ use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\UploadFeatureVideoController;
 use APP\plugins\generic\thoth\classes\services\ThothSubjectClassifier;
 use PKP\core\JSONMessage;
 use PKP\core\PKPContainer;
@@ -471,7 +472,8 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
             $container->make(GetWorkStatusController::class),
             $container->make(RegisterBookController::class),
             $container->make(SynchronizeMetadataController::class),
-            $container->make(UnlinkWorkController::class)
+            $container->make(UnlinkWorkController::class),
+            $container->make(UploadFeatureVideoController::class)
         );
         HookRegistry::register('APIHandler::endpoints', [$thothEndpoint, 'addEndpoints']);
     }
