@@ -16,6 +16,7 @@
 
 import('classes.handler.Handler');
 import('plugins.generic.thoth.classes.Application.Catalog.GetCatalogFiles');
+import('plugins.generic.thoth.classes.Application.HostedAssets.UploadPublicationFile');
 import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
 import('plugins.generic.thoth.classes.facades.ThothRepo');
 import('plugins.generic.thoth.classes.factories.ThothPublicationFactory');
@@ -86,7 +87,8 @@ class UploadThothFileHandler extends Handler
             $contextId,
             $publicationId,
             $representationId,
-            $thothWorkId
+            $thothWorkId,
+            Registry::get('laravelContainer')->make(UploadPublicationFile::class)
         );
         $form->initData();
         $form->setData('missingCdnWritePermissionAlert', !$this->canUploadFiles($request));
@@ -146,7 +148,8 @@ class UploadThothFileHandler extends Handler
             $contextId,
             $publicationId,
             $representationId,
-            $thothWorkId
+            $thothWorkId,
+            Registry::get('laravelContainer')->make(UploadPublicationFile::class)
         );
         $form->readInputData();
 
