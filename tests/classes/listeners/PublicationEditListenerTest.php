@@ -2,6 +2,13 @@
 
 require_once(__DIR__ . '/../../../vendor/autoload.php');
 
+use APP\plugins\generic\thoth\classes\Application\Synchronization\UpdatePublicationAfterEdit;
+use APP\plugins\generic\thoth\classes\Contracts\BookMetadataUpdater;
+use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
+use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
+use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationResult;
+use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationWarning;
 use PKP\tests\PKPTestCase;
 
 import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
@@ -108,7 +115,7 @@ class PublicationEditListenerTest extends PKPTestCase
                 return $this->submission;
             }
         };
-        $bookService = new class ($warning) {
+        $bookService = new class ($warning) implements BookMetadataUpdater {
             public $updates = 0;
             public $includedTitlesAndAbstracts = false;
             private $warning;
@@ -118,11 +125,30 @@ class PublicationEditListenerTest extends PKPTestCase
                 $this->warning = $warning;
             }
 
-            public function update($publication, $workId, $includeTitlesAndAbstracts = false)
-            {
+            public function update(
+                object $publication,
+                WorkId $workId,
+                bool $includeTitlesAndAbstracts
+            ): SynchronizationResult {
                 $this->updates++;
                 $this->includedTitlesAndAbstracts = $includeTitlesAndAbstracts;
-                return $this->warning;
+                return $this->warning
+                    ? new SynchronizationResult(new SynchronizationWarning($this->warning))
+                    : new SynchronizationResult();
+            }
+        };
+        $submissionLinks = new class () implements SubmissionLinkRepository {
+            public function findWorkId(SubmissionId $submissionId): ?WorkId
+            {
+                return new WorkId('11111111-1111-4111-8111-111111111111');
+            }
+
+            public function saveWorkId(SubmissionId $submissionId, WorkId $workId): void
+            {
+            }
+
+            public function deleteWorkId(SubmissionId $submissionId): void
+            {
             }
         };
         $notification = new class () {
@@ -145,7 +171,11 @@ class PublicationEditListenerTest extends PKPTestCase
         };
 
         return [
-            new PublicationEditListener($submissionRepository, $bookService, $notification),
+            new PublicationEditListener(
+                new UpdatePublicationAfterEdit($submissionLinks, $bookService),
+                $submissionRepository,
+                $notification
+            ),
             $bookService,
             $notification,
         ];

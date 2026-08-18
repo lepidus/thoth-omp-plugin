@@ -8,8 +8,10 @@ use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadFeatureVide
 use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadPublicationFile;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeMetadata;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\UpdatePublicationAfterEdit;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
+use APP\plugins\generic\thoth\classes\Contracts\BookMetadataUpdater;
 use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
 use APP\plugins\generic\thoth\classes\Contracts\CatalogFileCache;
 use APP\plugins\generic\thoth\classes\Contracts\CatalogFileGateway;
@@ -34,6 +36,7 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubmissionLink
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyTemporaryPublicationFileRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyTemporaryVideoFileRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyBookMetadataUpdater;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyCatalogFileGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyPublicationFileUploader;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
@@ -43,6 +46,7 @@ use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UploadFeatureVideoController;
 
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
+import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
 import('plugins.generic.thoth.classes.services.ThothFeatureVideoCacheService');
 import('plugins.generic.thoth.classes.services.ThothCatalogFilesCacheService');
 
@@ -50,6 +54,7 @@ final class ThothCompositionRoot
 {
     private $workLinkServiceFactory;
     private $bookRegistrationServiceFactory;
+    private $bookServiceFactory;
     private $metadataSynchronizersFactory;
     private $featureVideoServiceFactory;
     private $catalogFileRepositoryFactory;
@@ -61,6 +66,7 @@ final class ThothCompositionRoot
     public function __construct(
         callable $workLinkServiceFactory,
         callable $bookRegistrationServiceFactory,
+        callable $bookServiceFactory,
         callable $metadataSynchronizersFactory,
         callable $featureVideoServiceFactory,
         callable $catalogFileRepositoryFactory,
@@ -71,6 +77,7 @@ final class ThothCompositionRoot
     ) {
         $this->workLinkServiceFactory = $workLinkServiceFactory;
         $this->bookRegistrationServiceFactory = $bookRegistrationServiceFactory;
+        $this->bookServiceFactory = $bookServiceFactory;
         $this->metadataSynchronizersFactory = $metadataSynchronizersFactory;
         $this->featureVideoServiceFactory = $featureVideoServiceFactory;
         $this->catalogFileRepositoryFactory = $catalogFileRepositoryFactory;
@@ -132,6 +139,9 @@ final class ThothCompositionRoot
         $container->bind(BookRegistrar::class, function (): BookRegistrar {
             return ($this->bookRegistrationServiceFactory)();
         });
+        $container->bind(BookMetadataUpdater::class, function (): BookMetadataUpdater {
+            return new LegacyBookMetadataUpdater(($this->bookServiceFactory)());
+        });
         $container->bind(PublicationReader::class, function (): PublicationReader {
             return new LegacyPublicationReader($this->publicationRepository);
         });
@@ -170,6 +180,19 @@ final class ThothCompositionRoot
                 $this->notification,
                 $container->make(BookRegistrationPolicy::class),
                 $container->make(ExternalFailureReporter::class)
+            );
+        });
+        $container->bind(UpdatePublicationAfterEdit::class, function ($container): UpdatePublicationAfterEdit {
+            return new UpdatePublicationAfterEdit(
+                $container->make(SubmissionLinkRepository::class),
+                $container->make(BookMetadataUpdater::class)
+            );
+        });
+        $container->bind(\PublicationEditListener::class, function ($container): \PublicationEditListener {
+            return new \PublicationEditListener(
+                $container->make(UpdatePublicationAfterEdit::class),
+                $this->submissionRepository,
+                $this->notification
             );
         });
         $container->bind(UnlinkWork::class, function ($container): UnlinkWork {
