@@ -16,10 +16,10 @@
 
 require_once(__DIR__ . '/../../../vendor/autoload.php');
 
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyThothConfigurationRepository;
 use ThothApi\GraphQL\Client;
 
 import('plugins.generic.thoth.classes.container.providers.ContainerProvider');
-import('plugins.generic.thoth.classes.config.ThothSettings');
 import('plugins.generic.thoth.classes.factories.ThothBookFactory');
 import('plugins.generic.thoth.classes.factories.ThothChapterFactory');
 import('plugins.generic.thoth.classes.factories.ThothContributionFactory');
@@ -55,15 +55,16 @@ class ThothRepositoryProvider implements ContainerProvider
     public function register($container)
     {
         $container->singleton('config', function ($container) {
-            return (new ThothSettings())->toArray();
+            $contextId = Application::get()->getRequest()->getContext()->getId();
+            return (new LegacyThothConfigurationRepository())->get($contextId);
         });
 
         $container->singleton('client', function ($container) {
             $config = $container->get('config');
 
             $httpConfig = [];
-            if ($config['customThothApi'] && $config['customThothApiUrl']) {
-                $customThothApiUrl = trim($config['customThothApiUrl']);
+            if ($config->usesCustomApi() && $config->customApiUrl() !== '') {
+                $customThothApiUrl = trim($config->customApiUrl());
                 if (!(new ThothApiUrlValidator())->isSafe($customThothApiUrl)) {
                     throw new UnexpectedValueException('Unsafe custom Thoth API URL');
                 }
@@ -72,7 +73,7 @@ class ThothRepositoryProvider implements ContainerProvider
             }
 
             $client = new Client($httpConfig);
-            return $client->setToken($config['token']);
+            return $client->setToken($config->token());
         });
 
         $container->singleton('meRepository', function ($container) {
