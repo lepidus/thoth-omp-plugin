@@ -122,11 +122,6 @@ class ThothBookService
         return $this->frontcoverService?->sync($publication, $thothBookId);
     }
 
-    public function synchronizeFrontcover($publication, string $thothBookId)
-    {
-        return $this->frontcoverService?->sync($publication, $thothBookId);
-    }
-
     private function getPatchWorkData($thothBook): array
     {
         return array_intersect_key($thothBook->toArray(), self::PATCH_WORK_FIELDS);
