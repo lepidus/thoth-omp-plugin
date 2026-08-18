@@ -5,31 +5,38 @@ namespace APP\plugins\generic\thoth\tests\classes\Bootstrap;
 use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
 use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
 use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadFeatureVideo;
+use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadPublicationFile;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeMetadata;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
 use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
+use APP\plugins\generic\thoth\classes\Contracts\CatalogFileCache;
 use APP\plugins\generic\thoth\classes\Contracts\CatalogFileGateway;
 use APP\plugins\generic\thoth\classes\Contracts\FeatureVideoCache;
 use APP\plugins\generic\thoth\classes\Contracts\FeatureVideoUploader;
 use APP\plugins\generic\thoth\classes\Contracts\NotificationPublisher;
 use APP\plugins\generic\thoth\classes\Contracts\PluginLogger;
+use APP\plugins\generic\thoth\classes\Contracts\PublicationFileUploader;
 use APP\plugins\generic\thoth\classes\Contracts\PublicationReader;
 use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
+use APP\plugins\generic\thoth\classes\Contracts\TemporaryPublicationFileRepository;
 use APP\plugins\generic\thoth\classes\Contracts\TemporaryVideoFileRepository;
 use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyCatalogFileCache;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyFeatureVideoCache;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyFeatureVideoUploader;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyNotificationPublisher;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPluginLogger;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationReader;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubmissionLinkRepository;
+use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyTemporaryPublicationFileRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyTemporaryVideoFileRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyCatalogFileGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyPublicationFileUploader;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
@@ -72,6 +79,16 @@ class ThothCompositionRootTest extends PKPTestCase
         $this->assertFalse($workLinkServiceResolved);
         $this->assertInstanceOf(LegacyCatalogFileGateway::class, $container->make(CatalogFileGateway::class));
         $this->assertInstanceOf(GetCatalogFiles::class, $container->make(GetCatalogFiles::class));
+        $this->assertInstanceOf(LegacyCatalogFileCache::class, $container->make(CatalogFileCache::class));
+        $this->assertInstanceOf(
+            LegacyPublicationFileUploader::class,
+            $container->make(PublicationFileUploader::class)
+        );
+        $this->assertInstanceOf(
+            LegacyTemporaryPublicationFileRepository::class,
+            $container->make(TemporaryPublicationFileRepository::class)
+        );
+        $this->assertInstanceOf(UploadPublicationFile::class, $container->make(UploadPublicationFile::class));
         $this->assertInstanceOf(LegacyWorkGateway::class, $container->make(WorkGateway::class));
         $this->assertInstanceOf(LegacyFeatureVideoUploader::class, $container->make(FeatureVideoUploader::class));
         $this->assertInstanceOf(LegacyFeatureVideoCache::class, $container->make(FeatureVideoCache::class));

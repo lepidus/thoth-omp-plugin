@@ -18,12 +18,12 @@ use APP\facades\Repo;
 use APP\i18n\AppLocale;
 use APP\notification\Notification;
 use APP\notification\NotificationManager;
+use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadPublicationFile;
+use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use PKP\form\validation\FormValidator;
 
 import('lib.pkp.classes.form.Form');
 import('lib.pkp.classes.plugins.PKPPubIdPluginDAO');
-import('plugins.generic.thoth.classes.services.ThothCatalogFilesCacheService');
-import('plugins.generic.thoth.classes.services.ThothFileUploadService');
 
 class UploadThothPublicationFileForm extends Form
 {
@@ -35,14 +35,23 @@ class UploadThothPublicationFileForm extends Form
 
     public $thothWorkId;
 
-    public function __construct($template, $contextId, $publicationId, $representationId, $thothWorkId)
-    {
+    private UploadPublicationFile $uploadPublicationFile;
+
+    public function __construct(
+        $template,
+        $contextId,
+        $publicationId,
+        $representationId,
+        $thothWorkId,
+        UploadPublicationFile $uploadPublicationFile
+    ) {
         parent::__construct($template);
 
         $this->contextId = $contextId;
         $this->publicationId = $publicationId;
         $this->representationId = $representationId;
         $this->thothWorkId = $thothWorkId;
+        $this->uploadPublicationFile = $uploadPublicationFile;
 
         $this->addCheck(new FormValidator($this, 'temporaryFileId', 'required', 'form.fileRequired'));
     }
@@ -141,69 +150,15 @@ class UploadThothPublicationFileForm extends Form
         $user = $request->getUser();
         $notificationMgr = new NotificationManager();
 
-        import('lib.pkp.classes.file.TemporaryFileManager');
-        $temporaryFileManager = new TemporaryFileManager();
-        $temporaryFileDao = DAORegistry::getDAO('TemporaryFileDAO');
-        $temporaryFile = $temporaryFileDao->getTemporaryFile($this->getData('temporaryFileId'), $user->getId());
-
-        $extension = pathinfo($temporaryFile->getOriginalFileName(), PATHINFO_EXTENSION);
-        $mimeType = mime_content_type($temporaryFile->getfilePath());
-        $sha256 = hash_file('sha256', $temporaryFile->getfilePath());
-
-        $submissionComponentId = (int) $this->getData('submissionComponentId');
-        $thothWorkId = $this->thothWorkId;
-        $thothChapterId = null;
-
         try {
-            if ($submissionComponentId && $submissionComponentId !== $this->publicationId) {
-                $chapter = DAORegistry::getDAO('ChapterDAO')->getChapter($submissionComponentId, $this->publicationId);
-                if (!$chapter) {
-                    throw new Exception(__('plugins.generic.thoth.fileUpload.error.invalidSubmissionComponent'));
-                }
-
-                $thothChapterId = ThothRepo::chapter()->getByDoi(
-                    DoiFormatter::resolveUrl($chapter->getStoredPubId('doi'))
-                );
-                $thothWorkId = $thothChapterId;
-            }
-
-            $publicationFormat = DAORegistry::getDAO('PublicationFormatDAO')->getById(
+            $this->uploadPublicationFile->execute(
+                new WorkId($this->thothWorkId),
+                $this->publicationId,
                 $this->representationId,
-                $this->publicationId
+                (int) $this->getData('submissionComponentId'),
+                (int) $this->getData('temporaryFileId'),
+                $user->getId()
             );
-            if (!$publicationFormat) {
-                throw new Exception(__('plugins.generic.thoth.fileUpload.error.invalidPublicationFormat'));
-            }
-
-            $thothPublicationFactory = new ThothPublicationFactory();
-            $newThothPublication = $thothPublicationFactory->createFromPublicationFormat($publicationFormat);
-
-            $thothPublicationId = ThothRepo::publication()->getIdByType(
-                $thothWorkId,
-                $newThothPublication->getPublicationType()
-            );
-
-            if (is_null($thothPublicationId)) {
-                $newThothPublication->setWorkId($thothWorkId);
-                if ($thothChapterId) {
-                    $newThothPublication->unsetIsbn();
-                }
-                $thothPublicationId = ThothRepo::publication()->add($newThothPublication);
-            }
-
-            $newPublicationFileUpload = ThothRepo::publicationFileUpload()->new();
-            $newPublicationFileUpload->setPublicationId($thothPublicationId)
-                ->setDeclaredExtension($extension)
-                ->setDeclaredMimeType($mimeType)
-                ->setDeclaredSha256($sha256);
-
-            $fileUploadResponse = ThothRepo::publicationFileUpload()->init($newPublicationFileUpload);
-            (new ThothFileUploadService())->upload(
-                $fileUploadResponse,
-                $temporaryFile->getfilePath(),
-                ThothRepo::publicationFileUpload()
-            );
-            $this->flushCatalogFilesCache();
 
             $notificationMgr->createTrivialNotification(
                 $user->getId(),
@@ -216,17 +171,9 @@ class UploadThothPublicationFileForm extends Form
                 Notification::NOTIFICATION_TYPE_ERROR,
                 ['contents' => $e->getMessage()]
             );
-        } finally {
-            $temporaryFileManager->deleteById($temporaryFile->getId(), $user->getId());
         }
 
         return true;
-    }
-
-    private function flushCatalogFilesCache()
-    {
-        $cacheService = new ThothCatalogFilesCacheService();
-        $cacheService->flush($this->publicationId);
     }
 
     public function validate($callHooks = true)

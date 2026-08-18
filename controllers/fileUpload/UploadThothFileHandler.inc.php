@@ -16,6 +16,7 @@
 
 use APP\facades\Repo;
 use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
+use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadPublicationFile;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use PKP\core\JSONMessage;
 use PKP\core\PKPContainer;
@@ -91,7 +92,8 @@ class UploadThothFileHandler extends Handler
             $contextId,
             $publicationId,
             $representationId,
-            $thothWorkId
+            $thothWorkId,
+            PKPContainer::getInstance()->make(UploadPublicationFile::class)
         );
         $form->initData();
         $form->setData('missingCdnWritePermissionAlert', !$this->canUploadFiles($request));
@@ -151,7 +153,8 @@ class UploadThothFileHandler extends Handler
             $contextId,
             $publicationId,
             $representationId,
-            $thothWorkId
+            $thothWorkId,
+            PKPContainer::getInstance()->make(UploadPublicationFile::class)
         );
         $form->readInputData();
 
