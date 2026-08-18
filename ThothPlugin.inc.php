@@ -99,6 +99,9 @@ class ThothPlugin extends GenericPlugin
                 function (): object {
                     return ThothContainer::getInstance()->get('bookRegistrationService');
                 },
+                function (): object {
+                    return ThothService::book();
+                },
                 function (): array {
                     $bookService = ThothService::book();
                     $abstractService = ThothService::abstract();
@@ -475,7 +478,7 @@ class ThothPlugin extends GenericPlugin
         HookRegistry::register('Publication::validatePublish', [$publicationPublishListener, 'validate']);
         HookRegistry::register('Publication::publish', [$publicationPublishListener, 'registerThothBook']);
 
-        $publicationEditListener = new PublicationEditListener();
+        $publicationEditListener = Registry::get('laravelContainer')->make(PublicationEditListener::class);
         HookRegistry::register('Publication::edit', [$publicationEditListener, 'updateThothBook']);
     }
 

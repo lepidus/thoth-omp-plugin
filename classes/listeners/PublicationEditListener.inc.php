@@ -8,6 +8,7 @@
  * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
  *
  * @class PublicationEditListener
+ *
  * @ingroup plugins_generic_thoth
  *
  * @brief Trigger actions on publication edit event
@@ -15,87 +16,51 @@
 
 use ThothApi\Exception\QueryException;
 
-import('plugins.generic.thoth.classes.facades.ThothService');
+import('plugins.generic.thoth.classes.Application.Synchronization.UpdatePublicationAfterEdit');
+import('plugins.generic.thoth.classes.Domain.Identifier.SubmissionId');
 
 class PublicationEditListener
 {
-    private const CATALOG_ENTRY_FIELDS = [
-        'datePublished',
-        'seriesId',
-        'seriesPosition',
-        'categoryIds',
-        'urlPath',
-        'coverImage',
-        'place',
-        'pageCount',
-        'imageCount',
-        'thothUploadFrontcover',
-    ];
-
+    private UpdatePublicationAfterEdit $updatePublication;
     private $submissionService;
-    private $bookService;
     private $notification;
 
-    public function __construct($submissionService = null, $bookService = null, $notification = null)
-    {
+    public function __construct(
+        UpdatePublicationAfterEdit $updatePublication,
+        object $submissionService,
+        object $notification
+    ) {
+        $this->updatePublication = $updatePublication;
         $this->submissionService = $submissionService;
-        $this->bookService = $bookService;
         $this->notification = $notification;
     }
 
     public function updateThothBook($hookName, $args)
     {
         $publication = $args[0];
-        $params = $args[2];
-        if (!$this->isMetadataEdit($params)) {
-            return false;
-        }
-
+        $submissionId = new SubmissionId($publication->getData('submissionId'));
         $request = $args[3];
-        $submissionService = $this->submissionService ?: Services::get('submission');
-        $submission = $submissionService->get($publication->getData('submissionId'));
-
-        $thothBookId = $submission->getData('thothWorkId');
-        if ($thothBookId === null) {
+        try {
+            $result = $this->updatePublication->execute($publication, $submissionId, $args[2]);
+        } catch (QueryException $e) {
+            $submission = $this->submissionService->get($submissionId->toInt());
+            $this->notification->notifyError($request, $submission, $e);
             return false;
         }
 
-        $bookService = $this->bookService ?: ThothService::book();
-        $notification = $this->notification ?: new ThothNotification();
-        try {
-            $warning = $bookService->update(
-                $publication,
-                $thothBookId,
-                $this->isTitleAbstractEdit($params)
-            );
-            if (!$this->isDoiAssignment($params)) {
-                $notification->notifySuccess($request, $submission);
-            }
-            if ($warning) {
-                $notification->notifyWarning($request, $submission, $warning);
-            }
-        } catch (QueryException $e) {
-            $notification->notifyError($request, $submission, $e);
+        if (!$result->wasUpdated()) {
+            return false;
+        }
+
+        $submission = $this->submissionService->get($submissionId->toInt());
+        if ($result->shouldNotifySuccess()) {
+            $this->notification->notifySuccess($request, $submission);
+        }
+        foreach ($result->getWarnings() as $warning) {
+            $this->notification->notifyWarning($request, $submission, $warning->getMessageKey());
         }
 
         return false;
     }
 
-    private function isDoiAssignment($params)
-    {
-        unset($params['id']);
-        return count($params) === 1 && array_key_exists('doiId', $params);
-    }
-
-    private function isTitleAbstractEdit($params)
-    {
-        return (bool) array_intersect(['prefix', 'title', 'subtitle', 'abstract'], array_keys($params));
-    }
-
-    private function isMetadataEdit($params)
-    {
-        return $this->isDoiAssignment($params)
-            || $this->isTitleAbstractEdit($params)
-            || (bool) array_intersect(self::CATALOG_ENTRY_FIELDS, array_keys($params));
-    }
 }
