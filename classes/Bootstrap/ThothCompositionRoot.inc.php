@@ -29,6 +29,7 @@ import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController')
 import('plugins.generic.thoth.classes.Presentation.Api.RegisterBookController');
 import('plugins.generic.thoth.classes.Presentation.Api.SynchronizeMetadataController');
 import('plugins.generic.thoth.classes.Presentation.Api.UnlinkWorkController');
+import('plugins.generic.thoth.classes.Presentation.Api.UploadFeatureVideoController');
 import('plugins.generic.thoth.classes.services.ThothFeatureVideoCacheService');
 
 final class ThothCompositionRoot
@@ -160,5 +161,11 @@ final class ThothCompositionRoot
         $container->bind(UnlinkWorkController::class, function ($container): UnlinkWorkController {
             return new UnlinkWorkController($container->make(UnlinkWork::class));
         });
+        $container->bind(
+            UploadFeatureVideoController::class,
+            function ($container): UploadFeatureVideoController {
+                return new UploadFeatureVideoController($container->make(UploadFeatureVideo::class));
+            }
+        );
     }
 }

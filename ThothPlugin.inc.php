@@ -71,6 +71,7 @@ import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController')
 import('plugins.generic.thoth.classes.Presentation.Api.RegisterBookController');
 import('plugins.generic.thoth.classes.Presentation.Api.SynchronizeMetadataController');
 import('plugins.generic.thoth.classes.Presentation.Api.UnlinkWorkController');
+import('plugins.generic.thoth.classes.Presentation.Api.UploadFeatureVideoController');
 import('plugins.generic.thoth.classes.schema.ThothSchema');
 import('plugins.generic.thoth.classes.services.ThothCatalogFilesCacheService');
 import('plugins.generic.thoth.classes.services.ThothSubjectClassifier');
@@ -364,7 +365,8 @@ class ThothPlugin extends GenericPlugin
             $container->make(GetWorkStatusController::class),
             $container->make(RegisterBookController::class),
             $container->make(SynchronizeMetadataController::class),
-            $container->make(UnlinkWorkController::class)
+            $container->make(UnlinkWorkController::class),
+            $container->make(UploadFeatureVideoController::class)
         );
         HookRegistry::register('APIHandler::endpoints', [$thothEndpoint, 'addEndpoints']);
     }

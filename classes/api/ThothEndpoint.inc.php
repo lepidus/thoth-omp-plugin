@@ -14,12 +14,12 @@
  * @brief Thoth endpoints for OMP API
  */
 
-import('plugins.generic.thoth.classes.facades.ThothService');
 import('plugins.generic.thoth.classes.facades.ThothRepo');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
 import('plugins.generic.thoth.classes.Presentation.Api.RegisterBookController');
 import('plugins.generic.thoth.classes.Presentation.Api.SynchronizeMetadataController');
 import('plugins.generic.thoth.classes.Presentation.Api.UnlinkWorkController');
+import('plugins.generic.thoth.classes.Presentation.Api.UploadFeatureVideoController');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class ThothEndpoint
@@ -28,17 +28,20 @@ class ThothEndpoint
     private RegisterBookController $registerBookController;
     private SynchronizeMetadataController $synchronizeMetadataController;
     private UnlinkWorkController $unlinkWorkController;
+    private UploadFeatureVideoController $uploadFeatureVideoController;
 
     public function __construct(
         GetWorkStatusController $getWorkStatusController,
         RegisterBookController $registerBookController,
         SynchronizeMetadataController $synchronizeMetadataController,
-        UnlinkWorkController $unlinkWorkController
+        UnlinkWorkController $unlinkWorkController,
+        UploadFeatureVideoController $uploadFeatureVideoController
     ) {
         $this->getWorkStatusController = $getWorkStatusController;
         $this->registerBookController = $registerBookController;
         $this->synchronizeMetadataController = $synchronizeMetadataController;
         $this->unlinkWorkController = $unlinkWorkController;
+        $this->uploadFeatureVideoController = $uploadFeatureVideoController;
     }
 
     public function addEndpoints($hookName, $args)
@@ -150,30 +153,18 @@ class ThothEndpoint
                     'video' => [__('plugins.generic.thoth.fileUpload.error.missingCdnWritePermission')],
                 ]);
             }
-            $metadata = ThothService::featureVideoSubmission()->upload(
-                $submission,
-                $title,
-                $temporaryFileId,
-                (int) $user->getId()
-            );
-            return $response->withJson($metadata, 200);
-        } catch (InvalidArgumentException $exception) {
-            $message = $exception->getMessage();
-            if (
-                strpos($message, 'temporary video file was not found') !== false
-                || strpos($message, 'supported video') !== false
-            ) {
-                return $response->withStatus(400)->withJson([
-                    'video' => [__('plugins.generic.thoth.featureVideo.invalidFile')],
-                ]);
-            }
-
-            error_log($message);
-            return $response->withStatus(500)->withJsonError('plugins.generic.thoth.connectionError');
         } catch (Throwable $exception) {
             error_log($exception->getMessage());
             return $response->withStatus(500)->withJsonError('plugins.generic.thoth.connectionError');
         }
+
+        return $this->uploadFeatureVideoController->upload(
+            $submission,
+            $title,
+            $temporaryFileId,
+            (int) $user->getId(),
+            $response
+        );
     }
 
     public function getWorkStatus($slimRequest, $response, $args)
