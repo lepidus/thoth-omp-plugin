@@ -16,7 +16,6 @@
 
 namespace APP\plugins\generic\thoth\classes\templateFilters;
 
-use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\services\ThothFeatureVideoCacheService;
 use Throwable;
 
@@ -60,7 +59,7 @@ class ThothFeatureVideoTemplateFilter
     protected function loadVideo(string $workId): ?array
     {
         return (new ThothFeatureVideoCacheService())->get($workId, function () use ($workId) {
-            $featuredVideo = ThothContainer::getInstance()->get('workRepository')->getFeatureVideo($workId);
+            $featuredVideo = \PKP\core\PKPContainer::getInstance()->make('workRepository')->getFeatureVideo($workId);
             return $featuredVideo ? $featuredVideo->toArray() : null;
         });
     }

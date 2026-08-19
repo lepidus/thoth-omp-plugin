@@ -20,7 +20,6 @@ use APP\core\Application;
 use APP\facades\Repo;
 use APP\handler\Handler;
 use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
-use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use APP\plugins\generic\thoth\classes\factories\ThothPublicationFactory;
 use APP\plugins\generic\thoth\classes\formatters\DoiFormatter;
@@ -117,7 +116,7 @@ class ThothCatalogFilesHandler extends Handler
         }
 
         try {
-            $chapterRepository = ThothContainer::getInstance()->get('chapterRepository');
+            $chapterRepository = \PKP\core\PKPContainer::getInstance()->make('chapterRepository');
             $thothChapter = $chapterRepository->getByDoi(DoiFormatter::resolveUrl($doi));
             if (!$thothChapter) {
                 return [];

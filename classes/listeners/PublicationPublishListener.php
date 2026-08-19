@@ -19,7 +19,6 @@ namespace APP\plugins\generic\thoth\classes\listeners;
 use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
 use APP\plugins\generic\thoth\classes\Application\Exception\ExternalServiceFailure;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
-use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\ImprintId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
@@ -52,7 +51,7 @@ class PublicationPublishListener
         }
 
         try {
-            $metadataErrors = ThothContainer::getInstance()->get('bookService')->validate($args[1]);
+            $metadataErrors = \PKP\core\PKPContainer::getInstance()->make('bookService')->validate($args[1]);
         } catch (\Exception $exception) {
             $metadataErrors = [__('plugins.generic.thoth.connectionError')];
         }

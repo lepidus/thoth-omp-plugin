@@ -11,6 +11,8 @@ use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeMet
 use APP\plugins\generic\thoth\classes\Application\Synchronization\UpdatePublicationAfterEdit;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
+use APP\plugins\generic\thoth\classes\container\providers\ThothRepositoryProvider;
+use APP\plugins\generic\thoth\classes\container\providers\ThothServiceProvider;
 use APP\plugins\generic\thoth\classes\Contracts\BookMetadataUpdater;
 use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
 use APP\plugins\generic\thoth\classes\Contracts\CatalogFileCache;
@@ -67,6 +69,9 @@ final class ThothCompositionRoot
 
     public function register(object $container): void
     {
+        (new ThothRepositoryProvider())->register($container);
+        (new ThothServiceProvider())->register($container);
+
         $container->bind(
             CatalogFileGateway::class,
             fn (): CatalogFileGateway => new LegacyCatalogFileGateway(($this->catalogFileRepositoryFactory)())

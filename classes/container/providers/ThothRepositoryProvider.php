@@ -56,98 +56,98 @@ class ThothRepositoryProvider implements ContainerProvider
             );
         });
 
-        $container->set('client', function ($container) {
+        $container->bind('client', function ($container) {
             $contextId = Application::get()->getRequest()->getContext()->getId();
-            return $container->get('clientFactory')->create($contextId);
+            return $container->make('clientFactory')->create($contextId);
         });
 
         $container->singleton('abstractRepository', function ($container) {
-            return new ThothAbstractRepository($container->get('client'));
+            return new ThothAbstractRepository($container->make('client'));
         });
 
         $container->singleton('affiliationRepository', function ($container) {
-            return new ThothAffiliationRepository($container->get('client'));
+            return new ThothAffiliationRepository($container->make('client'));
         });
 
         $container->singleton('bookRepository', function ($container) {
-            return new ThothBookRepository($container->get('client'));
+            return new ThothBookRepository($container->make('client'));
         });
 
         $container->singleton('biographyRepository', function ($container) {
-            return new ThothBiographyRepository($container->get('client'));
+            return new ThothBiographyRepository($container->make('client'));
         });
 
         $container->singleton('chapterRepository', function ($container) {
-            return new ThothChapterRepository($container->get('client'));
+            return new ThothChapterRepository($container->make('client'));
         });
 
         $container->singleton('contributionRepository', function ($container) {
-            return new ThothContributionRepository($container->get('client'));
+            return new ThothContributionRepository($container->make('client'));
         });
 
         $container->singleton('contributorRepository', function ($container) {
-            return new ThothContributorRepository($container->get('client'));
+            return new ThothContributorRepository($container->make('client'));
         });
 
         $container->singleton('imprintRepository', function ($container) {
-            return new ThothImprintRepository($container->get('client'));
+            return new ThothImprintRepository($container->make('client'));
         });
 
         $container->singleton('institutionRepository', function ($container) {
-            return new ThothInstitutionRepository($container->get('client'));
+            return new ThothInstitutionRepository($container->make('client'));
         });
 
         $container->singleton('languageRepository', function ($container) {
-            return new ThothLanguageRepository($container->get('client'));
+            return new ThothLanguageRepository($container->make('client'));
         });
 
         $container->singleton('locationRepository', function ($container) {
-            return new ThothLocationRepository($container->get('client'));
+            return new ThothLocationRepository($container->make('client'));
         });
 
         $container->singleton('meRepository', function ($container) {
             $contextId = Application::get()->getRequest()->getContext()->getId();
-            return new ThothMeRepository($container->get('client'), $contextId);
+            return new ThothMeRepository($container->make('client'), $contextId);
         });
 
         $container->singleton('publicationRepository', function ($container) {
-            return new ThothPublicationRepository($container->get('client'));
+            return new ThothPublicationRepository($container->make('client'));
         });
 
         $container->singleton('publicationFileUploadRepository', function ($container) {
-            return new ThothPublicationFileUploadRepository($container->get('client'));
+            return new ThothPublicationFileUploadRepository($container->make('client'));
         });
 
         $container->singleton('frontcoverFileUploadRepository', function ($container) {
-            return new ThothFrontcoverFileUploadRepository($container->get('client'));
+            return new ThothFrontcoverFileUploadRepository($container->make('client'));
         });
 
         $container->singleton('featureVideoRepository', function ($container) {
-            return new ThothFeatureVideoRepository($container->get('client'));
+            return new ThothFeatureVideoRepository($container->make('client'));
         });
 
         $container->singleton('featureVideoFileUploadRepository', function ($container) {
-            return new ThothFeatureVideoFileUploadRepository($container->get('client'));
+            return new ThothFeatureVideoFileUploadRepository($container->make('client'));
         });
 
         $container->singleton('referenceRepository', function ($container) {
-            return new ThothReferenceRepository($container->get('client'));
+            return new ThothReferenceRepository($container->make('client'));
         });
 
         $container->singleton('subjectRepository', function ($container) {
-            return new ThothSubjectRepository($container->get('client'));
+            return new ThothSubjectRepository($container->make('client'));
         });
 
         $container->singleton('titleRepository', function ($container) {
-            return new ThothTitleRepository($container->get('client'));
+            return new ThothTitleRepository($container->make('client'));
         });
 
         $container->singleton('workRelationRepository', function ($container) {
-            return new ThothWorkRelationRepository($container->get('client'));
+            return new ThothWorkRelationRepository($container->make('client'));
         });
 
         $container->singleton('workRepository', function ($container) {
-            return new ThothWorkRepository($container->get('client'));
+            return new ThothWorkRepository($container->make('client'));
         });
     }
 }

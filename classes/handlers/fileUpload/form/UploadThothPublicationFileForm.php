@@ -21,7 +21,6 @@ use APP\facades\Repo;
 use APP\i18n\AppLocale;
 use APP\notification\NotificationManager;
 use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadPublicationFile;
-use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use APP\plugins\generic\thoth\classes\formatters\DoiFormatter;
 use APP\template\TemplateManager;
@@ -193,7 +192,7 @@ class UploadThothPublicationFileForm extends Form
 
         $chapterDoi = DoiFormatter::resolveUrl($chapter->getStoredPubId('doi'));
         try {
-            $thothChapter = ThothContainer::getInstance()->get('chapterRepository')->getByDoi($chapterDoi);
+            $thothChapter = \PKP\core\PKPContainer::getInstance()->make('chapterRepository')->getByDoi($chapterDoi);
             if (is_null($thothChapter)) {
                 $this->addError(
                     'submissionComponentId',

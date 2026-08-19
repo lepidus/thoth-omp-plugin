@@ -18,7 +18,6 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\services;
 
-use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\factories\ThothPublicationFactory;
 use APP\plugins\generic\thoth\classes\repositories\ThothPublicationRepository;
 use APP\plugins\generic\thoth\classes\services\ThothLocationService;
@@ -36,25 +35,8 @@ use ThothApi\GraphQL\Inputs\PatchPublication as ThothPublication;
 
 class ThothPublicationServiceTest extends PKPTestCase
 {
-    protected mixed $backup = null;
-    public function setUp(): void
-    {
-        parent::setUp();
-        $this->backup = ThothContainer::getInstance()->backup('client');
-    }
-
-    protected function tearDown(): void
-    {
-        ThothContainer::getInstance()->set('client', $this->backup);
-        parent::tearDown();
-    }
-
     public function testRegisterPublication()
     {
-        ThothContainer::getInstance()->set('client', function () {
-            return $this->getMockBuilder(ThothClient::class)->getMock();
-        });
-
         $mockFactory = $this->getMockBuilder(ThothPublicationFactory::class)
             ->onlyMethods(['createFromPublicationFormat'])
             ->getMock();

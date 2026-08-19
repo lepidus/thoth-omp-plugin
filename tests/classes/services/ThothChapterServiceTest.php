@@ -18,7 +18,6 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\services;
 
-use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\factories\ThothChapterFactory;
 use APP\plugins\generic\thoth\classes\repositories\ThothChapterRepository;
 use APP\plugins\generic\thoth\classes\services\ThothAbstractService;
@@ -36,29 +35,6 @@ use ThothApi\GraphQL\Inputs\PatchWork as ThothWork;
 
 class ThothChapterServiceTest extends PKPTestCase
 {
-    protected array $backups = [];
-    public function setUp(): void
-    {
-        parent::setUp();
-        $container = ThothContainer::getInstance();
-        $this->backups = [
-            'client' => $container->backup('client'),
-            'abstractService' => $container->backup('abstractService'),
-            'contributionService' => $container->backup('contributionService'),
-            'publicationService' => $container->backup('publicationService'),
-            'titleService' => $container->backup('titleService'),
-        ];
-    }
-
-    protected function tearDown(): void
-    {
-        $container = ThothContainer::getInstance();
-        foreach ($this->backups as $key => $factory) {
-            $container->set($key, $factory);
-        }
-        parent::tearDown();
-    }
-
     protected function getMockedContainerKeys(): array
     {
         return [...parent::getMockedContainerKeys(), PublicationRepository::class];
@@ -66,12 +42,6 @@ class ThothChapterServiceTest extends PKPTestCase
 
     public function testRegisterChapter()
     {
-        $container = ThothContainer::getInstance();
-
-        $container->set('client', function () {
-            return $this->getMockBuilder(ThothClient::class)->getMock();
-        });
-
         $mockAbstractService = $this->createMock(ThothAbstractService::class);
         $mockAbstractService->expects($this->once())->method('registerByChapter');
         $mockContributionService = $this->createMock(ThothContributionService::class);

@@ -19,7 +19,6 @@
 namespace APP\plugins\generic\thoth\tests\classes\services;
 
 use APP\author\Author;
-use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\repositories\ThothAffiliationRepository;
 use APP\plugins\generic\thoth\classes\repositories\ThothInstitutionRepository;
 use APP\plugins\generic\thoth\classes\services\ThothAffiliationService;
@@ -32,18 +31,6 @@ use ThothApi\GraphQL\Inputs\PatchInstitution as ThothInstitution;
 class ThothAffiliationServiceTest extends PKPTestCase
 {
     protected mixed $backup = null;
-    public function setUp(): void
-    {
-        parent::setUp();
-        $this->backup = ThothContainer::getInstance()->backup('institutionRepository');
-    }
-
-    protected function tearDown(): void
-    {
-        ThothContainer::getInstance()->set('institutionRepository', $this->backup);
-        parent::tearDown();
-    }
-
     private function createAffiliation(?string $ror = null): Affiliation
     {
         $affiliation = new Affiliation();

@@ -23,7 +23,6 @@ use APP\facades\Repo;
 use APP\handler\Handler;
 use APP\i18n\AppLocale;
 use APP\plugins\generic\thoth\classes\components\listPanels\ThothListPanel;
-use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\template\TemplateManager;
 use PKP\db\DAORegistry;
 use PKP\plugins\PluginRegistry;
@@ -68,7 +67,7 @@ class ThothHandler extends Handler
         $templateMgr = TemplateManager::getManager($request);
 
         try {
-            $imprints = ThothContainer::getInstance()->get('meService')->getImprints();
+            $imprints = \PKP\core\PKPContainer::getInstance()->make('meService')->getImprints();
         } catch (\Exception $e) {
             error_log($e->getMessage());
             $connectionError = true;

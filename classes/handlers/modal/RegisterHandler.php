@@ -21,7 +21,6 @@ namespace APP\plugins\generic\thoth\classes\handlers\modal;
 use APP\core\Application;
 use APP\handler\Handler;
 use APP\plugins\generic\thoth\classes\components\forms\RegisterForm;
-use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\template\TemplateManager;
 use Exception;
 use PKP\core\JSONMessage;
@@ -102,10 +101,10 @@ class RegisterHandler extends Handler
         $imprints = [];
         $workType = $this->submission->getData('workType');
         try {
-            $errors = ThothContainer::getInstance()->get('bookService')->validate($this->publication);
+            $errors = \PKP\core\PKPContainer::getInstance()->make('bookService')->validate($this->publication);
 
             if (empty($errors)) {
-                $imprints = ThothContainer::getInstance()->get('meService')->getImprints();
+                $imprints = \PKP\core\PKPContainer::getInstance()->make('meService')->getImprints();
             }
         } catch (Exception $e) {
             error_log($e->getMessage());

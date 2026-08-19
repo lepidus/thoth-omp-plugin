@@ -18,7 +18,6 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\services;
 
-use APP\plugins\generic\thoth\classes\container\ThothContainer;
 use APP\plugins\generic\thoth\classes\factories\ThothBookFactory;
 use APP\plugins\generic\thoth\classes\repositories\ThothBookRepository;
 use APP\plugins\generic\thoth\classes\services\ThothAbstractService;
@@ -33,36 +32,8 @@ use ThothApi\GraphQL\Inputs\PatchWork as ThothWork;
 
 class ThothBookServiceTest extends PKPTestCase
 {
-    protected array $backups = [];
-    public function setUp(): void
-    {
-        parent::setUp();
-        $container = ThothContainer::getInstance();
-        $this->backups = [
-            'client' => $container->backup('client'),
-            'abstractService' => $container->backup('abstractService'),
-            'publicationService' => $container->backup('publicationService'),
-            'titleService' => $container->backup('titleService'),
-        ];
-    }
-
-    protected function tearDown(): void
-    {
-        $container = ThothContainer::getInstance();
-        foreach ($this->backups as $key => $factory) {
-            $container->set($key, $factory);
-        }
-        parent::tearDown();
-    }
-
     public function testRegisterBook()
     {
-        $container = ThothContainer::getInstance();
-
-        $container->set('client', function () {
-            return $this->getMockBuilder(ThothClient::class)->getMock();
-        });
-
         $mockFactory = $this->getMockBuilder(ThothBookFactory::class)
             ->onlyMethods(['createFromPublication'])
             ->getMock();
