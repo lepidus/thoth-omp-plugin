@@ -7,7 +7,6 @@ use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use Exception;
 use PKP\db\DAORegistry;
 
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.factories.ThothPublicationFactory');
 import('plugins.generic.thoth.classes.formatters.DoiFormatter');
 import('plugins.generic.thoth.classes.services.ThothFileUploadService');
@@ -29,7 +28,7 @@ final class LegacyPublicationFileUploader implements PublicationFileUploader
                 throw new Exception(__('plugins.generic.thoth.fileUpload.error.invalidSubmissionComponent'));
             }
 
-            $remoteChapterId = \ThothContainer::getInstance()->get('chapterRepository')->getByDoi(
+            $remoteChapterId = \PKP\core\PKPContainer::getInstance()->make('chapterRepository')->getByDoi(
                 \DoiFormatter::resolveUrl($chapter->getStoredPubId('doi'))
             );
             $remoteWorkId = $remoteChapterId;
@@ -44,7 +43,7 @@ final class LegacyPublicationFileUploader implements PublicationFileUploader
         }
 
         $newPublication = (new \ThothPublicationFactory())->createFromPublicationFormat($publicationFormat);
-        $publicationRepository = \ThothContainer::getInstance()->get('publicationRepository');
+        $publicationRepository = \PKP\core\PKPContainer::getInstance()->make('publicationRepository');
         $remotePublicationId = $publicationRepository->getIdByType(
             $remoteWorkId,
             $newPublication->getPublicationType()
@@ -58,7 +57,7 @@ final class LegacyPublicationFileUploader implements PublicationFileUploader
             $remotePublicationId = $publicationRepository->add($newPublication);
         }
 
-        $uploadRepository = \ThothContainer::getInstance()->get('publicationFileUploadRepository');
+        $uploadRepository = \PKP\core\PKPContainer::getInstance()->make('publicationFileUploadRepository');
         $newUpload = $uploadRepository->new();
         $newUpload->setPublicationId($remotePublicationId)
             ->setDeclaredExtension($file['extension'])

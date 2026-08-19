@@ -47,6 +47,8 @@ use APP\plugins\generic\thoth\classes\Presentation\Api\UploadFeatureVideoControl
 
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
+import('plugins.generic.thoth.classes.container.providers.ThothRepositoryProvider');
+import('plugins.generic.thoth.classes.container.providers.ThothServiceProvider');
 import('plugins.generic.thoth.classes.services.ThothFeatureVideoCacheService');
 import('plugins.generic.thoth.classes.services.ThothCatalogFilesCacheService');
 
@@ -89,6 +91,9 @@ final class ThothCompositionRoot
 
     public function register(object $container): void
     {
+        (new \ThothRepositoryProvider())->register($container);
+        (new \ThothServiceProvider())->register($container);
+
         $container->bind(CatalogFileGateway::class, function (): CatalogFileGateway {
             return new LegacyCatalogFileGateway(($this->catalogFileRepositoryFactory)());
         });

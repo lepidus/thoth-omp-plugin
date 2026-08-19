@@ -24,7 +24,6 @@ use PKP\form\validation\FormValidator;
 
 import('lib.pkp.classes.form.Form');
 import('lib.pkp.classes.plugins.PKPPubIdPluginDAO');
-import('plugins.generic.thoth.classes.container.ThothContainer');
 
 class UploadThothPublicationFileForm extends Form
 {
@@ -212,7 +211,7 @@ class UploadThothPublicationFileForm extends Form
 
             $chapterDoi = DoiFormatter::resolveUrl($chapter->getStoredPubId('doi'));
             try {
-                $thothChapter = ThothContainer::getInstance()->get('chapterRepository')->getByDoi($chapterDoi);
+                $thothChapter = \PKP\core\PKPContainer::getInstance()->make('chapterRepository')->getByDoi($chapterDoi);
                 if (is_null($thothChapter)) {
                     $this->addError(
                         'submissionComponentId',

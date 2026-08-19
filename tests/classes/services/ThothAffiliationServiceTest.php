@@ -22,25 +22,12 @@ use ThothApi\GraphQL\Client as ThothClient;
 use ThothApi\GraphQL\Inputs\PatchAffiliation as ThothAffiliation;
 use ThothApi\GraphQL\Inputs\PatchInstitution as ThothInstitution;
 
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.repositories.ThothAffiliationRepository');
 import('plugins.generic.thoth.classes.repositories.ThothInstitutionRepository');
 import('plugins.generic.thoth.classes.services.ThothAffiliationService');
 
 class ThothAffiliationServiceTest extends PKPTestCase
 {
-    public function setUp(): void
-    {
-        parent::setUp();
-        $this->backup = ThothContainer::getInstance()->backup('institutionRepository');
-    }
-
-    protected function tearDown(): void
-    {
-        ThothContainer::getInstance()->set('institutionRepository', $this->backup);
-        parent::tearDown();
-    }
-
     public function testRegisterAffiliation()
     {
         $mockInstitutionRepository = $this->getMockBuilder(ThothInstitutionRepository::class)

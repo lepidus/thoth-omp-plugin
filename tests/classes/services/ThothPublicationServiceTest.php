@@ -27,7 +27,6 @@ use ThothApi\GraphQL\Enums\WorkStatus;
 use ThothApi\GraphQL\Inputs\PatchLocation as ThothLocation;
 use ThothApi\GraphQL\Inputs\PatchPublication as ThothPublication;
 
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.factories.ThothPublicationFactory');
 import('plugins.generic.thoth.classes.repositories.ThothPublicationRepository');
 import('plugins.generic.thoth.classes.services.ThothLocationService');
@@ -35,25 +34,8 @@ import('plugins.generic.thoth.classes.services.ThothPublicationService');
 
 class ThothPublicationServiceTest extends PKPTestCase
 {
-    public function setUp(): void
-    {
-        parent::setUp();
-        $this->backup = ThothContainer::getInstance()->backup('client');
-        $this->locationServiceBackup = ThothContainer::getInstance()->backup('locationService');
-    }
-
-    protected function tearDown(): void
-    {
-        ThothContainer::getInstance()->set('client', $this->backup);
-        ThothContainer::getInstance()->set('locationService', $this->locationServiceBackup);
-        parent::tearDown();
-    }
-
     public function testRegisterPublication()
     {
-        ThothContainer::getInstance()->set('client', function () {
-            return $this->getMockBuilder(ThothClient::class)->getMock();
-        });
         $mockLocationService = $this->createMock(ThothLocationService::class);
         $mockLocationService->expects($this->once())
             ->method('registerByPublicationFormat')

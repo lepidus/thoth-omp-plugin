@@ -33,22 +33,22 @@ class ThothServiceProvider implements ContainerProvider
 {
     public function register($container)
     {
-        $container->singletonClass('abstractService', ThothAbstractService::class, [
+        $this->singletonClass($container, 'abstractService', ThothAbstractService::class, [
             new ThothAbstractFactory(),
             'abstractRepository',
         ]);
 
-        $container->singletonClass('affiliationService', ThothAffiliationService::class, [
+        $this->singletonClass($container, 'affiliationService', ThothAffiliationService::class, [
             'affiliationRepository',
             'institutionRepository',
         ]);
 
-        $container->singletonClass('biographyService', ThothBiographyService::class, [
+        $this->singletonClass($container, 'biographyService', ThothBiographyService::class, [
             new ThothBiographyFactory(),
             'biographyRepository',
         ]);
 
-        $container->singletonClass('bookService', ThothBookService::class, [
+        $this->singletonClass($container, 'bookService', ThothBookService::class, [
             new ThothBookFactory(),
             'bookRepository',
             'publicationService',
@@ -57,7 +57,7 @@ class ThothServiceProvider implements ContainerProvider
             'frontcoverService',
         ]);
 
-        $container->singletonClass('bookRegistrationService', ThothBookRegistrationService::class, [
+        $this->singletonClass($container, 'bookRegistrationService', ThothBookRegistrationService::class, [
             new ThothBookFactory(),
             'bookRepository',
             'abstractService',
@@ -71,7 +71,7 @@ class ThothServiceProvider implements ContainerProvider
             'frontcoverService',
         ]);
 
-        $container->singletonClass('chapterService', ThothChapterService::class, [
+        $this->singletonClass($container, 'chapterService', ThothChapterService::class, [
             new ThothChapterFactory(),
             'chapterRepository',
             'contributionService',
@@ -80,7 +80,7 @@ class ThothServiceProvider implements ContainerProvider
             'abstractService',
         ]);
 
-        $container->singletonClass('contributionService', ThothContributionService::class, [
+        $this->singletonClass($container, 'contributionService', ThothContributionService::class, [
             new ThothContributionFactory(),
             'contributionRepository',
             'contributorRepository',
@@ -89,56 +89,70 @@ class ThothServiceProvider implements ContainerProvider
             'affiliationService',
         ]);
 
-        $container->singletonClass('contributorService', ThothContributorService::class, [
+        $this->singletonClass($container, 'contributorService', ThothContributorService::class, [
             new ThothContributorFactory(),
             'contributorRepository',
         ]);
 
-        $container->singletonClass('fileUploadService', ThothFileUploadService::class);
+        $this->singletonClass($container, 'fileUploadService', ThothFileUploadService::class);
 
-        $container->singletonClass('featureVideoService', ThothFeatureVideoService::class, [
+        $this->singletonClass($container, 'featureVideoService', ThothFeatureVideoService::class, [
             'featureVideoRepository',
             'featureVideoFileUploadRepository',
             'fileUploadService',
         ]);
 
-        $container->singletonClass('frontcoverService', ThothFrontcoverService::class, [
+        $this->singletonClass($container, 'frontcoverService', ThothFrontcoverService::class, [
             'frontcoverFileUploadRepository',
             'workRepository',
             'fileUploadService',
         ]);
 
-        $container->singletonClass('languageService', ThothLanguageService::class, [
+        $this->singletonClass($container, 'languageService', ThothLanguageService::class, [
             'languageRepository',
         ]);
 
-        $container->singletonClass('locationService', ThothLocationService::class, [
+        $this->singletonClass($container, 'locationService', ThothLocationService::class, [
             new ThothLocationFactory(),
             'locationRepository',
         ]);
 
-        $container->singletonClass('publicationService', ThothPublicationService::class, [
+        $this->singletonClass($container, 'publicationService', ThothPublicationService::class, [
             new ThothPublicationFactory(),
             'publicationRepository',
             'locationService',
         ]);
 
-        $container->singletonClass('referenceService', ThothReferenceService::class, [
+        $this->singletonClass($container, 'referenceService', ThothReferenceService::class, [
             'referenceRepository',
         ]);
 
-        $container->singletonClass('subjectService', ThothSubjectService::class, [
+        $this->singletonClass($container, 'subjectService', ThothSubjectService::class, [
             'subjectRepository',
         ]);
 
-        $container->singletonClass('titleService', ThothTitleService::class, [
+        $this->singletonClass($container, 'titleService', ThothTitleService::class, [
             new ThothTitleFactory(),
             'titleRepository',
         ]);
 
-        $container->singletonClass('workRelationService', ThothWorkRelationService::class, [
+        $this->singletonClass($container, 'workRelationService', ThothWorkRelationService::class, [
             'workRelationRepository',
             'chapterService',
         ]);
+    }
+
+    private function singletonClass($container, $id, $className, array $dependencies = [])
+    {
+        $container->singleton($id, function ($container) use ($className, $dependencies) {
+            $resolvedDependencies = array_map(
+                function ($dependency) use ($container) {
+                    return is_string($dependency) ? $container->make($dependency) : $dependency;
+                },
+                $dependencies
+            );
+
+            return new $className(...$resolvedDependencies);
+        });
     }
 }

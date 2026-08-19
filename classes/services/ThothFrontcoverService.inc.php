@@ -18,7 +18,6 @@ use APP\facades\Repo;
 use APP\publication\DAO as PublicationDAO;
 
 import('classes.file.PublicFileManager');
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class ThothFrontcoverService
@@ -151,7 +150,7 @@ class ThothFrontcoverService
 
     protected function hasCdnWritePermission($contextId): bool
     {
-        $meRepository = ThothContainer::getInstance()->get('meRepository');
+        $meRepository = \PKP\core\PKPContainer::getInstance()->make('meRepository');
         return (new ThothMeCacheService($meRepository))->hasCdnWritePermission($contextId);
     }
 

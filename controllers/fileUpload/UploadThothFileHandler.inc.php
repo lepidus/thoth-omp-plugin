@@ -23,7 +23,6 @@ use PKP\core\PKPContainer;
 use PKP\security\Role;
 
 import('classes.handler.Handler');
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.factories.ThothPublicationFactory');
 import('plugins.generic.thoth.classes.formatters.DoiFormatter');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
@@ -278,7 +277,7 @@ class UploadThothFileHandler extends Handler
         }
 
         try {
-            $chapterRepository = ThothContainer::getInstance()->get('chapterRepository');
+            $chapterRepository = \PKP\core\PKPContainer::getInstance()->make('chapterRepository');
             $thothChapter = $chapterRepository->getByDoi(DoiFormatter::resolveUrl($doi));
             if (!$thothChapter) {
                 return null;
@@ -308,7 +307,7 @@ class UploadThothFileHandler extends Handler
     private function canUploadFiles($request)
     {
         try {
-            $cacheService = new ThothMeCacheService(ThothContainer::getInstance()->get('meRepository'));
+            $cacheService = new ThothMeCacheService(\PKP\core\PKPContainer::getInstance()->make('meRepository'));
             $contextId = $request->getContext()->getId();
             return $cacheService->hasCdnWritePermission($contextId);
         } catch (Exception $e) {

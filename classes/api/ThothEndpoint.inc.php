@@ -23,7 +23,6 @@ use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UploadFeatureVideoController;
 use PKP\security\Role;
 
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class ThothEndpoint
@@ -148,7 +147,7 @@ class ThothEndpoint
         }
 
         try {
-            $canUpload = (new ThothMeCacheService(ThothContainer::getInstance()->get('meRepository')))
+            $canUpload = (new ThothMeCacheService(\PKP\core\PKPContainer::getInstance()->make('meRepository')))
                 ->hasCdnWritePermission($context->getId());
             if (!$canUpload) {
                 return $response->withStatus(403)->withJson([

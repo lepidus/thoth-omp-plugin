@@ -18,7 +18,6 @@ use APP\facades\Repo;
 use APP\submission\Submission;
 use ThothApi\GraphQL\Enums\WorkType;
 
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.components.forms.ThothValidationMessageFormatter');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
@@ -38,14 +37,14 @@ class PublishFormConfig
         }
 
         try {
-            $errors = ThothContainer::getInstance()->get('bookService')->validate($publication);
+            $errors = \PKP\core\PKPContainer::getInstance()->make('bookService')->validate($publication);
 
             if (empty($errors)) {
-                $meRepository = ThothContainer::getInstance()->get('meRepository');
+                $meRepository = \PKP\core\PKPContainer::getInstance()->make('meRepository');
                 $publishers = (new ThothMeCacheService($meRepository))
                     ->getLinkedPublishers($submission->getData('contextId'));
                 $publisherIds = array_column($publishers, 'publisherId');
-                $imprints = ThothContainer::getInstance()->get('imprintRepository')->getMany([
+                $imprints = \PKP\core\PKPContainer::getInstance()->make('imprintRepository')->getMany([
                     'publishers' => $publisherIds
                 ], [
                     'imprintId',

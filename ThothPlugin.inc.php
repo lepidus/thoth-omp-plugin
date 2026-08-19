@@ -75,7 +75,6 @@ import('plugins.generic.thoth.classes.components.forms.config.CatalogEntryFormCo
 import('plugins.generic.thoth.classes.components.forms.config.PublishFormConfig');
 import('plugins.generic.thoth.classes.components.forms.config.ContributorFormConfig');
 import('plugins.generic.thoth.classes.formModifiers.PublicationFormatFormModifier');
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.templateFilters.PublicationFormatTemplateFilter');
 import('plugins.generic.thoth.classes.templateFilters.ThothSectionTemplateFilter');
 import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
@@ -84,7 +83,6 @@ import('plugins.generic.thoth.classes.notification.ThothNotification');
 import('plugins.generic.thoth.classes.schema.ThothSchema');
 import('plugins.generic.thoth.classes.services.ThothCatalogFilesCacheService');
 import('plugins.generic.thoth.classes.services.ThothWorkLinkService');
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.templateFilters.ThothCatalogFilesTemplateFilter');
 import('plugins.generic.thoth.classes.templateFilters.ThothFrontcoverTemplateFilter');
 import('plugins.generic.thoth.classes.templateFilters.ThothFeatureVideoWorkflowTemplateFilter');
@@ -99,27 +97,27 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
         if ($success && $this->getEnabled()) {
             $compositionRoot = new ThothCompositionRoot(
                 function (): object {
-                    return new ThothWorkLinkService(ThothContainer::getInstance()->get('workRepository'));
+                    return new ThothWorkLinkService(\PKP\core\PKPContainer::getInstance()->make('workRepository'));
                 },
                 function (): object {
-                    return ThothContainer::getInstance()->get('bookRegistrationService');
+                    return \PKP\core\PKPContainer::getInstance()->make('bookRegistrationService');
                 },
                 function (): object {
-                    return ThothContainer::getInstance()->get('bookService');
+                    return \PKP\core\PKPContainer::getInstance()->make('bookService');
                 },
                 function (): array {
-                    $bookService = ThothContainer::getInstance()->get('bookService');
-                    $abstractService = ThothContainer::getInstance()->get('abstractService');
-                    $chapterService = ThothContainer::getInstance()->get('chapterService');
-                    $contributionService = ThothContainer::getInstance()->get('contributionService');
-                    $languageService = ThothContainer::getInstance()->get('languageService');
-                    $referenceService = ThothContainer::getInstance()->get('referenceService');
-                    $subjectService = ThothContainer::getInstance()->get('subjectService');
-                    $titleService = ThothContainer::getInstance()->get('titleService');
-                    $workRelationService = ThothContainer::getInstance()->get('workRelationService');
-                    $publicationService = ThothContainer::getInstance()->get('publicationService');
-                    $locationService = ThothContainer::getInstance()->get('locationService');
-                    $frontcoverService = ThothContainer::getInstance()->get('frontcoverService');
+                    $bookService = \PKP\core\PKPContainer::getInstance()->make('bookService');
+                    $abstractService = \PKP\core\PKPContainer::getInstance()->make('abstractService');
+                    $chapterService = \PKP\core\PKPContainer::getInstance()->make('chapterService');
+                    $contributionService = \PKP\core\PKPContainer::getInstance()->make('contributionService');
+                    $languageService = \PKP\core\PKPContainer::getInstance()->make('languageService');
+                    $referenceService = \PKP\core\PKPContainer::getInstance()->make('referenceService');
+                    $subjectService = \PKP\core\PKPContainer::getInstance()->make('subjectService');
+                    $titleService = \PKP\core\PKPContainer::getInstance()->make('titleService');
+                    $workRelationService = \PKP\core\PKPContainer::getInstance()->make('workRelationService');
+                    $publicationService = \PKP\core\PKPContainer::getInstance()->make('publicationService');
+                    $locationService = \PKP\core\PKPContainer::getInstance()->make('locationService');
+                    $frontcoverService = \PKP\core\PKPContainer::getInstance()->make('frontcoverService');
                     $chapterWorkMapper = new LegacyChapterWorkMetadataMapper($chapterService->factory);
                     $chapterSynchronizer = new ChapterSynchronizer(
                         new LegacyChapterMetadataGateway($chapterService->repository),
@@ -215,10 +213,10 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                     ];
                 },
                 function (): object {
-                    return ThothContainer::getInstance()->get('featureVideoService');
+                    return \PKP\core\PKPContainer::getInstance()->make('featureVideoService');
                 },
                 function (): object {
-                    return ThothContainer::getInstance()->get('publicationRepository');
+                    return \PKP\core\PKPContainer::getInstance()->make('publicationRepository');
                 },
                 Repo::publication(),
                 Repo::submission(),
