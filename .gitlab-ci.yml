@@ -11,3 +11,20 @@ include:
 .unit_test_template:
   before_script:
     - composer install
+
+static_analysis:
+  stage: validation
+  image: $CI_IMAGE_OMP
+  needs: []
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: on_success
+  variables:
+    PHP_VERSION: '8.4'
+  before_script:
+    - update-alternatives --set php /usr/bin/php$PHP_VERSION
+    - composer install
+  script:
+    - cd "$CI_PROJECT_DIR"
+    - vendor/bin/phpstan analyse --no-progress
