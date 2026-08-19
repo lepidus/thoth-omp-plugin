@@ -23,8 +23,6 @@ use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UploadFeatureVideoController;
 use PKP\security\Role;
 
-import('plugins.generic.thoth.classes.services.ThothMeCacheService');
-
 class ThothEndpoint
 {
     private GetWorkStatusController $getWorkStatusController;

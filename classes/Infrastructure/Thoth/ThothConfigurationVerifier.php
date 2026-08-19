@@ -7,8 +7,6 @@ use ThothApi\GraphQL\Client;
 use ThothApiUrlValidator;
 use Throwable;
 
-import('plugins.generic.thoth.classes.security.ThothApiUrlValidator');
-
 final class ThothConfigurationVerifier
 {
     private ThothApiUrlValidator $urlValidator;

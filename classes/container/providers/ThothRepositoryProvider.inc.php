@@ -19,37 +19,6 @@ require_once(__DIR__ . '/../../../vendor/autoload.php');
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyThothConfigurationRepository;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\ThothClientFactory;
 
-import('plugins.generic.thoth.classes.container.providers.ContainerProvider');
-import('plugins.generic.thoth.classes.factories.ThothBookFactory');
-import('plugins.generic.thoth.classes.factories.ThothChapterFactory');
-import('plugins.generic.thoth.classes.factories.ThothContributionFactory');
-import('plugins.generic.thoth.classes.factories.ThothContributorFactory');
-import('plugins.generic.thoth.classes.factories.ThothLocationFactory');
-import('plugins.generic.thoth.classes.factories.ThothPublicationFactory');
-import('plugins.generic.thoth.classes.repositories.ThothAbstractRepository');
-import('plugins.generic.thoth.classes.repositories.ThothAffiliationRepository');
-import('plugins.generic.thoth.classes.repositories.ThothBiographyRepository');
-import('plugins.generic.thoth.classes.repositories.ThothBookRepository');
-import('plugins.generic.thoth.classes.repositories.ThothChapterRepository');
-import('plugins.generic.thoth.classes.repositories.ThothContributionRepository');
-import('plugins.generic.thoth.classes.repositories.ThothContributorRepository');
-import('plugins.generic.thoth.classes.repositories.ThothFrontcoverFileUploadRepository');
-import('plugins.generic.thoth.classes.repositories.ThothFeatureVideoFileUploadRepository');
-import('plugins.generic.thoth.classes.repositories.ThothFeatureVideoRepository');
-import('plugins.generic.thoth.classes.repositories.ThothImprintRepository');
-import('plugins.generic.thoth.classes.repositories.ThothInstitutionRepository');
-import('plugins.generic.thoth.classes.repositories.ThothLanguageRepository');
-import('plugins.generic.thoth.classes.repositories.ThothLocationRepository');
-import('plugins.generic.thoth.classes.repositories.ThothMeRepository');
-import('plugins.generic.thoth.classes.repositories.ThothPublicationRepository');
-import('plugins.generic.thoth.classes.repositories.ThothPublicationFileUploadRepository');
-import('plugins.generic.thoth.classes.repositories.ThothReferenceRepository');
-import('plugins.generic.thoth.classes.repositories.ThothSubjectRepository');
-import('plugins.generic.thoth.classes.repositories.ThothTitleRepository');
-import('plugins.generic.thoth.classes.repositories.ThothWorkRelationRepository');
-import('plugins.generic.thoth.classes.repositories.ThothWorkRepository');
-import('plugins.generic.thoth.classes.security.ThothApiUrlValidator');
-
 class ThothRepositoryProvider implements ContainerProvider
 {
     public function register($container)

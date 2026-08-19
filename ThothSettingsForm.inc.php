@@ -27,9 +27,6 @@ use PKP\form\validation\FormValidatorCSRF;
 use PKP\form\validation\FormValidatorCustom;
 use PKP\form\validation\FormValidatorPost;
 
-import('plugins.generic.thoth.classes.services.ThothMeCacheService');
-import('plugins.generic.thoth.classes.security.ThothApiUrlValidator');
-
 class ThothSettingsForm extends Form
 {
     private $contextId;

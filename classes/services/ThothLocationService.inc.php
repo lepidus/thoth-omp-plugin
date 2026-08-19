@@ -18,8 +18,6 @@ use APP\core\Application;
 use APP\facades\Repo;
 use ThothApi\GraphQL\Enums\LocationPlatform;
 
-import('plugins.generic.thoth.classes.exceptions.MetadataSynchronizationException');
-
 class ThothLocationService
 {
     public $factory;

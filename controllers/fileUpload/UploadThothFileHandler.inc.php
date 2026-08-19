@@ -23,9 +23,6 @@ use PKP\core\PKPContainer;
 use PKP\security\Role;
 
 import('classes.handler.Handler');
-import('plugins.generic.thoth.classes.factories.ThothPublicationFactory');
-import('plugins.generic.thoth.classes.formatters.DoiFormatter');
-import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class UploadThothFileHandler extends Handler
 {
@@ -84,7 +81,6 @@ class UploadThothFileHandler extends Handler
         $representationId = (int) $request->getUserVar('representationId');
         $thothWorkId = $request->getUserVar('thothWorkId');
 
-        import('plugins.generic.thoth.controllers.fileUpload.form.UploadThothPublicationFileForm');
         $template = $this->plugin->getTemplateResource('form/uploadThothPublicationFileForm.tpl');
         $form = new UploadThothPublicationFileForm(
             $template,
@@ -145,7 +141,6 @@ class UploadThothFileHandler extends Handler
         $representationId = (int) $request->getUserVar('representationId');
         $thothWorkId = $request->getUserVar('thothWorkId');
 
-        import('plugins.generic.thoth.controllers.fileUpload.form.UploadThothPublicationFileForm');
         $template = $this->plugin->getTemplateResource('form/uploadThothPublicationFileForm.tpl');
         $form = new UploadThothPublicationFileForm(
             $template,

@@ -8,8 +8,6 @@ use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use ThothApi\Exception\QueryException;
 
-import('plugins.generic.thoth.classes.exceptions.MetadataSynchronizationException');
-
 final class SynchronizeMetadataController
 {
     private SynchronizeMetadata $synchronizeMetadata;

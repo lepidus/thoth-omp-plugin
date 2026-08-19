@@ -16,8 +16,6 @@
 
 use ThothApi\Exception\QueryException;
 
-import('plugins.generic.thoth.classes.repositories.ThothWorkRepository');
-
 class ThothChapterRepository extends ThothWorkRepository
 {
     public function getByDoi($doi)

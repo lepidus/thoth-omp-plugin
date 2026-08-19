@@ -22,8 +22,6 @@ use Biblys\Isbn\IsbnValidationException;
 use PKP\db\DAORegistry;
 use ThothApi\GraphQL\Enums\WorkStatus;
 
-import('plugins.generic.thoth.classes.exceptions.MetadataSynchronizationException');
-
 class ThothPublicationService
 {
     public $factory;

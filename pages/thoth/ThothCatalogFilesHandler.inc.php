@@ -21,9 +21,6 @@ use PKP\core\JSONMessage;
 use PKP\core\PKPContainer;
 
 import('classes.handler.Handler');
-import('plugins.generic.thoth.classes.factories.ThothPublicationFactory');
-import('plugins.generic.thoth.classes.formatters.DoiFormatter');
-import('plugins.generic.thoth.classes.services.ThothCatalogFilesCacheService');
 
 class ThothCatalogFilesHandler extends Handler
 {

@@ -1,6 +1,5 @@
 <?php
 
-import('plugins.generic.thoth.classes.services.ThothFeatureVideoCacheService');
 
 class ThothFeatureVideoTemplateFilter
 {

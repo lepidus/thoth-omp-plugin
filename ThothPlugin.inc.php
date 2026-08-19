@@ -70,24 +70,6 @@ use PKP\linkAction\LinkAction;
 use PKP\linkAction\request\AjaxModal;
 use PKP\security\Role;
 
-import('plugins.generic.thoth.classes.api.ThothEndpoint');
-import('plugins.generic.thoth.classes.components.forms.config.CatalogEntryFormConfig');
-import('plugins.generic.thoth.classes.components.forms.config.PublishFormConfig');
-import('plugins.generic.thoth.classes.components.forms.config.ContributorFormConfig');
-import('plugins.generic.thoth.classes.formModifiers.PublicationFormatFormModifier');
-import('plugins.generic.thoth.classes.templateFilters.PublicationFormatTemplateFilter');
-import('plugins.generic.thoth.classes.templateFilters.ThothSectionTemplateFilter');
-import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
-import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
-import('plugins.generic.thoth.classes.notification.ThothNotification');
-import('plugins.generic.thoth.classes.schema.ThothSchema');
-import('plugins.generic.thoth.classes.services.ThothCatalogFilesCacheService');
-import('plugins.generic.thoth.classes.services.ThothWorkLinkService');
-import('plugins.generic.thoth.classes.templateFilters.ThothCatalogFilesTemplateFilter');
-import('plugins.generic.thoth.classes.templateFilters.ThothFrontcoverTemplateFilter');
-import('plugins.generic.thoth.classes.templateFilters.ThothFeatureVideoWorkflowTemplateFilter');
-import('plugins.generic.thoth.classes.templateFilters.ThothFeatureVideoTemplateFilter');
-
 class ThothPlugin extends \PKP\plugins\GenericPlugin
 {
     public function register($category, $path, $mainContextId = null)
@@ -235,7 +217,6 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
             HookRegistry::register('TemplateManager::display', [$this, 'addMenu']);
             HookRegistry::register('LoadHandler', [$this, 'addHandlers']);
 
-            import('plugins.generic.thoth.classes.gridModifier.PublicationFormatGridModifier');
             $publicationFormatGridModifier = new PublicationFormatGridModifier($this);
         }
 
@@ -295,7 +276,6 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
             case 'settings':
                 $context = $request->getContext();
 
-                $this->import('ThothSettingsForm');
                 $form = new ThothSettingsForm($this, $context->getId());
 
                 if ($request->getUserVar('save')) {
@@ -526,19 +506,16 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
         }
 
         if ($op === 'register') {
-            $this->import('controllers/modal/RegisterHandler');
             define('HANDLER_CLASS', 'RegisterHandler');
             return true;
         }
 
         if ($op === 'index') {
-            $this->import('pages/thoth/ThothHandler');
             define('HANDLER_CLASS', 'ThothHandler');
             return true;
         }
 
         if ($op === 'catalogFiles') {
-            $this->import('pages/thoth/ThothCatalogFilesHandler');
             define('HANDLER_CLASS', 'ThothCatalogFilesHandler');
             return true;
         }
@@ -552,7 +529,6 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                 'viewThothPublicationFormatFiles',
             ]
         )) {
-            $this->import('controllers/fileUpload/UploadThothFileHandler');
             define('HANDLER_CLASS', 'UploadThothFileHandler');
             return true;
         }

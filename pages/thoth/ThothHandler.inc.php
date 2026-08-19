@@ -25,9 +25,6 @@ use PKP\db\DAORegistry;
 use PKP\plugins\PluginRegistry;
 use PKP\security\Role;
 
-import('plugins.generic.thoth.classes.components.listPanels.ThothListPanel');
-import('plugins.generic.thoth.classes.services.ThothMeCacheService');
-
 class ThothHandler extends Handler
 {
     public $_isBackendPage = true;

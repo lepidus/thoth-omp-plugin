@@ -1,33 +1,5 @@
 <?php
 
-import('plugins.generic.thoth.classes.container.providers.ContainerProvider');
-import('plugins.generic.thoth.classes.factories.ThothAbstractFactory');
-import('plugins.generic.thoth.classes.factories.ThothBiographyFactory');
-import('plugins.generic.thoth.classes.factories.ThothBookFactory');
-import('plugins.generic.thoth.classes.factories.ThothChapterFactory');
-import('plugins.generic.thoth.classes.factories.ThothContributionFactory');
-import('plugins.generic.thoth.classes.factories.ThothContributorFactory');
-import('plugins.generic.thoth.classes.factories.ThothLocationFactory');
-import('plugins.generic.thoth.classes.factories.ThothPublicationFactory');
-import('plugins.generic.thoth.classes.factories.ThothTitleFactory');
-import('plugins.generic.thoth.classes.services.ThothAbstractService');
-import('plugins.generic.thoth.classes.services.ThothAffiliationService');
-import('plugins.generic.thoth.classes.services.ThothBiographyService');
-import('plugins.generic.thoth.classes.services.ThothBookRegistrationService');
-import('plugins.generic.thoth.classes.services.ThothBookService');
-import('plugins.generic.thoth.classes.services.ThothChapterService');
-import('plugins.generic.thoth.classes.services.ThothContributionService');
-import('plugins.generic.thoth.classes.services.ThothContributorService');
-import('plugins.generic.thoth.classes.services.ThothFileUploadService');
-import('plugins.generic.thoth.classes.services.ThothFeatureVideoService');
-import('plugins.generic.thoth.classes.services.ThothFrontcoverService');
-import('plugins.generic.thoth.classes.services.ThothLanguageService');
-import('plugins.generic.thoth.classes.services.ThothLocationService');
-import('plugins.generic.thoth.classes.services.ThothPublicationService');
-import('plugins.generic.thoth.classes.services.ThothReferenceService');
-import('plugins.generic.thoth.classes.services.ThothSubjectService');
-import('plugins.generic.thoth.classes.services.ThothTitleService');
-import('plugins.generic.thoth.classes.services.ThothWorkRelationService');
 
 class ThothServiceProvider implements ContainerProvider
 {

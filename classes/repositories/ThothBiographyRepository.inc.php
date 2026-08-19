@@ -16,8 +16,6 @@
 
 use ThothApi\GraphQL\Inputs\PatchBiography as ThothBiography;
 
-import('plugins.generic.thoth.classes.formatters.ThothMarkupFormat');
-
 class ThothBiographyRepository
 {
     protected $thothClient;

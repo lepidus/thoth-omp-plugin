@@ -18,7 +18,6 @@ use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy
 use PKP\db\DAORegistry;
 
 import('lib.pkp.classes.services.PKPSchemaService');
-import('plugins.generic.thoth.classes.services.ThothFrontcoverService');
 
 class ThothBookService
 {

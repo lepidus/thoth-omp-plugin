@@ -45,13 +45,6 @@ use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataContro
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UploadFeatureVideoController;
 
-import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
-import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
-import('plugins.generic.thoth.classes.container.providers.ThothRepositoryProvider');
-import('plugins.generic.thoth.classes.container.providers.ThothServiceProvider');
-import('plugins.generic.thoth.classes.services.ThothFeatureVideoCacheService');
-import('plugins.generic.thoth.classes.services.ThothCatalogFilesCacheService');
-
 final class ThothCompositionRoot
 {
     private $workLinkServiceFactory;

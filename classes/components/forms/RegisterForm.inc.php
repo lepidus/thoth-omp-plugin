@@ -24,8 +24,6 @@ use PKP\components\forms\FieldSelect;
 use PKP\components\forms\FormComponent;
 use ThothApi\GraphQL\Enums\WorkType;
 
-import('plugins.generic.thoth.classes.components.forms.ThothValidationMessageFormatter');
-
 class RegisterForm extends FormComponent
 {
     public $id = 'register';

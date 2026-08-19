@@ -13,8 +13,6 @@ use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
 use PKP\db\DAORegistry;
 
-import('plugins.generic.thoth.classes.notification.ThothNotification');
-
 final class RegisterBookController
 {
     private RegisterBook $registerBook;

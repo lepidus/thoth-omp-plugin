@@ -18,9 +18,6 @@ use APP\facades\Repo;
 use APP\submission\Submission;
 use ThothApi\GraphQL\Enums\WorkType;
 
-import('plugins.generic.thoth.classes.components.forms.ThothValidationMessageFormatter');
-import('plugins.generic.thoth.classes.services.ThothMeCacheService');
-
 class PublishFormConfig
 {
     public function addConfig($hookName, $form)

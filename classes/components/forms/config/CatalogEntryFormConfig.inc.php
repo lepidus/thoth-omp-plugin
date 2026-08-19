@@ -16,8 +16,6 @@
 
 use APP\facades\Repo;
 
-import('plugins.generic.thoth.classes.services.ThothMeCacheService');
-
 class CatalogEntryFormConfig
 {
     public function addConfig($hookName, $form)

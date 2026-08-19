@@ -18,8 +18,6 @@ use PKP\db\DAORegistry;
 use ThothApi\GraphQL\Enums\RelationType;
 use ThothApi\GraphQL\Enums\WorkType;
 
-import('plugins.generic.thoth.classes.exceptions.MetadataSynchronizationException');
-
 class ThothWorkRelationService
 {
     public $repository;

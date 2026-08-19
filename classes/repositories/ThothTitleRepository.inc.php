@@ -16,8 +16,6 @@
 
 use ThothApi\GraphQL\Inputs\PatchTitle as ThothTitle;
 
-import('plugins.generic.thoth.classes.formatters.ThothMarkupFormat');
-
 class ThothTitleRepository
 {
     protected $thothClient;

@@ -23,8 +23,6 @@ use APP\template\TemplateManager;
 use PKP\plugins\PluginRegistry;
 use PKP\security\Role;
 
-import('plugins.generic.thoth.classes.services.ThothMeCacheService');
-
 class RegisterHandler extends Handler
 {
     public $submission;
@@ -107,7 +105,6 @@ class RegisterHandler extends Handler
             $errors = [__('plugins.generic.thoth.connectionError')];
         }
 
-        $plugin->import('classes.components.forms.RegisterForm');
         $registerForm = new RegisterForm($publicationApiUrl, $imprints, $workType, $errors);
 
         $settingsData = [

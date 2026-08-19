@@ -16,8 +16,6 @@
 
 use ThothApi\GraphQL\Inputs\PatchTitle as ThothTitle;
 
-import('plugins.generic.thoth.classes.i18n.ThothLocaleCode');
-
 class ThothTitleFactory
 {
     public function createFromPublication($publication, string $workId, ?string $preferredLocale = null): array

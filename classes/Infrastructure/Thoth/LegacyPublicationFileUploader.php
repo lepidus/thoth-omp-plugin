@@ -7,10 +7,6 @@ use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use Exception;
 use PKP\db\DAORegistry;
 
-import('plugins.generic.thoth.classes.factories.ThothPublicationFactory');
-import('plugins.generic.thoth.classes.formatters.DoiFormatter');
-import('plugins.generic.thoth.classes.services.ThothFileUploadService');
-
 final class LegacyPublicationFileUploader implements PublicationFileUploader
 {
     public function upload(

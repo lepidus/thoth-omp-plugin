@@ -14,7 +14,6 @@
  * @brief Shared service for sending files to Thoth presigned upload URLs.
  */
 
-import('plugins.generic.thoth.classes.security.ThothApiUrlValidator');
 
 class ThothFileUploadService
 {

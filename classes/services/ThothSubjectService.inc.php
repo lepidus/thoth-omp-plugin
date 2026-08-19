@@ -16,8 +16,6 @@
 
 use ThothApi\GraphQL\Enums\SubjectType;
 
-import('plugins.generic.thoth.classes.services.ThothSubjectClassifier');
-
 class ThothSubjectService
 {
     public $repository;

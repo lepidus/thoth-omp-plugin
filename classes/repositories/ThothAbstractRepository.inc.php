@@ -16,8 +16,6 @@
 
 use ThothApi\GraphQL\Inputs\PatchAbstract as ThothAbstract;
 
-import('plugins.generic.thoth.classes.formatters.ThothMarkupFormat');
-
 class ThothAbstractRepository
 {
     protected $thothClient;

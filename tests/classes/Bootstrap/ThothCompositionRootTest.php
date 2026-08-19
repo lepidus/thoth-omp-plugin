@@ -2,6 +2,8 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\Bootstrap;
 
+require_once __DIR__ . '/../../../vendor/autoload.php';
+
 use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
 use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
 use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadFeatureVideo;
@@ -48,10 +50,6 @@ use Illuminate\Container\Container;
 use PKP\tests\PKPTestCase;
 use stdClass;
 use ThothApi\GraphQL\Client as ThothClient;
-
-import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
-import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
-import('plugins.generic.thoth.classes.services.ThothBookService');
 
 class ThothCompositionRootTest extends PKPTestCase
 {

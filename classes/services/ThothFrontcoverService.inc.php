@@ -18,7 +18,6 @@ use APP\facades\Repo;
 use APP\publication\DAO as PublicationDAO;
 
 import('classes.file.PublicFileManager');
-import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class ThothFrontcoverService
 {

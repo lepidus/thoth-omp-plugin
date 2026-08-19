@@ -14,8 +14,6 @@
  * @brief Adds the featured video form to the legacy OMP workflow.
  */
 
-import('plugins.generic.thoth.classes.components.forms.FeatureVideoForm');
-import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class ThothFeatureVideoWorkflowTemplateFilter
 {

@@ -16,9 +16,6 @@
 
 use ThothApi\GraphQL\Inputs\PatchAbstract as ThothAbstract;
 
-import('plugins.generic.thoth.classes.i18n.ThothLocaleCode');
-import('plugins.generic.thoth.classes.formatters.ThothMarkupFormatter');
-
 class ThothAbstractFactory
 {
     public function createFromPublication($publication, string $workId, ?string $preferredLocale = null): array
