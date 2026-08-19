@@ -16,7 +16,6 @@
 
 use ThothApi\GraphQL\Enums\WorkType;
 
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.components.forms.ThothValidationMessageFormatter');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
@@ -36,14 +35,14 @@ class PublishFormConfig
         }
 
         try {
-            $errors = ThothContainer::getInstance()->get('bookService')->validate($publication);
+            $errors = Registry::get('laravelContainer')->make('bookService')->validate($publication);
 
             if (empty($errors)) {
-                $meRepository = ThothContainer::getInstance()->get('meRepository');
+                $meRepository = Registry::get('laravelContainer')->make('meRepository');
                 $publishers = (new ThothMeCacheService($meRepository))
                     ->getLinkedPublishers($submission->getData('contextId'));
                 $publisherIds = array_column($publishers, 'publisherId');
-                $imprints = ThothContainer::getInstance()->get('imprintRepository')->getMany([
+                $imprints = Registry::get('laravelContainer')->make('imprintRepository')->getMany([
                     'publishers' => $publisherIds
                 ], [
                     'imprintId',

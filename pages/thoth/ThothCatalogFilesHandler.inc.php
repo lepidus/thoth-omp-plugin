@@ -17,7 +17,6 @@
 import('classes.handler.Handler');
 import('plugins.generic.thoth.classes.Application.Catalog.GetCatalogFiles');
 import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.factories.ThothPublicationFactory');
 import('plugins.generic.thoth.classes.formatters.DoiFormatter');
 import('plugins.generic.thoth.classes.services.ThothCatalogFilesCacheService');
@@ -111,7 +110,7 @@ class ThothCatalogFilesHandler extends Handler
         }
 
         try {
-            $chapterRepository = ThothContainer::getInstance()->get('chapterRepository');
+            $chapterRepository = Registry::get('laravelContainer')->make('chapterRepository');
             $thothChapter = $chapterRepository->getByDoi(DoiFormatter::resolveUrl($doi));
             if (!$thothChapter) {
                 return [];

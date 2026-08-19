@@ -45,8 +45,10 @@ import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController')
 import('plugins.generic.thoth.classes.Presentation.Api.RegisterBookController');
 import('plugins.generic.thoth.classes.Presentation.Api.SynchronizeMetadataController');
 import('plugins.generic.thoth.classes.Presentation.Api.UnlinkWorkController');
+import('plugins.generic.thoth.classes.services.ThothBookService');
 
 use Illuminate\Container\Container;
+use ThothApi\GraphQL\Client as ThothClient;
 
 class ThothCompositionRootTest extends PKPTestCase
 {
@@ -77,7 +79,14 @@ class ThothCompositionRootTest extends PKPTestCase
         );
 
         $root->register($container);
+        $container->bind('client', fn (): ThothClient => $this->createMock(ThothClient::class));
 
+        $this->assertTrue($container->bound('clientFactory'));
+        $this->assertTrue($container->bound('workRepository'));
+        $this->assertTrue($container->bound('bookService'));
+        $bookService = $container->make('bookService');
+        $this->assertInstanceOf(ThothBookService::class, $bookService);
+        $this->assertSame($bookService, $container->make('bookService'));
         $this->assertFalse($workLinkServiceResolved);
         $this->assertInstanceOf(LegacyCatalogFileGateway::class, $container->make(CatalogFileGateway::class));
         $this->assertInstanceOf(GetCatalogFiles::class, $container->make(GetCatalogFiles::class));

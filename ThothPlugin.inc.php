@@ -37,7 +37,6 @@ import('plugins.generic.thoth.classes.components.forms.config.CatalogEntryFormCo
 import('plugins.generic.thoth.classes.components.forms.config.PublishFormConfig');
 import('plugins.generic.thoth.classes.formModifiers.AuthorFormModifier');
 import('plugins.generic.thoth.classes.formModifiers.PublicationFormatFormModifier');
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.notification.ThothNotification');
@@ -76,7 +75,6 @@ import('plugins.generic.thoth.classes.schema.ThothSchema');
 import('plugins.generic.thoth.classes.services.ThothCatalogFilesCacheService');
 import('plugins.generic.thoth.classes.services.ThothSubjectClassifier');
 import('plugins.generic.thoth.classes.services.ThothWorkLinkService');
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.templateFilters.ThothCatalogFilesTemplateFilter');
 import('plugins.generic.thoth.classes.templateFilters.ThothFrontcoverTemplateFilter');
 import('plugins.generic.thoth.classes.templateFilters.PublicationFormatTemplateFilter');
@@ -93,27 +91,27 @@ class ThothPlugin extends GenericPlugin
         if ($success && $this->getEnabled()) {
             $compositionRoot = new ThothCompositionRoot(
                 function (): object {
-                    return new ThothWorkLinkService(ThothContainer::getInstance()->get('workRepository'));
+                    return new ThothWorkLinkService(Registry::get('laravelContainer')->make('workRepository'));
                 },
                 function (): object {
-                    return ThothContainer::getInstance()->get('bookRegistrationService');
+                    return Registry::get('laravelContainer')->make('bookRegistrationService');
                 },
                 function (): object {
-                    return ThothContainer::getInstance()->get('bookService');
+                    return Registry::get('laravelContainer')->make('bookService');
                 },
                 function (): array {
-                    $bookService = ThothContainer::getInstance()->get('bookService');
-                    $abstractService = ThothContainer::getInstance()->get('abstractService');
-                    $chapterService = ThothContainer::getInstance()->get('chapterService');
-                    $contributionService = ThothContainer::getInstance()->get('contributionService');
-                    $languageService = ThothContainer::getInstance()->get('languageService');
-                    $referenceService = ThothContainer::getInstance()->get('referenceService');
-                    $subjectService = ThothContainer::getInstance()->get('subjectService');
-                    $titleService = ThothContainer::getInstance()->get('titleService');
-                    $workRelationService = ThothContainer::getInstance()->get('workRelationService');
-                    $publicationService = ThothContainer::getInstance()->get('publicationService');
-                    $locationService = ThothContainer::getInstance()->get('locationService');
-                    $frontcoverService = ThothContainer::getInstance()->get('frontcoverService');
+                    $bookService = Registry::get('laravelContainer')->make('bookService');
+                    $abstractService = Registry::get('laravelContainer')->make('abstractService');
+                    $chapterService = Registry::get('laravelContainer')->make('chapterService');
+                    $contributionService = Registry::get('laravelContainer')->make('contributionService');
+                    $languageService = Registry::get('laravelContainer')->make('languageService');
+                    $referenceService = Registry::get('laravelContainer')->make('referenceService');
+                    $subjectService = Registry::get('laravelContainer')->make('subjectService');
+                    $titleService = Registry::get('laravelContainer')->make('titleService');
+                    $workRelationService = Registry::get('laravelContainer')->make('workRelationService');
+                    $publicationService = Registry::get('laravelContainer')->make('publicationService');
+                    $locationService = Registry::get('laravelContainer')->make('locationService');
+                    $frontcoverService = Registry::get('laravelContainer')->make('frontcoverService');
                     $chapterWorkMapper = new LegacyChapterWorkMetadataMapper($chapterService->factory);
                     $chapterSynchronizer = new ChapterSynchronizer(
                         new LegacyChapterMetadataGateway($chapterService->repository),
@@ -209,10 +207,10 @@ class ThothPlugin extends GenericPlugin
                     ];
                 },
                 function (): object {
-                    return ThothContainer::getInstance()->get('featureVideoService');
+                    return Registry::get('laravelContainer')->make('featureVideoService');
                 },
                 function (): object {
-                    return ThothContainer::getInstance()->get('publicationRepository');
+                    return Registry::get('laravelContainer')->make('publicationRepository');
                 },
                 DAORegistry::getDAO('PublicationDAO'),
                 DAORegistry::getDAO('SubmissionDAO'),

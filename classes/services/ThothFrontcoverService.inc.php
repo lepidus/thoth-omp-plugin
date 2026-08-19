@@ -15,7 +15,6 @@
  */
 
 import('classes.file.PublicFileManager');
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class ThothFrontcoverService
@@ -140,7 +139,7 @@ class ThothFrontcoverService
     {
         try {
             $contextId = $this->getContextId($publication);
-            $meRepository = ThothContainer::getInstance()->get('meRepository');
+            $meRepository = Registry::get('laravelContainer')->make('meRepository');
             return $contextId
                 ? (new ThothMeCacheService($meRepository))->hasCdnWritePermission($contextId)
                 : false;

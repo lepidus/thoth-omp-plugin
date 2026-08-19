@@ -1,6 +1,5 @@
 <?php
 
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.services.ThothFeatureVideoCacheService');
 
 class ThothFeatureVideoTemplateFilter
@@ -39,7 +38,7 @@ class ThothFeatureVideoTemplateFilter
     protected function loadVideo($workId)
     {
         return (new ThothFeatureVideoCacheService())->get($workId, function () use ($workId) {
-            $featuredVideo = ThothContainer::getInstance()->get('workRepository')->getFeatureVideo($workId);
+            $featuredVideo = Registry::get('laravelContainer')->make('workRepository')->getFeatureVideo($workId);
             return $featuredVideo ? $featuredVideo->toArray() : null;
         });
     }

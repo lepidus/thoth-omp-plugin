@@ -15,7 +15,6 @@
  */
 
 import('plugins.generic.thoth.classes.components.forms.FeatureVideoForm');
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class ThothFeatureVideoWorkflowTemplateFilter
@@ -90,7 +89,9 @@ class ThothFeatureVideoWorkflowTemplateFilter
     protected function hasExistingVideo($submission)
     {
         return (bool) ($submission->getData('thothWorkId')
-            ? ThothContainer::getInstance()->get('workRepository')->getFeatureVideo($submission->getData('thothWorkId'))
+            ? Registry::get('laravelContainer')
+                ->make('workRepository')
+                ->getFeatureVideo($submission->getData('thothWorkId'))
             : null);
     }
 
@@ -105,7 +106,7 @@ class ThothFeatureVideoWorkflowTemplateFilter
 
     protected function canUpload($request)
     {
-        return (new ThothMeCacheService(ThothContainer::getInstance()->get('meRepository')))
+        return (new ThothMeCacheService(Registry::get('laravelContainer')->make('meRepository')))
             ->hasCdnWritePermission($request->getContext()->getId());
     }
 }

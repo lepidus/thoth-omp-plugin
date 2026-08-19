@@ -18,7 +18,6 @@ import('lib.pkp.classes.form.Form');
 import('lib.pkp.classes.plugins.PKPPubIdPluginDAO');
 import('plugins.generic.thoth.classes.Application.HostedAssets.UploadPublicationFile');
 import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.container.ThothContainer');
 
 class UploadThothPublicationFileForm extends Form
 {
@@ -206,7 +205,7 @@ class UploadThothPublicationFileForm extends Form
 
             $chapterDoi = DoiFormatter::resolveUrl($chapter->getStoredPubId('doi'));
             try {
-                $thothChapter = ThothContainer::getInstance()->get('chapterRepository')->getByDoi($chapterDoi);
+                $thothChapter = Registry::get('laravelContainer')->make('chapterRepository')->getByDoi($chapterDoi);
                 if (is_null($thothChapter)) {
                     $this->addError(
                         'submissionComponentId',

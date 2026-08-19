@@ -9,7 +9,9 @@ require_once(__DIR__ . '/../../../vendor/autoload.php');
  * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
  *
  * @class ThothPublicationServiceTest
+ *
  * @ingroup plugins_generic_thoth_tests
+ *
  * @see ThothPublicationService
  *
  * @brief Test class for the ThothPublicationService class
@@ -26,7 +28,6 @@ import('lib.pkp.tests.PKPTestCase');
 import('lib.pkp.classes.db.DAOResultFactory');
 import('lib.pkp.classes.submission.SubmissionFile');
 import('classes.publicationFormat.IdentificationCode');
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.exceptions.MetadataSynchronizationException');
 import('plugins.generic.thoth.classes.factories.ThothPublicationFactory');
 import('plugins.generic.thoth.classes.repositories.ThothPublicationRepository');
@@ -35,25 +36,8 @@ import('plugins.generic.thoth.classes.services.ThothPublicationService');
 
 class ThothPublicationServiceTest extends PKPTestCase
 {
-    public function setUp(): void
-    {
-        parent::setUp();
-        $this->backup = ThothContainer::getInstance()->backup('client');
-        $this->locationServiceBackup = ThothContainer::getInstance()->backup('locationService');
-    }
-
-    protected function tearDown(): void
-    {
-        ThothContainer::getInstance()->set('client', $this->backup);
-        ThothContainer::getInstance()->set('locationService', $this->locationServiceBackup);
-        parent::tearDown();
-    }
-
     public function testRegisterPublication()
     {
-        ThothContainer::getInstance()->set('client', function () {
-            return $this->getMockBuilder(ThothClient::class)->getMock();
-        });
         $mockLocationService = $this->createMock(ThothLocationService::class);
         $mockLocationService->expects($this->once())
             ->method('registerByPublicationFormat')

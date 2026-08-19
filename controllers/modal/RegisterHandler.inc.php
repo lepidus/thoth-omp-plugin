@@ -18,7 +18,6 @@
 
 
 import('classes.handler.Handler');
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class RegisterHandler extends Handler
@@ -84,14 +83,14 @@ class RegisterHandler extends Handler
         $imprints = [];
         $workType = $this->submission->getData('workType');
         try {
-            $errors = ThothContainer::getInstance()->get('bookService')->validate($this->publication);
+            $errors = Registry::get('laravelContainer')->make('bookService')->validate($this->publication);
 
             if (empty($errors)) {
-                $meRepository = ThothContainer::getInstance()->get('meRepository');
+                $meRepository = Registry::get('laravelContainer')->make('meRepository');
                 $publishers = (new ThothMeCacheService($meRepository))
                     ->getLinkedPublishers($submissionContext->getId());
                 $publisherIds = array_column($publishers, 'publisherId');
-                $imprints = ThothContainer::getInstance()->get('imprintRepository')->getMany([
+                $imprints = Registry::get('laravelContainer')->make('imprintRepository')->getMany([
                     'publishers' => $publisherIds
                 ], [
                     'imprintId',

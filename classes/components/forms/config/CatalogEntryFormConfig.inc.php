@@ -14,7 +14,6 @@
  * @brief Thoth config for catalog entry form
  */
 
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 
 class CatalogEntryFormConfig
@@ -70,9 +69,9 @@ class CatalogEntryFormConfig
     {
         try {
             $submission = Services::get('submission')->get($publication->getData('submissionId'));
-            return (new ThothMeCacheService(ThothContainer::getInstance()->get('meRepository')))->hasCdnWritePermission(
-                $submission->getData('contextId')
-            );
+            return (new ThothMeCacheService(
+                Registry::get('laravelContainer')->make('meRepository')
+            ))->hasCdnWritePermission($submission->getData('contextId'));
         } catch (Exception $e) {
             error_log($e->getMessage());
             return false;

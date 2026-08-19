@@ -9,7 +9,9 @@ require_once(__DIR__ . '/../../../vendor/autoload.php');
  * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
  *
  * @class ThothChapterServiceTest
+ *
  * @ingroup plugins_generic_thoth_tests
+ *
  * @see ThothChapterService
  *
  * @brief Test class for the ThothChapterService class
@@ -23,7 +25,6 @@ import('classes.monograph.Chapter');
 import('classes.publication.Publication');
 import('classes.publication.PublicationDAO');
 import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.container.ThothContainer');
 import('plugins.generic.thoth.classes.factories.ThothChapterFactory');
 import('plugins.generic.thoth.classes.repositories.ThothChapterRepository');
 import('plugins.generic.thoth.classes.services.ThothAbstractService');
@@ -34,28 +35,6 @@ import('plugins.generic.thoth.classes.services.ThothTitleService');
 
 class ThothChapterServiceTest extends PKPTestCase
 {
-    public function setUp(): void
-    {
-        parent::setUp();
-        $container = ThothContainer::getInstance();
-        $this->backups = [
-            'client' => $container->backup('client'),
-            'abstractService' => $container->backup('abstractService'),
-            'contributionService' => $container->backup('contributionService'),
-            'publicationService' => $container->backup('publicationService'),
-            'titleService' => $container->backup('titleService'),
-        ];
-    }
-
-    protected function tearDown(): void
-    {
-        $container = ThothContainer::getInstance();
-        foreach ($this->backups as $key => $factory) {
-            $container->set($key, $factory);
-        }
-        parent::tearDown();
-    }
-
     protected function getMockedDAOs()
     {
         return ['PublicationDAO'];
@@ -63,10 +42,6 @@ class ThothChapterServiceTest extends PKPTestCase
 
     public function testRegisterChapter()
     {
-        ThothContainer::getInstance()->set('client', function () {
-            return $this->getMockBuilder(ThothClient::class)->getMock();
-        });
-
         $mockAbstractService = $this->createMock(ThothAbstractService::class);
         $mockAbstractService->expects($this->once())->method('registerByChapter');
 
