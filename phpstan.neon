@@ -1,0 +1,8 @@
+parameters:
+    level: 0
+    paths:
+        - classes/Application
+        - classes/Contracts
+        - classes/Domain
+    bootstrapFiles:
+        - phpstan-bootstrap.php
