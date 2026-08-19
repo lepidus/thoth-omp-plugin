@@ -11,5 +11,8 @@
             "pages/",
             "ThothSettingsForm.inc.php"
         ]
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.2"
     }
 }
