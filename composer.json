@@ -2,5 +2,10 @@
     "require": {
         "biblys/isbn": "~3.0",
         "thoth-pub/thoth-client-php": "2.0.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "APP\\plugins\\generic\\thoth\\": ""
+        }
     }
 }
