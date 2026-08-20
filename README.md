@@ -211,6 +211,11 @@ with a prefix, such as `THEMA:GTK` or `BISAC:EDU000000`.
 
 </details>
 
+## Development
+
+See [Extending the plugin architecture](docs/architecture/extending-the-plugin.md) before adding a use case,
+external integration, or PKP adapter.
+
 ## Credits
 
 This plugin was idealized and sponsored by [Thoth](https://thoth.pub/).
