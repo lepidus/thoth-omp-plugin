@@ -39,7 +39,7 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyTemporaryVideo
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyBookMetadataUpdater;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyCatalogFileGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyPublicationFileUploader;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\ThothPublicationFileUploader;
 use APP\plugins\generic\thoth\classes\listeners\PublicationEditListener;
 use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
@@ -94,7 +94,7 @@ class ThothCompositionRootTest extends PKPTestCase
         $this->assertInstanceOf(GetCatalogFiles::class, $container->make(GetCatalogFiles::class));
         $this->assertInstanceOf(LegacyCatalogFileCache::class, $container->make(CatalogFileCache::class));
         $this->assertInstanceOf(
-            LegacyPublicationFileUploader::class,
+            ThothPublicationFileUploader::class,
             $container->make(PublicationFileUploader::class)
         );
         $this->assertInstanceOf(

@@ -28,6 +28,7 @@ use APP\plugins\generic\thoth\classes\Contracts\TemporaryPublicationFileReposito
 use APP\plugins\generic\thoth\classes\Contracts\TemporaryVideoFileRepository;
 use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
+use APP\plugins\generic\thoth\classes\factories\ThothPublicationFactory;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyCatalogFileCache;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyFeatureVideoCache;
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyFeatureVideoUploader;
@@ -40,7 +41,7 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyTemporaryVideo
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyBookMetadataUpdater;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyCatalogFileGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyPublicationFileUploader;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\ThothPublicationFileUploader;
 use APP\plugins\generic\thoth\classes\listeners\PublicationEditListener;
 use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
@@ -50,6 +51,8 @@ use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UploadFeatureVideoController;
 use APP\plugins\generic\thoth\classes\services\ThothCatalogFilesCacheService;
 use APP\plugins\generic\thoth\classes\services\ThothFeatureVideoCacheService;
+use APP\plugins\generic\thoth\classes\services\ThothFileUploadService;
+use PKP\db\DAORegistry;
 
 final class ThothCompositionRoot
 {
@@ -86,7 +89,15 @@ final class ThothCompositionRoot
         );
         $container->bind(
             PublicationFileUploader::class,
-            fn (): PublicationFileUploader => new LegacyPublicationFileUploader()
+            fn ($container): PublicationFileUploader => new ThothPublicationFileUploader(
+                DAORegistry::getDAO('ChapterDAO'),
+                DAORegistry::getDAO('PublicationFormatDAO'),
+                $container->make('chapterRepository'),
+                $container->make('publicationRepository'),
+                $container->make('publicationFileUploadRepository'),
+                new ThothPublicationFactory(),
+                new ThothFileUploadService()
+            )
         );
         $container->bind(
             TemporaryPublicationFileRepository::class,

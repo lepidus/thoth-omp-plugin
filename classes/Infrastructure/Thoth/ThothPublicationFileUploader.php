@@ -2,16 +2,31 @@
 
 namespace APP\plugins\generic\thoth\classes\Infrastructure\Thoth;
 
+use APP\monograph\ChapterDAO;
 use APP\plugins\generic\thoth\classes\Contracts\PublicationFileUploader;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
 use APP\plugins\generic\thoth\classes\factories\ThothPublicationFactory;
 use APP\plugins\generic\thoth\classes\formatters\DoiFormatter;
+use APP\plugins\generic\thoth\classes\repositories\ThothChapterRepository;
+use APP\plugins\generic\thoth\classes\repositories\ThothPublicationFileUploadRepository;
+use APP\plugins\generic\thoth\classes\repositories\ThothPublicationRepository;
 use APP\plugins\generic\thoth\classes\services\ThothFileUploadService;
+use APP\publicationFormat\PublicationFormatDAO;
 use Exception;
-use PKP\db\DAORegistry;
 
-final class LegacyPublicationFileUploader implements PublicationFileUploader
+final class ThothPublicationFileUploader implements PublicationFileUploader
 {
+    public function __construct(
+        private ChapterDAO $chapterDao,
+        private PublicationFormatDAO $publicationFormatDao,
+        private ThothChapterRepository $chapterRepository,
+        private ThothPublicationRepository $publicationRepository,
+        private ThothPublicationFileUploadRepository $uploadRepository,
+        private ThothPublicationFactory $publicationFactory,
+        private ThothFileUploadService $fileUploadService
+    ) {
+    }
+
     public function upload(
         WorkId $workId,
         int $publicationId,
@@ -22,29 +37,25 @@ final class LegacyPublicationFileUploader implements PublicationFileUploader
         $remoteWorkId = $workId->toString();
         $remoteChapterId = null;
         if ($submissionComponentId && $submissionComponentId !== $publicationId) {
-            $chapter = DAORegistry::getDAO('ChapterDAO')->getChapter($submissionComponentId, $publicationId);
+            $chapter = $this->chapterDao->getChapter($submissionComponentId, $publicationId);
             if (!$chapter) {
                 throw new Exception(__('plugins.generic.thoth.fileUpload.error.invalidSubmissionComponent'));
             }
 
-            $remoteChapter = \PKP\core\PKPContainer::getInstance()->make('chapterRepository')->getByDoi(
+            $remoteChapter = $this->chapterRepository->getByDoi(
                 DoiFormatter::resolveUrl($chapter->getStoredPubId('doi'))
             );
             $remoteChapterId = is_object($remoteChapter) ? $remoteChapter->getWorkId() : $remoteChapter;
             $remoteWorkId = $remoteChapterId;
         }
 
-        $publicationFormat = DAORegistry::getDAO('PublicationFormatDAO')->getById(
-            $representationId,
-            $publicationId
-        );
+        $publicationFormat = $this->publicationFormatDao->getById($representationId, $publicationId);
         if (!$publicationFormat) {
             throw new Exception(__('plugins.generic.thoth.fileUpload.error.invalidPublicationFormat'));
         }
 
-        $newPublication = (new ThothPublicationFactory())->createFromPublicationFormat($publicationFormat);
-        $publicationRepository = \PKP\core\PKPContainer::getInstance()->make('publicationRepository');
-        $remotePublicationId = $publicationRepository->getIdByType(
+        $newPublication = $this->publicationFactory->createFromPublicationFormat($publicationFormat);
+        $remotePublicationId = $this->publicationRepository->getIdByType(
             $remoteWorkId,
             $newPublication->getPublicationType()
         );
@@ -54,17 +65,16 @@ final class LegacyPublicationFileUploader implements PublicationFileUploader
             if ($remoteChapterId) {
                 $newPublication->unsetIsbn();
             }
-            $remotePublicationId = $publicationRepository->add($newPublication);
+            $remotePublicationId = $this->publicationRepository->add($newPublication);
         }
 
-        $uploadRepository = \PKP\core\PKPContainer::getInstance()->make('publicationFileUploadRepository');
-        $newUpload = $uploadRepository->new();
+        $newUpload = $this->uploadRepository->new();
         $newUpload->setPublicationId($remotePublicationId)
             ->setDeclaredExtension($file['extension'])
             ->setDeclaredMimeType($file['mimeType'])
             ->setDeclaredSha256($file['sha256']);
 
-        $response = $uploadRepository->init($newUpload);
-        (new ThothFileUploadService())->upload($response, $file['path'], $uploadRepository);
+        $response = $this->uploadRepository->init($newUpload);
+        $this->fileUploadService->upload($response, $file['path'], $this->uploadRepository);
     }
 }
