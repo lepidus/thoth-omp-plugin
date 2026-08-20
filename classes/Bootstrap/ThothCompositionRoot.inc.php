@@ -1,5 +1,6 @@
 <?php
 
+import('lib.pkp.classes.plugins.PKPPubIdPluginDAO');
 import('plugins.generic.thoth.classes.Application.Catalog.GetCatalogFiles');
 import('plugins.generic.thoth.classes.Application.Registration.RegisterBook');
 import('plugins.generic.thoth.classes.Application.Exception.ExternalFailureReporter');
@@ -38,7 +39,7 @@ import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyTemporaryPubli
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyBookMetadataUpdater');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyCatalogFileGateway');
-import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyPublicationFileUploader');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.ThothPublicationFileUploader');
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
@@ -100,8 +101,16 @@ final class ThothCompositionRoot
         $container->bind(CatalogFileCache::class, function (): CatalogFileCache {
             return new LegacyCatalogFileCache(new ThothCatalogFilesCacheService());
         });
-        $container->bind(PublicationFileUploader::class, function (): PublicationFileUploader {
-            return new LegacyPublicationFileUploader();
+        $container->bind(PublicationFileUploader::class, function ($container): PublicationFileUploader {
+            return new ThothPublicationFileUploader(
+                DAORegistry::getDAO('ChapterDAO'),
+                DAORegistry::getDAO('PublicationFormatDAO'),
+                $container->make('chapterRepository'),
+                $container->make('publicationRepository'),
+                $container->make('publicationFileUploadRepository'),
+                new ThothPublicationFactory(),
+                new ThothFileUploadService()
+            );
         });
         $container->bind(
             TemporaryPublicationFileRepository::class,

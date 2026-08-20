@@ -38,7 +38,7 @@ import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyTemporaryPubli
 import('plugins.generic.thoth.classes.Infrastructure.Legacy.LegacyWorkGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyBookMetadataUpdater');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyCatalogFileGateway');
-import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyPublicationFileUploader');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.ThothPublicationFileUploader');
 import('plugins.generic.thoth.classes.listeners.PublicationPublishListener');
 import('plugins.generic.thoth.classes.listeners.PublicationEditListener');
 import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
@@ -92,7 +92,7 @@ class ThothCompositionRootTest extends PKPTestCase
         $this->assertInstanceOf(GetCatalogFiles::class, $container->make(GetCatalogFiles::class));
         $this->assertInstanceOf(LegacyCatalogFileCache::class, $container->make(CatalogFileCache::class));
         $this->assertInstanceOf(
-            LegacyPublicationFileUploader::class,
+            ThothPublicationFileUploader::class,
             $container->make(PublicationFileUploader::class)
         );
         $this->assertInstanceOf(
