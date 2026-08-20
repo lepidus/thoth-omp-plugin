@@ -207,6 +207,9 @@ into OMP 3.5 is also recognized automatically.
 
 ## Development
 
+See [Extending the plugin architecture](docs/architecture/extending-the-plugin.md) before adding a use case,
+external integration, or PKP adapter.
+
 ### Requirements
 
 - PHP 8.2+
