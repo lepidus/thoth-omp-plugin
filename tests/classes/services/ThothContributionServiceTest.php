@@ -17,6 +17,7 @@ require_once(__DIR__ . '/../../../vendor/autoload.php');
  * @brief Test class for the ThothContributionService class
  */
 
+use PKP\db\DAORegistry;
 use PKP\tests\PKPTestCase;
 use ThothApi\GraphQL\Client as ThothClient;
 use ThothApi\GraphQL\Enums\ContributionType;
@@ -33,6 +34,52 @@ import('plugins.generic.thoth.classes.services.ThothContributorService');
 
 class ThothContributionServiceTest extends PKPTestCase
 {
+    protected function getMockedDAOs(): array
+    {
+        return [...parent::getMockedDAOs(), 'ChapterDAO'];
+    }
+
+    protected function getMockedContainerKeys(): array
+    {
+        return [...parent::getMockedContainerKeys(), \APP\author\DAO::class];
+    }
+
+    public function testGetPublicationAuthorsUsesChapterCollectorAvailableInOmp3407()
+    {
+        $publication = new \APP\publication\Publication();
+        $publication->setId(987654321);
+
+        $chapter = new \APP\monograph\Chapter();
+        $chapter->setId(987654321);
+        $chapter->setData('publicationId', $publication->getId());
+
+        $chapters = $this->getMockBuilder(\PKP\db\DAOResultFactory::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['toArray'])
+            ->getMock();
+        $chapters->method('toArray')->willReturn([$chapter]);
+
+        $chapterDao = $this->getMockBuilder(\APP\monograph\ChapterDAO::class)
+            ->onlyMethods(['getByPublicationId'])
+            ->getMock();
+        $chapterDao->method('getByPublicationId')
+            ->with($publication->getId())
+            ->willReturn($chapters);
+        DAORegistry::registerDAO('ChapterDAO', $chapterDao);
+
+        $authorDao = $this->getMockBuilder(\APP\author\DAO::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getMany', 'getIds'])
+            ->getMock();
+        $authorDao->method('getMany')->willReturn(\Illuminate\Support\LazyCollection::make([]));
+        $authorDao->method('getIds')->willReturn(collect());
+        app()->instance(\APP\author\DAO::class, $authorDao);
+
+        $service = new ThothContributionService(null, null, null, null, null, null);
+
+        $this->assertSame([], $service->getPublicationAuthors($publication, null));
+    }
+
     public function testRegisterContribution()
     {
         $mockBiographyService = $this->createMock(ThothBiographyService::class);
