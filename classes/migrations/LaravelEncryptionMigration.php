@@ -8,6 +8,7 @@ use Illuminate\Encryption\Encrypter;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use PKP\config\Config;
+use Throwable;
 
 class LaravelEncryptionMigration extends Migration
 {
@@ -21,17 +22,10 @@ class LaravelEncryptionMigration extends Migration
             ->where('setting_name', 'password')
             ->get(['context_id', 'setting_value'])
             ->each(function ($row) {
-                if (empty($row->setting_value)) {
+                $encryptedValue = $this->normalizePassword((string) $row->setting_value);
+                if ($encryptedValue === null) {
                     return;
                 }
-
-                try {
-                    $decryptedPassword = $this->decryptString($row->setting_value);
-                } catch (Exception $e) {
-                    return;
-                }
-
-                $encryptedValue = Crypt::encrypt($decryptedPassword);
 
                 DB::table('plugin_settings')
                     ->where('plugin_name', 'thothplugin')
@@ -39,6 +33,44 @@ class LaravelEncryptionMigration extends Migration
                     ->where('setting_name', 'password')
                     ->update(['setting_value' => $encryptedValue]);
             });
+    }
+
+    private function normalizePassword(string $password): ?string
+    {
+        if ($password === '' || $this->isLaravelEncrypted($password)) {
+            return null;
+        }
+
+        $plainPassword = $this->plainPassword($password);
+
+        return $plainPassword === null ? null : Crypt::encrypt($plainPassword);
+    }
+
+    private function isLaravelEncrypted(string $password): bool
+    {
+        try {
+            Crypt::decrypt($password);
+            return true;
+        } catch (Throwable $exception) {
+            return false;
+        }
+    }
+
+    private function plainPassword(string $password): ?string
+    {
+        if (str_starts_with($password, self::BASE64_PREFIX)) {
+            try {
+                return $this->decryptString($password);
+            } catch (Throwable $exception) {
+                return null;
+            }
+        }
+
+        if ($this->isJwt($password)) {
+            return $this->decodeJwtPayload($password) ?? $password;
+        }
+
+        return $password;
     }
 
     private function decryptString(string $encryptedText): string
@@ -50,6 +82,47 @@ class LaravelEncryptionMigration extends Migration
         $payload = base64_decode($encryptedText);
 
         return $encrypter->decrypt($payload);
+    }
+
+    private function isJwt(string $token): bool
+    {
+        $parts = explode('.', $token);
+        if (count($parts) !== 3) {
+            return false;
+        }
+
+        foreach ($parts as $part) {
+            if (!preg_match('/^[A-Za-z0-9\-_]+$/', $part)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function decodeJwtPayload(string $token): ?string
+    {
+        [, $payload] = explode('.', $token);
+        $decodedPayload = $this->base64UrlDecode($payload);
+        if ($decodedPayload === null) {
+            return null;
+        }
+
+        $password = json_decode($decodedPayload, true);
+
+        return is_string($password) ? $password : null;
+    }
+
+    private function base64UrlDecode(string $value): ?string
+    {
+        $remainder = strlen($value) % 4;
+        if ($remainder !== 0) {
+            $value .= str_repeat('=', 4 - $remainder);
+        }
+
+        $decoded = base64_decode(strtr($value, '-_', '+/'), true);
+
+        return $decoded === false ? null : $decoded;
     }
 
     private function getSecretFromConfig(): string
