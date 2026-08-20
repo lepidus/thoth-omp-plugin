@@ -44,10 +44,17 @@ class ThothContributionServiceTest extends PKPTestCase
         return [...parent::getMockedContainerKeys(), \APP\author\DAO::class];
     }
 
-    public function testGetPublicationAuthorsUsesChapterCollectorAvailableInOmp3407()
+    public function testGetPublicationAuthorsUsesChapterApiAcrossOmp340()
     {
         $publication = new \APP\publication\Publication();
         $publication->setId(987654321);
+
+        $primaryAuthor = new \APP\author\Author();
+        $primaryAuthor->setId(1);
+        $chapterAuthor = new \APP\author\Author();
+        $chapterAuthor->setId(2);
+        $bookAuthor = new \APP\author\Author();
+        $bookAuthor->setId(3);
 
         $chapter = new \APP\monograph\Chapter();
         $chapter->setId(987654321);
@@ -69,15 +76,22 @@ class ThothContributionServiceTest extends PKPTestCase
 
         $authorDao = $this->getMockBuilder(\APP\author\DAO::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['getMany', 'getIds'])
+            ->onlyMethods(['getMany'])
             ->getMock();
-        $authorDao->method('getMany')->willReturn(\Illuminate\Support\LazyCollection::make([]));
-        $authorDao->method('getIds')->willReturn(collect());
+        $authorDao->expects($this->exactly(2))
+            ->method('getMany')
+            ->willReturnOnConsecutiveCalls(
+                \Illuminate\Support\LazyCollection::make([$primaryAuthor, $chapterAuthor, $bookAuthor]),
+                \Illuminate\Support\LazyCollection::make([$chapterAuthor])
+            );
         app()->instance(\APP\author\DAO::class, $authorDao);
 
         $service = new ThothContributionService(null, null, null, null, null, null);
 
-        $this->assertSame([], $service->getPublicationAuthors($publication, null));
+        $this->assertSame(
+            [$primaryAuthor, $bookAuthor],
+            array_values($service->getPublicationAuthors($publication, $primaryAuthor->getId()))
+        );
     }
 
     public function testRegisterContribution()
