@@ -13,11 +13,20 @@ use PKP\tests\PKPTestCase;
 
 final class LaravelEncryptionMigrationTest extends PKPTestCase
 {
+    private const TEST_API_KEY_SECRET = 'laravel-encryption-migration-test-secret';
+
     private int $contextId;
+    private bool $hadApiKeySecret;
+    private mixed $originalApiKeySecret;
 
     protected function setUp(): void
     {
         parent::setUp();
+        $configData = &Config::getData();
+        $this->hadApiKeySecret = array_key_exists('api_key_secret', $configData['security'] ?? []);
+        $this->originalApiKeySecret = $configData['security']['api_key_secret'] ?? null;
+        $configData['security']['api_key_secret'] = self::TEST_API_KEY_SECRET;
+
         DB::beginTransaction();
         $this->contextId = (int) DB::table('presses')->value('press_id');
         $this->assertGreaterThan(0, $this->contextId);
@@ -26,8 +35,18 @@ final class LaravelEncryptionMigrationTest extends PKPTestCase
 
     protected function tearDown(): void
     {
-        DB::rollBack();
-        parent::tearDown();
+        try {
+            DB::rollBack();
+        } finally {
+            $configData = &Config::getData();
+            if ($this->hadApiKeySecret) {
+                $configData['security']['api_key_secret'] = $this->originalApiKeySecret;
+            } else {
+                unset($configData['security']['api_key_secret']);
+            }
+
+            parent::tearDown();
+        }
     }
 
     public function testConvertsPlainPasswordToLaravelEncryption(): void
@@ -110,7 +129,6 @@ final class LaravelEncryptionMigrationTest extends PKPTestCase
     private function legacyEncrypt(string $password): string
     {
         $secret = Config::getVar('security', 'api_key_secret');
-        $this->assertNotEmpty($secret);
         $encrypter = new Encrypter(hash('sha256', $secret, true), 'AES-256-CBC');
 
         return 'base64:' . base64_encode($encrypter->encrypt($password));
