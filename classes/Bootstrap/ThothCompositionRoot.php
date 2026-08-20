@@ -38,12 +38,13 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyTemporaryVideo
 use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyBookMetadataUpdater;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyCatalogFileGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyPublicationFileUploader;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\ThothPublicationFileUploader;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UploadFeatureVideoController;
+use PKP\db\DAORegistry;
 
 final class ThothCompositionRoot
 {
@@ -96,8 +97,16 @@ final class ThothCompositionRoot
         $container->bind(CatalogFileCache::class, function (): CatalogFileCache {
             return new LegacyCatalogFileCache(new \ThothCatalogFilesCacheService());
         });
-        $container->bind(PublicationFileUploader::class, function (): PublicationFileUploader {
-            return new LegacyPublicationFileUploader();
+        $container->bind(PublicationFileUploader::class, function ($container): PublicationFileUploader {
+            return new ThothPublicationFileUploader(
+                DAORegistry::getDAO('ChapterDAO'),
+                DAORegistry::getDAO('PublicationFormatDAO'),
+                $container->make('chapterRepository'),
+                $container->make('publicationRepository'),
+                $container->make('publicationFileUploadRepository'),
+                new \ThothPublicationFactory(),
+                new \ThothFileUploadService()
+            );
         });
         $container->bind(
             TemporaryPublicationFileRepository::class,
