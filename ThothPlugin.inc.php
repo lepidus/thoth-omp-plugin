@@ -31,16 +31,15 @@ use APP\plugins\generic\thoth\classes\Application\Synchronization\TitleSynchroni
 use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkRelationSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkSynchronizer;
 use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
+use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\PkpContributionAuthorReader;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyChapterAbstractMetadataMapper;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyChapterContributionMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyChapterMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyChapterPublicationMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyChapterTitleMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyChapterWorkMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyContributionMetadataGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyContributionMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyFrontcoverGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyLanguageMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyLanguageMetadataMapper;
@@ -57,6 +56,8 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkMetadataGat
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkMetadataMapper;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkRelationMetadataGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkRelationMetadataMapper;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\ThothChapterContributionMetadataMapper;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\ThothContributionMetadataMapper;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
@@ -100,6 +101,10 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                     $publicationService = \PKP\core\PKPContainer::getInstance()->make('publicationService');
                     $locationService = \PKP\core\PKPContainer::getInstance()->make('locationService');
                     $frontcoverService = \PKP\core\PKPContainer::getInstance()->make('frontcoverService');
+                    $contributionAuthorReader = new PkpContributionAuthorReader(
+                        Repo::author(),
+                        DAORegistry::getDAO('ChapterDAO')
+                    );
                     $chapterWorkMapper = new LegacyChapterWorkMetadataMapper($chapterService->factory);
                     $chapterSynchronizer = new ChapterSynchronizer(
                         new LegacyChapterMetadataGateway($chapterService->repository),
@@ -125,7 +130,10 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                             ),
                             new ContributionSynchronizer(
                                 new LegacyContributionMetadataGateway($contributionService),
-                                new LegacyChapterContributionMetadataMapper($contributionService)
+                                new ThothChapterContributionMetadataMapper(
+                                    $contributionAuthorReader,
+                                    $contributionService->factory
+                                )
                             ),
                             new PublicationSynchronizer(
                                 new LegacyPublicationMetadataGateway($publicationService),
@@ -161,7 +169,10 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
                         ),
                         new ContributionSynchronizer(
                             new LegacyContributionMetadataGateway($contributionService),
-                            new LegacyContributionMetadataMapper($contributionService)
+                            new ThothContributionMetadataMapper(
+                                $contributionAuthorReader,
+                                $contributionService->factory
+                            )
                         ),
                         new PublicationSynchronizer(
                             new LegacyPublicationMetadataGateway($publicationService),
