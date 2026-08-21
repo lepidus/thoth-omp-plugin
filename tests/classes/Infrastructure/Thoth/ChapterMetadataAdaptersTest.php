@@ -4,9 +4,10 @@ require_once __DIR__ . '/../../../../vendor/autoload.php';
 
 import('lib.pkp.tests.PKPTestCase');
 import('plugins.generic.thoth.classes.Application.Synchronization.ChapterSynchronizationState');
+import('plugins.generic.thoth.classes.Contracts.ContributionAuthorReader');
 import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterAbstractMetadataMapper');
-import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterContributionMetadataMapper');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.ThothChapterContributionMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterPublicationMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterTitleMetadataMapper');
@@ -25,13 +26,14 @@ final class ChapterMetadataAdaptersTest extends PKPTestCase
         $workFactory = new ChapterAdapterWorkFactory();
         $titleFactory = new ChapterAdapterLocalizedFactory('title');
         $abstractFactory = new ChapterAdapterLocalizedFactory('abstract');
-        $contributionService = new ChapterAdapterContributionService();
+        $contributionReader = new ChapterAdapterContributionAuthorReader();
+        $contributionFactory = new ChapterAdapterContributionFactory();
         $publicationService = new ChapterAdapterPublicationService();
 
         $work = (new LegacyChapterWorkMetadataMapper($workFactory))->fromPublication($state);
         $titles = (new LegacyChapterTitleMetadataMapper($titleFactory))->fromPublication($state, $workId);
         $abstracts = (new LegacyChapterAbstractMetadataMapper($abstractFactory))->fromPublication($state, $workId);
-        $contributions = (new LegacyChapterContributionMetadataMapper($contributionService))
+        $contributions = (new ThothChapterContributionMetadataMapper($contributionReader, $contributionFactory))
             ->fromPublication($state, $workId);
         $publications = (new LegacyChapterPublicationMetadataMapper($publicationService))
             ->fromPublication($state, $workId);
@@ -143,19 +145,22 @@ final class ChapterAdapterLocalizedFactory
     }
 }
 
-final class ChapterAdapterContributionService
+final class ChapterAdapterContributionAuthorReader implements ContributionAuthorReader
 {
-    public ChapterAdapterContributionFactory $factory;
-
-    public function __construct()
+    public function forPublication(object $publication, ?int $primaryContactId): array
     {
-        $this->factory = new ChapterAdapterContributionFactory();
+        return [];
+    }
+
+    public function forChapter(object $chapter): array
+    {
+        return $chapter->getAuthors()->toArray();
     }
 }
 
-final class ChapterAdapterContributionFactory
+final class ChapterAdapterContributionFactory extends ThothContributionFactory
 {
-    public function createFromAuthor(object $author, int $sequence, $primaryContactId): ChapterAdapterInput
+    public function createFromAuthor($author, $sequence, $primaryContactId = null)
     {
         return new ChapterAdapterInput([
             'contributionType' => 'AUTHOR',

@@ -43,13 +43,14 @@ import('plugins.generic.thoth.classes.notification.ThothNotification');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyAbstractMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyAbstractMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterAbstractMetadataMapper');
-import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterContributionMetadataMapper');
+import('plugins.generic.thoth.classes.Infrastructure.Pkp.PkpContributionAuthorReader');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.ThothChapterContributionMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterPublicationMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterTitleMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyChapterWorkMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyContributionMetadataGateway');
-import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyContributionMetadataMapper');
+import('plugins.generic.thoth.classes.Infrastructure.Thoth.ThothContributionMetadataMapper');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyFrontcoverGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyLanguageMetadataGateway');
 import('plugins.generic.thoth.classes.Infrastructure.Thoth.LegacyLanguageMetadataMapper');
@@ -112,6 +113,10 @@ class ThothPlugin extends GenericPlugin
                     $publicationService = Registry::get('laravelContainer')->make('publicationService');
                     $locationService = Registry::get('laravelContainer')->make('locationService');
                     $frontcoverService = Registry::get('laravelContainer')->make('frontcoverService');
+                    $contributionAuthorReader = new PkpContributionAuthorReader(
+                        DAORegistry::getDAO('AuthorDAO'),
+                        DAORegistry::getDAO('ChapterAuthorDAO')
+                    );
                     $chapterWorkMapper = new LegacyChapterWorkMetadataMapper($chapterService->factory);
                     $chapterSynchronizer = new ChapterSynchronizer(
                         new LegacyChapterMetadataGateway($chapterService->repository),
@@ -137,7 +142,10 @@ class ThothPlugin extends GenericPlugin
                             ),
                             new ContributionSynchronizer(
                                 new LegacyContributionMetadataGateway($contributionService),
-                                new LegacyChapterContributionMetadataMapper($contributionService)
+                                new ThothChapterContributionMetadataMapper(
+                                    $contributionAuthorReader,
+                                    $contributionService->factory
+                                )
                             ),
                             new PublicationSynchronizer(
                                 new LegacyPublicationMetadataGateway($publicationService),
@@ -173,7 +181,10 @@ class ThothPlugin extends GenericPlugin
                         ),
                         new ContributionSynchronizer(
                             new LegacyContributionMetadataGateway($contributionService),
-                            new LegacyContributionMetadataMapper($contributionService)
+                            new ThothContributionMetadataMapper(
+                                $contributionAuthorReader,
+                                $contributionService->factory
+                            )
                         ),
                         new PublicationSynchronizer(
                             new LegacyPublicationMetadataGateway($publicationService),
