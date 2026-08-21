@@ -4,9 +4,11 @@ namespace APP\plugins\generic\thoth\tests\classes\Infrastructure\Thoth;
 
 require_once __DIR__ . '/../../../../vendor/autoload.php';
 
+use APP\plugins\generic\thoth\classes\Contracts\ContributionAuthorReader;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\factories\ThothContributionFactory;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyContributionMetadataGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyContributionMetadataMapper;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\ThothContributionMetadataMapper;
 use PKP\tests\PKPTestCase;
 use ThothApi\GraphQL\Inputs\PatchContribution;
 
@@ -22,8 +24,8 @@ final class ContributionMetadataAdaptersTest extends PKPTestCase
                 return 'https://orcid.org/0000-0001-2345-6789';
             }
         };
-        $factory = new class () {
-            public function createFromAuthor($author, $sequence, $primaryContactId): PatchContribution
+        $factory = new class () extends ThothContributionFactory {
+            public function createFromAuthor($author, $sequence, $primaryContactId = null)
             {
                 return new PatchContribution([
                     'contributionId' => 'must-not-cross-the-mapper',
@@ -36,19 +38,22 @@ final class ContributionMetadataAdaptersTest extends PKPTestCase
                 ]);
             }
         };
-        $service = new class ($author, $factory) {
-            public $factory;
+        $reader = new class ($author) implements ContributionAuthorReader {
             private $author;
 
-            public function __construct($author, $factory)
+            public function __construct($author)
             {
                 $this->author = $author;
-                $this->factory = $factory;
             }
 
-            public function getPublicationAuthors($publication, $primaryContactId): array
+            public function forPublication(object $publication, ?int $primaryContactId): array
             {
                 return [$this->author];
+            }
+
+            public function forChapter(object $chapter): array
+            {
+                return [];
             }
         };
         $publication = new class () {
@@ -58,7 +63,7 @@ final class ContributionMetadataAdaptersTest extends PKPTestCase
             }
         };
 
-        $mapped = (new LegacyContributionMetadataMapper($service))->fromPublication(
+        $mapped = (new ThothContributionMetadataMapper($reader, $factory))->fromPublication(
             $publication,
             $this->workId()
         );

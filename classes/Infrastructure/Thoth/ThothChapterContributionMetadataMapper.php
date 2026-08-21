@@ -3,10 +3,12 @@
 namespace APP\plugins\generic\thoth\classes\Infrastructure\Thoth;
 
 use APP\plugins\generic\thoth\classes\Application\Synchronization\ChapterSynchronizationState;
+use APP\plugins\generic\thoth\classes\Contracts\ContributionAuthorReader;
 use APP\plugins\generic\thoth\classes\Contracts\ContributionMetadataMapper;
 use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\factories\ThothContributionFactory;
 
-final class LegacyChapterContributionMetadataMapper implements ContributionMetadataMapper
+final class ThothChapterContributionMetadataMapper implements ContributionMetadataMapper
 {
     private const MUTABLE_FIELDS = [
         'contributionType' => true,
@@ -17,18 +19,21 @@ final class LegacyChapterContributionMetadataMapper implements ContributionMetad
         'fullName' => true,
     ];
 
-    public function __construct(private object $service)
-    {
+    public function __construct(
+        private ContributionAuthorReader $authors,
+        private ThothContributionFactory $factory
+    ) {
     }
 
     public function fromPublication(object $publication, WorkId $workId): array
     {
         /** @var ChapterSynchronizationState $publication */
         $contributions = [];
-        $authors = array_values($publication->getChapter()->getAuthors()->toArray());
+        $authors = $this->authors->forChapter($publication->getChapter());
+
         foreach ($authors as $sequence => $author) {
             $metadata = array_intersect_key(
-                $this->service->factory->createFromAuthor($author, $sequence, null)->getAllData(),
+                $this->factory->createFromAuthor($author, $sequence, null)->getAllData(),
                 self::MUTABLE_FIELDS
             );
             $metadata['author'] = $author;
