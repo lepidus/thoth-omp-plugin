@@ -12,8 +12,22 @@ include:
   before_script:
     - composer install
 
+.minimum_php_compatibility:
+  before_script:
+    - apt-get update
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl
+    - curl -fsSL https://packages.sury.org/php/apt.gpg -o /usr/share/keyrings/deb.sury.org-php.gpg
+    - . /etc/os-release && echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $VERSION_CODENAME main" > /etc/apt/sources.list.d/php.list
+    - apt-get update
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends php${PHP_VERSION}-cli php${PHP_VERSION}-bcmath php${PHP_VERSION}-curl php${PHP_VERSION}-gd php${PHP_VERSION}-intl php${PHP_VERSION}-mbstring php${PHP_VERSION}-mysql php${PHP_VERSION}-xml php${PHP_VERSION}-zip
+    - update-alternatives --set php /usr/bin/php${PHP_VERSION}
+    - test "$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')" = "$PHP_VERSION"
+    - composer install
+
 plugin_compatibility_omp_php_8_2:
-  extends: .unit_test_template
+  extends:
+    - .unit_test_template
+    - .minimum_php_compatibility
   stage: plugin
   needs: []
   variables:
@@ -40,7 +54,7 @@ static_analysis:
       when: never
     - when: on_success
   variables:
-    PHP_VERSION: '8.2'
+    PHP_VERSION: '8.4'
     THOTH_PKP_ROOT: '/var/www/omp'
   before_script:
     - update-alternatives --set php /usr/bin/php$PHP_VERSION
