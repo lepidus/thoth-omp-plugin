@@ -1,12 +1,6 @@
 <?php
 
 import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.Work.GetWorkStatus');
-import('plugins.generic.thoth.classes.Contracts.WorkGateway');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.Presentation.Api.GetWorkStatusController');
-
-use Slim\Http\Response;
 
 class GetWorkStatusControllerTest extends PKPTestCase
 {
@@ -20,10 +14,10 @@ class GetWorkStatusControllerTest extends PKPTestCase
             ->willReturn('ACTIVE');
         $controller = new GetWorkStatusController(new GetWorkStatus($gateway));
 
-        $response = $controller->get($this->submissionWithWorkId($workId), new Response());
+        $response = $controller->get($this->submissionWithWorkId($workId));
 
         $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame(['workStatus' => 'ACTIVE'], json_decode((string) $response->getBody(), true));
+        $this->assertSame(['workStatus' => 'ACTIVE'], $response->getData(true));
     }
 
     public function testReturnsNotFoundWhenTheWorkDoesNotExist(): void
@@ -33,18 +27,16 @@ class GetWorkStatusControllerTest extends PKPTestCase
         $gateway->method('getStatus')->willReturn(null);
         $controller = new GetWorkStatusController(new GetWorkStatus($gateway));
 
-        $response = $controller->get($this->submissionWithWorkId($workId), new Response());
-        $body = json_decode((string) $response->getBody(), true);
+        $response = $controller->get($this->submissionWithWorkId($workId));
 
         $this->assertSame(404, $response->getStatusCode());
-        $this->assertTrue($body['workNotFound']);
+        $this->assertTrue($response->getData(true)['workNotFound']);
     }
 
     private function submissionWithWorkId(string $workId): object
     {
         return new class ($workId) {
             private string $workId;
-
             public function __construct(string $workId)
             {
                 $this->workId = $workId;

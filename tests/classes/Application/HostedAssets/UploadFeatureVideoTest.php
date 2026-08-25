@@ -1,13 +1,8 @@
 <?php
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.HostedAssets.UploadFeatureVideo');
-import('plugins.generic.thoth.classes.Contracts.FeatureVideoCache');
-import('plugins.generic.thoth.classes.Contracts.FeatureVideoUploader');
-import('plugins.generic.thoth.classes.Contracts.TemporaryVideoFileRepository');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
+use PHPUnit\Framework\TestCase;
 
-class UploadFeatureVideoTest extends PKPTestCase
+class UploadFeatureVideoTest extends TestCase
 {
     public function testUploadsVideoThenInvalidatesCacheAndDeletesTemporaryFile(): void
     {

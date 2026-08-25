@@ -1,24 +1,18 @@
 <?php
 
-import('plugins.generic.thoth.classes.Application.HostedAssets.UploadFeatureVideo');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 final class UploadFeatureVideoController
 {
     private UploadFeatureVideo $uploadFeatureVideo;
-
     public function __construct(UploadFeatureVideo $uploadFeatureVideo)
     {
         $this->uploadFeatureVideo = $uploadFeatureVideo;
     }
 
-    public function upload(
-        object $submission,
-        string $title,
-        int $temporaryFileId,
-        int $userId,
-        object $response
-    ): object {
+    public function upload(object $submission, string $title, int $temporaryFileId, int $userId): JsonResponse
+    {
         try {
             $metadata = $this->uploadFeatureVideo->execute(
                 new WorkId($submission->getData('thothWorkId')),
@@ -27,17 +21,18 @@ final class UploadFeatureVideoController
                 $userId
             );
         } catch (InvalidArgumentException $exception) {
-            return $response->withStatus(400)->withJson([
-                'video' => [__('plugins.generic.thoth.featureVideo.invalidFile')],
-            ]);
+            return new JsonResponse(
+                ['video' => [__('plugins.generic.thoth.featureVideo.invalidFile')]],
+                Response::HTTP_BAD_REQUEST
+            );
         } catch (Throwable $exception) {
             error_log($exception->getMessage());
-            return $response->withStatus(500)->withJson([
-                'error' => 'plugins.generic.thoth.connectionError',
-                'errorMessage' => __('plugins.generic.thoth.connectionError'),
-            ]);
+            return new JsonResponse(
+                ['error' => __('plugins.generic.thoth.connectionError')],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
 
-        return $response->withJson($metadata, 200);
+        return new JsonResponse($metadata, Response::HTTP_OK);
     }
 }

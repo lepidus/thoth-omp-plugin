@@ -1,13 +1,8 @@
 <?php
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.Exception.InvalidRemoteMetadata');
-import('plugins.generic.thoth.classes.Application.Synchronization.SubjectSynchronizer');
-import('plugins.generic.thoth.classes.Contracts.SubjectMetadataGateway');
-import('plugins.generic.thoth.classes.Contracts.SubjectMetadataMapper');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
+use PHPUnit\Framework\TestCase;
 
-class SubjectSynchronizerTest extends PKPTestCase
+class SubjectSynchronizerTest extends TestCase
 {
     private const WORK_ID = '4c64863b-ce51-4cf5-bedf-0dd911147f6d';
 

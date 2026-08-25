@@ -1,12 +1,5 @@
 <?php
 
-import('plugins.generic.thoth.classes.Application.Exception.InvalidRemoteMetadata');
-import('plugins.generic.thoth.classes.Contracts.DomainSynchronizer');
-import('plugins.generic.thoth.classes.Contracts.WorkRelationMetadataGateway');
-import('plugins.generic.thoth.classes.Contracts.WorkRelationMetadataMapper');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationResult');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationWarning');
 
 final class WorkRelationSynchronizer implements DomainSynchronizer
 {

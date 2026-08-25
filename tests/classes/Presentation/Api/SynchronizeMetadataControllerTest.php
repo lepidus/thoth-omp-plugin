@@ -3,17 +3,6 @@
 require_once(__DIR__ . '/../../../../vendor/autoload.php');
 
 import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.Synchronization.SynchronizeMetadata');
-import('plugins.generic.thoth.classes.Contracts.DomainSynchronizer');
-import('plugins.generic.thoth.classes.Contracts.NotificationPublisher');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationResult');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationWarning');
-import('plugins.generic.thoth.classes.exceptions.MetadataSynchronizationException');
-import('plugins.generic.thoth.classes.Presentation.Api.SynchronizeMetadataController');
-
-use Slim\Http\Response;
-use ThothApi\Exception\QueryException;
 
 class SynchronizeMetadataControllerTest extends PKPTestCase
 {
@@ -37,20 +26,16 @@ class SynchronizeMetadataControllerTest extends PKPTestCase
         $notifications->expects($this->once())
             ->method('publishWarning')
             ->with(31, $this->anything(), 'warning.key');
-        $controller = new SynchronizeMetadataController(
-            new SynchronizeMetadata($synchronizer),
-            $notifications
-        );
+        $controller = $this->controller(new SynchronizeMetadata($synchronizer), $notifications);
 
         $response = $controller->synchronize(
             $publication,
             $this->submissionWithWorkId(self::WORK_ID),
-            31,
-            new Response()
+            31
         );
 
         $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame(['status' => true], json_decode((string) $response->getBody(), true));
+        $this->assertSame(['status' => true], $response->getData(true));
     }
 
     public function testRejectsASubmissionWithoutAWorkLink(): void
@@ -61,17 +46,9 @@ class SynchronizeMetadataControllerTest extends PKPTestCase
         $notifications->expects($this->never())->method('publishSuccess');
         $notifications->expects($this->never())->method('publishWarning');
         $notifications->expects($this->never())->method('publishError');
-        $controller = new SynchronizeMetadataController(
-            new SynchronizeMetadata($synchronizer),
-            $notifications
-        );
+        $controller = $this->controller(new SynchronizeMetadata($synchronizer), $notifications);
 
-        $response = $controller->synchronize(
-            new stdClass(),
-            $this->submissionWithWorkId(null),
-            31,
-            new Response()
-        );
+        $response = $controller->synchronize(new stdClass(), $this->submissionWithWorkId(null), 31);
 
         $this->assertSame(403, $response->getStatusCode());
     }
@@ -79,18 +56,19 @@ class SynchronizeMetadataControllerTest extends PKPTestCase
     public function testReturnsConflictForAmbiguousRemoteMetadata(): void
     {
         $synchronizer = $this->createMock(DomainSynchronizer::class);
-        $synchronizer->method('synchronize')->willThrowException(new MetadataSynchronizationException());
+        $synchronizer->method('synchronize')->willThrowException(
+            new InvalidRemoteMetadata('synchronizeMetadata', 'Ambiguous metadata')
+        );
         $notifications = $this->createMock(NotificationPublisher::class);
         $notifications->expects($this->never())->method('publishSuccess');
         $notifications->expects($this->never())->method('publishWarning');
         $notifications->expects($this->never())->method('publishError');
-        $controller = new SynchronizeMetadataController(new SynchronizeMetadata($synchronizer), $notifications);
+        $controller = $this->controller(new SynchronizeMetadata($synchronizer), $notifications);
 
         $response = $controller->synchronize(
             new stdClass(),
             $this->submissionWithWorkId(self::WORK_ID),
-            31,
-            new Response()
+            31
         );
 
         $this->assertSame(409, $response->getStatusCode());
@@ -98,30 +76,53 @@ class SynchronizeMetadataControllerTest extends PKPTestCase
 
     public function testReturnsConnectionErrorAndPublishesTheFailure(): void
     {
-        $failure = new QueryException(['message' => 'Unavailable'], null, null, null, 200);
+        $failure = new ThothUnavailable('synchronizeMetadata', 'Unavailable');
         $synchronizer = $this->createMock(DomainSynchronizer::class);
         $synchronizer->method('synchronize')->willThrowException($failure);
         $notifications = $this->createMock(NotificationPublisher::class);
         $notifications->expects($this->once())
             ->method('publishError')
-            ->with(31, $this->anything(), 'plugins.generic.thoth.register.error', $failure->getMessage());
-        $controller = new SynchronizeMetadataController(new SynchronizeMetadata($synchronizer), $notifications);
+            ->with(31, $this->anything(), 'plugins.generic.thoth.register.error', 'Unavailable', true);
+        $logger = $this->createMock(PluginLogger::class);
+        $logger->expects($this->once())
+            ->method('error')
+            ->with('Thoth operation failed', $this->callback(
+                fn (array $context): bool => $context['operation'] === 'synchronizeMetadata'
+                    && $context['submissionId'] === 17
+            ));
+        $controller = $this->controller(new SynchronizeMetadata($synchronizer), $notifications, $logger);
 
         $response = $controller->synchronize(
             new stdClass(),
             $this->submissionWithWorkId(self::WORK_ID),
-            31,
-            new Response()
+            31
         );
 
         $this->assertSame(500, $response->getStatusCode());
+        $this->assertSame(
+            ['errorMessage' => __('plugins.generic.thoth.connectionError')],
+            $response->getData(true)
+        );
+    }
+
+    private function controller(
+        SynchronizeMetadata $synchronizeMetadata,
+        NotificationPublisher $notifications,
+        ?PluginLogger $logger = null
+    ): SynchronizeMetadataController {
+        $logger ??= $this->createMock(PluginLogger::class);
+
+        return new SynchronizeMetadataController(
+            $synchronizeMetadata,
+            $notifications,
+            new ExternalFailureReporter($notifications, $logger)
+        );
     }
 
     private function submissionWithWorkId(?string $workId): object
     {
         return new class ($workId) {
             private ?string $workId;
-
             public function __construct(?string $workId)
             {
                 $this->workId = $workId;

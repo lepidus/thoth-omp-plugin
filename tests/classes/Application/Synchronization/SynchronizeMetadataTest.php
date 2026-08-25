@@ -1,13 +1,8 @@
 <?php
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.Synchronization.SynchronizeMetadata');
-import('plugins.generic.thoth.classes.Contracts.DomainSynchronizer');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationResult');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationWarning');
+use PHPUnit\Framework\TestCase;
 
-class SynchronizeMetadataTest extends PKPTestCase
+class SynchronizeMetadataTest extends TestCase
 {
     private const WORK_ID = '4c64863b-ce51-4cf5-bedf-0dd911147f6d';
 

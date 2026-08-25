@@ -1,9 +1,5 @@
 <?php
 
-import('plugins.generic.thoth.classes.Contracts.FeatureVideoCache');
-import('plugins.generic.thoth.classes.Contracts.FeatureVideoUploader');
-import('plugins.generic.thoth.classes.Contracts.TemporaryVideoFileRepository');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
 
 final class UploadFeatureVideo
 {

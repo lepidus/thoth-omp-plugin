@@ -1,11 +1,8 @@
 <?php
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.Configuration.SaveThothConfiguration');
-import('plugins.generic.thoth.classes.Contracts.ThothConfigurationRepository');
-import('plugins.generic.thoth.classes.Domain.Configuration.ThothConfiguration');
+use PHPUnit\Framework\TestCase;
 
-class SaveThothConfigurationTest extends PKPTestCase
+class SaveThothConfigurationTest extends TestCase
 {
     public function testPersistsConfigurationAndInvalidatesContextCache()
     {

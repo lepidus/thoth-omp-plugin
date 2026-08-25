@@ -3,6 +3,6 @@
 
 <install version="0.1.11.0">
     <migration
-        class="plugins.generic.thoth.classes.migrations.PasswordEncryptionMigration"
+        class="plugins.generic.thoth.classes.Infrastructure.Pkp.Migration.PasswordEncryptionMigration"
     />
 </install>

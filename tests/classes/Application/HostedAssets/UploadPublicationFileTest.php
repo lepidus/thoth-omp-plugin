@@ -1,13 +1,8 @@
 <?php
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.HostedAssets.UploadPublicationFile');
-import('plugins.generic.thoth.classes.Contracts.CatalogFileCache');
-import('plugins.generic.thoth.classes.Contracts.PublicationFileUploader');
-import('plugins.generic.thoth.classes.Contracts.TemporaryPublicationFileRepository');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
+use PHPUnit\Framework\TestCase;
 
-class UploadPublicationFileTest extends PKPTestCase
+class UploadPublicationFileTest extends TestCase
 {
     public function testUploadsFileThenInvalidatesCacheAndDeletesTemporaryFile(): void
     {

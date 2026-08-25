@@ -1,7 +1,5 @@
 <?php
 
-import('plugins.generic.thoth.classes.Contracts.ThothConfigurationRepository');
-import('plugins.generic.thoth.classes.Domain.Configuration.ThothConfiguration');
 
 final class SaveThothConfiguration
 {

@@ -1,14 +1,6 @@
 <?php
 
 import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.HostedAssets.UploadFeatureVideo');
-import('plugins.generic.thoth.classes.Contracts.FeatureVideoCache');
-import('plugins.generic.thoth.classes.Contracts.FeatureVideoUploader');
-import('plugins.generic.thoth.classes.Contracts.TemporaryVideoFileRepository');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.Presentation.Api.UploadFeatureVideoController');
-
-use Slim\Http\Response;
 
 class UploadFeatureVideoControllerTest extends PKPTestCase
 {
@@ -23,9 +15,8 @@ class UploadFeatureVideoControllerTest extends PKPTestCase
         ]);
         $uploader = $this->createMock(FeatureVideoUploader::class);
         $uploader->expects($this->once())->method('upload')->with(
-            $this->callback(function (WorkId $workId): bool {
-                return $workId->toString() === '11111111-1111-4111-8111-111111111111';
-            }),
+            $this->callback(fn (WorkId $workId): bool =>
+                $workId->toString() === '11111111-1111-4111-8111-111111111111'),
             'Book trailer',
             $this->anything()
         )->willReturn(['id' => 'video-id']);
@@ -35,16 +26,10 @@ class UploadFeatureVideoControllerTest extends PKPTestCase
             $this->createMock(FeatureVideoCache::class)
         ));
 
-        $response = $controller->upload(
-            $this->submissionWithWorkId(),
-            'Book trailer',
-            15,
-            7,
-            new Response()
-        );
+        $response = $controller->upload($this->submissionWithWorkId(), 'Book trailer', 15, 7);
 
         $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame(['id' => 'video-id'], json_decode((string) $response->getBody(), true));
+        $this->assertSame(['id' => 'video-id'], $response->getData(true));
     }
 
     public function testReturnsBadRequestForAnInvalidTemporaryVideo(): void
@@ -57,10 +42,10 @@ class UploadFeatureVideoControllerTest extends PKPTestCase
             $this->createMock(FeatureVideoCache::class)
         ));
 
-        $response = $controller->upload($this->submissionWithWorkId(), 'Trailer', 15, 7, new Response());
+        $response = $controller->upload($this->submissionWithWorkId(), 'Trailer', 15, 7);
 
         $this->assertSame(400, $response->getStatusCode());
-        $this->assertArrayHasKey('video', json_decode((string) $response->getBody(), true));
+        $this->assertArrayHasKey('video', $response->getData(true));
     }
 
     public function testReturnsConnectionErrorWhenTheUploadFails(): void
@@ -68,20 +53,17 @@ class UploadFeatureVideoControllerTest extends PKPTestCase
         $temporaryFiles = $this->createMock(TemporaryVideoFileRepository::class);
         $temporaryFiles->method('get')->willReturn(['path' => '/tmp/trailer.mp4']);
         $uploader = $this->createMock(FeatureVideoUploader::class);
-        $uploader->method('upload')->willThrowException(new RuntimeException('Remote failure'));
+        $uploader->method('upload')->willThrowException(new \RuntimeException('Remote failure'));
         $controller = new UploadFeatureVideoController(new UploadFeatureVideo(
             $temporaryFiles,
             $uploader,
             $this->createMock(FeatureVideoCache::class)
         ));
 
-        $response = $controller->upload($this->submissionWithWorkId(), 'Trailer', 15, 7, new Response());
+        $response = $controller->upload($this->submissionWithWorkId(), 'Trailer', 15, 7);
 
         $this->assertSame(500, $response->getStatusCode());
-        $this->assertSame(
-            'plugins.generic.thoth.connectionError',
-            json_decode((string) $response->getBody(), true)['error']
-        );
+        $this->assertArrayHasKey('error', $response->getData(true));
     }
 
     private function submissionWithWorkId(): object

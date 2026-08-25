@@ -1,16 +1,8 @@
 <?php
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.Registration.RegisterBook');
-import('plugins.generic.thoth.classes.Contracts.BookRegistrar');
-import('plugins.generic.thoth.classes.Contracts.SubmissionLinkRepository');
-import('plugins.generic.thoth.classes.Domain.Identifier.ImprintId');
-import('plugins.generic.thoth.classes.Domain.Identifier.SubmissionId');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.Domain.Result.RegistrationResult');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationResult');
+use PHPUnit\Framework\TestCase;
 
-class RegisterBookTest extends PKPTestCase
+class RegisterBookTest extends TestCase
 {
     public function testItDelegatesRegistrationAndReturnsTheResult(): void
     {
@@ -30,6 +22,7 @@ class RegisterBookTest extends PKPTestCase
         $this->assertSame($result, $actualResult);
         $this->assertSame($publication, $registrar->publication);
         $this->assertSame($imprintId, $registrar->imprintId);
+        $this->assertSame($publication, $registrar->completedPublication);
     }
 
     public function testItDoesNotCreateALocalLinkWhenRegistrationFails(): void
@@ -81,6 +74,7 @@ class BookRegistrarDouble implements BookRegistrar
     private RegistrationResult $result;
     public ?object $publication = null;
     public ?ImprintId $imprintId = null;
+    public ?object $completedPublication = null;
 
     public function __construct(RegistrationResult $result)
     {
@@ -97,6 +91,11 @@ class BookRegistrarDouble implements BookRegistrar
 
     public function rollback(object $publication): void
     {
+    }
+
+    public function complete(object $publication): void
+    {
+        $this->completedPublication = $publication;
     }
 }
 
@@ -118,5 +117,9 @@ class CompensatingBookRegistrarDouble implements BookRegistrar
     public function rollback(object $publication): void
     {
         $this->compensatedPublication = $publication;
+    }
+
+    public function complete(object $publication): void
+    {
     }
 }

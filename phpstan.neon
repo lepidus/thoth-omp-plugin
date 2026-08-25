@@ -2,7 +2,7 @@ parameters:
     level: 0
     paths:
         - classes/Application
-        - classes/Contracts
         - classes/Domain
+        - classes/Infrastructure
     bootstrapFiles:
         - phpstan-bootstrap.php

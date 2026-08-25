@@ -1,15 +1,5 @@
 <?php
 
-import('plugins.generic.thoth.classes.Application.Exception.InvalidRemoteMetadata');
-import('plugins.generic.thoth.classes.Application.Synchronization.SynchronizeLocations');
-import('plugins.generic.thoth.classes.Contracts.DomainSynchronizer');
-import('plugins.generic.thoth.classes.Contracts.PublicationMetadataGateway');
-import('plugins.generic.thoth.classes.Contracts.PublicationMetadataMapper');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.Domain.Publication.PublicationDiff');
-import('plugins.generic.thoth.classes.Domain.Publication.PublicationMatcher');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationResult');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationWarning');
 
 final class PublicationSynchronizer implements DomainSynchronizer
 {

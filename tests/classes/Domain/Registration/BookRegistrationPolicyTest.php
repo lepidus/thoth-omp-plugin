@@ -1,11 +1,11 @@
 <?php
 
+use PHPUnit\Framework\TestCase;
+
 require_once(__DIR__ . '/../../../../vendor/autoload.php');
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Domain.Registration.BookRegistrationPolicy');
 
-class BookRegistrationPolicyTest extends PKPTestCase
+class BookRegistrationPolicyTest extends TestCase
 {
     public function testEligibleRegistrationDoesNotDependOnPublicationState()
     {

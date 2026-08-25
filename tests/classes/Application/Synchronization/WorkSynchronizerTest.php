@@ -1,15 +1,8 @@
 <?php
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Contracts.DomainSynchronizer');
-import('plugins.generic.thoth.classes.Contracts.WorkMetadataGateway');
-import('plugins.generic.thoth.classes.Contracts.WorkMetadataMapper');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.Domain.Registration.BookRegistrationPolicy');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationResult');
-import('plugins.generic.thoth.classes.Application.Synchronization.WorkSynchronizer');
+use PHPUnit\Framework\TestCase;
 
-class WorkSynchronizerTest extends PKPTestCase
+class WorkSynchronizerTest extends TestCase
 {
     private const WORK_ID = '4c64863b-ce51-4cf5-bedf-0dd911147f6d';
 

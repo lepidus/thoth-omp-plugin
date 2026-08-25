@@ -1,9 +1,5 @@
 <?php
 
-import('plugins.generic.thoth.classes.Contracts.BookMetadataUpdater');
-import('plugins.generic.thoth.classes.Contracts.SubmissionLinkRepository');
-import('plugins.generic.thoth.classes.Domain.Identifier.SubmissionId');
-import('plugins.generic.thoth.classes.Domain.Result.AutomaticPublicationUpdateResult');
 
 final class UpdatePublicationAfterEdit
 {

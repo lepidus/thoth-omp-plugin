@@ -1,13 +1,8 @@
 <?php
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.Exception.InvalidRemoteMetadata');
-import('plugins.generic.thoth.classes.Contracts.TitleMetadataGateway');
-import('plugins.generic.thoth.classes.Contracts.TitleMetadataMapper');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.Application.Synchronization.TitleSynchronizer');
+use PHPUnit\Framework\TestCase;
 
-class TitleSynchronizerTest extends PKPTestCase
+class TitleSynchronizerTest extends TestCase
 {
     private const WORK_ID = '4c64863b-ce51-4cf5-bedf-0dd911147f6d';
 

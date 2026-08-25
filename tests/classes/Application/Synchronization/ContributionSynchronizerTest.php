@@ -1,13 +1,8 @@
 <?php
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.Exception.InvalidRemoteMetadata');
-import('plugins.generic.thoth.classes.Application.Synchronization.ContributionSynchronizer');
-import('plugins.generic.thoth.classes.Contracts.ContributionMetadataGateway');
-import('plugins.generic.thoth.classes.Contracts.ContributionMetadataMapper');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
+use PHPUnit\Framework\TestCase;
 
-final class ContributionSynchronizerTest extends PKPTestCase
+final class ContributionSynchronizerTest extends TestCase
 {
     private const WORK_ID = '4c64863b-ce51-4cf5-bedf-0dd911147f6d';
 

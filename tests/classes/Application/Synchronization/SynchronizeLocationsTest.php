@@ -1,11 +1,8 @@
 <?php
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.Exception.InvalidRemoteMetadata');
-import('plugins.generic.thoth.classes.Application.Synchronization.SynchronizeLocations');
-import('plugins.generic.thoth.classes.Contracts.LocationMetadataGateway');
+use PHPUnit\Framework\TestCase;
 
-final class SynchronizeLocationsTest extends PKPTestCase
+final class SynchronizeLocationsTest extends TestCase
 {
     public function testItReconcilesPublisherLocationsAndPreservesThothLocations(): void
     {

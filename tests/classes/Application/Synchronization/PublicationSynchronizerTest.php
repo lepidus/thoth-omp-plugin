@@ -1,17 +1,11 @@
 <?php
 
+use PHPUnit\Framework\TestCase;
+
 require_once(__DIR__ . '/../../../../vendor/autoload.php');
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.Exception.InvalidRemoteMetadata');
-import('plugins.generic.thoth.classes.Application.Synchronization.PublicationSynchronizer');
-import('plugins.generic.thoth.classes.Application.Synchronization.SynchronizeLocations');
-import('plugins.generic.thoth.classes.Contracts.LocationMetadataGateway');
-import('plugins.generic.thoth.classes.Contracts.PublicationMetadataGateway');
-import('plugins.generic.thoth.classes.Contracts.PublicationMetadataMapper');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
 
-final class PublicationSynchronizerTest extends PKPTestCase
+final class PublicationSynchronizerTest extends TestCase
 {
     private const WORK_ID = '4c64863b-ce51-4cf5-bedf-0dd911147f6d';
     private const DELETION_WARNING =

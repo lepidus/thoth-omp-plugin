@@ -1,11 +1,8 @@
 <?php
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.Catalog.GetCatalogFiles');
-import('plugins.generic.thoth.classes.Contracts.CatalogFileGateway');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
+use PHPUnit\Framework\TestCase;
 
-class GetCatalogFilesTest extends PKPTestCase
+class GetCatalogFilesTest extends TestCase
 {
     public function testReturnsNoFilesWithoutAWorkId(): void
     {

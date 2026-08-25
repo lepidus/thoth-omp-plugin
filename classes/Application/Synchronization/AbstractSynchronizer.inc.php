@@ -1,11 +1,5 @@
 <?php
 
-import('plugins.generic.thoth.classes.Application.Exception.InvalidRemoteMetadata');
-import('plugins.generic.thoth.classes.Contracts.AbstractMetadataGateway');
-import('plugins.generic.thoth.classes.Contracts.AbstractMetadataMapper');
-import('plugins.generic.thoth.classes.Contracts.DomainSynchronizer');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationResult');
 
 final class AbstractSynchronizer implements DomainSynchronizer
 {

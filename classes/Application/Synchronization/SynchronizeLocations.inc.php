@@ -1,7 +1,5 @@
 <?php
 
-import('plugins.generic.thoth.classes.Application.Exception.InvalidRemoteMetadata');
-import('plugins.generic.thoth.classes.Contracts.LocationMetadataGateway');
 
 final class SynchronizeLocations
 {

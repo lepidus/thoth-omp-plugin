@@ -1,7 +1,5 @@
 <?php
 
-import('plugins.generic.thoth.classes.Contracts.CatalogFileGateway');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
 
 final class GetCatalogFiles
 {

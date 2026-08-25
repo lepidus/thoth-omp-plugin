@@ -1,7 +1,5 @@
 <?php
 
-import('plugins.generic.thoth.classes.Domain.Contribution.ContributionKey');
-import('plugins.generic.thoth.classes.Domain.Contribution.ContributorIdentity');
 
 final class ContributionMatcher
 {

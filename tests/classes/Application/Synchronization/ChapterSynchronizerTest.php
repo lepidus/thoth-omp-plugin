@@ -1,19 +1,11 @@
 <?php
 
+use PHPUnit\Framework\TestCase;
+
 require_once __DIR__ . '/../../../../vendor/autoload.php';
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.Synchronization.ChapterSynchronizer');
-import('plugins.generic.thoth.classes.Application.Synchronization.WorkSynchronizer');
-import('plugins.generic.thoth.classes.Contracts.ChapterMetadataGateway');
-import('plugins.generic.thoth.classes.Contracts.DomainSynchronizer');
-import('plugins.generic.thoth.classes.Contracts.WorkMetadataGateway');
-import('plugins.generic.thoth.classes.Contracts.WorkMetadataMapper');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationResult');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationWarning');
 
-final class ChapterSynchronizerTest extends PKPTestCase
+final class ChapterSynchronizerTest extends TestCase
 {
     private const NEW_WORK_ID = '9805634b-eb47-4381-99e9-77813ae98168';
     private const EXISTING_WORK_ID = '8b9f66e9-e663-4d96-91a9-a9c47563fa2f';

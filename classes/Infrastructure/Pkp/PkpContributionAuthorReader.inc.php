@@ -1,6 +1,6 @@
 <?php
 
-import('plugins.generic.thoth.classes.Contracts.ContributionAuthorReader');
+import('plugins.generic.thoth.classes.Application.Synchronization.Port.ContributionAuthorReader');
 
 final class PkpContributionAuthorReader implements ContributionAuthorReader
 {

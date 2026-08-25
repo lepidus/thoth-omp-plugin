@@ -1,10 +1,5 @@
 <?php
 
-import('plugins.generic.thoth.classes.Contracts.BookRegistrar');
-import('plugins.generic.thoth.classes.Contracts.SubmissionLinkRepository');
-import('plugins.generic.thoth.classes.Domain.Identifier.ImprintId');
-import('plugins.generic.thoth.classes.Domain.Identifier.SubmissionId');
-import('plugins.generic.thoth.classes.Domain.Result.RegistrationResult');
 
 final class RegisterBook
 {
@@ -25,6 +20,7 @@ final class RegisterBook
         try {
             $result = $this->registrar->register($publication, $imprintId);
             $this->submissionLinks->saveWorkId($submissionId, $result->getWorkId());
+            $this->registrar->complete($publication);
         } catch (Throwable $exception) {
             try {
                 $this->registrar->rollback($publication);

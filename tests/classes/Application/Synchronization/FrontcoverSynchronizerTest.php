@@ -1,12 +1,8 @@
 <?php
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.Synchronization.FrontcoverSynchronizer');
-import('plugins.generic.thoth.classes.Contracts.FrontcoverGateway');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationWarning');
+use PHPUnit\Framework\TestCase;
 
-class FrontcoverSynchronizerTest extends PKPTestCase
+class FrontcoverSynchronizerTest extends TestCase
 {
     private const WORK_ID = '4c64863b-ce51-4cf5-bedf-0dd911147f6d';
 

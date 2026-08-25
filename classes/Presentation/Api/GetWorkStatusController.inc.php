@@ -1,38 +1,44 @@
 <?php
 
-use ThothApi\Exception\QueryException;
-
-import('plugins.generic.thoth.classes.Application.Work.GetWorkStatus');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 final class GetWorkStatusController
 {
     private GetWorkStatus $getWorkStatus;
-
     public function __construct(GetWorkStatus $getWorkStatus)
     {
         $this->getWorkStatus = $getWorkStatus;
     }
 
-    public function get(object $submission, object $response): object
+    public function get(object $submission): JsonResponse
     {
         $thothWorkId = $submission->getData('thothWorkId');
         if (!$thothWorkId) {
-            return $response->withStatus(404)->withJsonError('plugins.generic.thoth.status.unregistered');
+            return new JsonResponse(
+                ['error' => __('plugins.generic.thoth.status.unregistered')],
+                Response::HTTP_NOT_FOUND
+            );
         }
 
         try {
             $workStatus = $this->getWorkStatus->execute(new WorkId($thothWorkId));
             if ($workStatus === null) {
-                return $response->withStatus(404)->withJson([
-                    'error' => __('plugins.generic.thoth.status.notFound'),
-                    'workNotFound' => true,
-                ]);
+                return new JsonResponse(
+                    [
+                        'error' => __('plugins.generic.thoth.status.notFound'),
+                        'workNotFound' => true,
+                    ],
+                    Response::HTTP_NOT_FOUND
+                );
             }
 
-            return $response->withJson(['workStatus' => $workStatus], 200);
-        } catch (QueryException $exception) {
-            return $response->withStatus(500)->withJsonError('plugins.generic.thoth.connectionError');
+            return new JsonResponse(['workStatus' => $workStatus], Response::HTTP_OK);
+        } catch (Throwable $exception) {
+            return new JsonResponse(
+                ['error' => __('plugins.generic.thoth.connectionError')],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
     }
 }

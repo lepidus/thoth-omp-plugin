@@ -1,15 +1,11 @@
 <?php
 
+use PHPUnit\Framework\TestCase;
+
 require_once __DIR__ . '/../../../../vendor/autoload.php';
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.Exception.InvalidRemoteMetadata');
-import('plugins.generic.thoth.classes.Application.Synchronization.WorkRelationSynchronizer');
-import('plugins.generic.thoth.classes.Contracts.WorkRelationMetadataGateway');
-import('plugins.generic.thoth.classes.Contracts.WorkRelationMetadataMapper');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
 
-final class WorkRelationSynchronizerTest extends PKPTestCase
+final class WorkRelationSynchronizerTest extends TestCase
 {
     private const WORK_ID = '4c64863b-ce51-4cf5-bedf-0dd911147f6d';
     private const WARNING = 'plugins.generic.thoth.synchronize.activeWorkPublicationDeletionsSkipped';

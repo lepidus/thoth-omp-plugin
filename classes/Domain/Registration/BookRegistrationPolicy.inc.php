@@ -1,6 +1,5 @@
 <?php
 
-import('plugins.generic.thoth.classes.Domain.Registration.RegistrationEligibility');
 
 final class BookRegistrationPolicy
 {

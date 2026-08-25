@@ -1,9 +1,5 @@
 <?php
 
-import('plugins.generic.thoth.classes.Contracts.CatalogFileCache');
-import('plugins.generic.thoth.classes.Contracts.PublicationFileUploader');
-import('plugins.generic.thoth.classes.Contracts.TemporaryPublicationFileRepository');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
 
 final class UploadPublicationFile
 {

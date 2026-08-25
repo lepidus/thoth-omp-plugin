@@ -1,15 +1,8 @@
 <?php
 
-import('lib.pkp.tests.PKPTestCase');
-import('plugins.generic.thoth.classes.Application.Synchronization.UpdatePublicationAfterEdit');
-import('plugins.generic.thoth.classes.Contracts.BookMetadataUpdater');
-import('plugins.generic.thoth.classes.Contracts.SubmissionLinkRepository');
-import('plugins.generic.thoth.classes.Domain.Identifier.SubmissionId');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationResult');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationWarning');
+use PHPUnit\Framework\TestCase;
 
-class UpdatePublicationAfterEditTest extends PKPTestCase
+class UpdatePublicationAfterEditTest extends TestCase
 {
     public function testDoiAssignmentUpdatesWorkWithoutRequestingSuccessNotification(): void
     {

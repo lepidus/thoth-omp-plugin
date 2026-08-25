@@ -1,14 +1,5 @@
 <?php
 
-import('plugins.generic.thoth.classes.Application.Exception.InvalidRemoteMetadata');
-import('plugins.generic.thoth.classes.Contracts.ContributionMetadataGateway');
-import('plugins.generic.thoth.classes.Contracts.ContributionMetadataMapper');
-import('plugins.generic.thoth.classes.Contracts.DomainSynchronizer');
-import('plugins.generic.thoth.classes.Domain.Contribution.ContributionDiff');
-import('plugins.generic.thoth.classes.Domain.Contribution.ContributionMatcher');
-import('plugins.generic.thoth.classes.Domain.Contribution.ContributorIdentity');
-import('plugins.generic.thoth.classes.Domain.Identifier.WorkId');
-import('plugins.generic.thoth.classes.Domain.Result.SynchronizationResult');
 
 final class ContributionSynchronizer implements DomainSynchronizer
 {
