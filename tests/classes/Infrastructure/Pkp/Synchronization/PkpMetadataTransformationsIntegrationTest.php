@@ -11,7 +11,6 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\Synchronization\Works\P
 use Illuminate\Support\Facades\DB;
 use PKP\db\DAORegistry;
 use PKP\tests\PKPTestCase;
-use ReflectionClass;
 use ThothApi\GraphQL\Enums\LocaleCode;
 
 final class PkpMetadataTransformationsIntegrationTest extends PKPTestCase
@@ -37,7 +36,7 @@ final class PkpMetadataTransformationsIntegrationTest extends PKPTestCase
 
         $this->assertNotEmpty($titles);
         $this->assertNotEmpty($titles[0]['title']);
-        $this->assertContains($titles[0]['localeCode'], (new ReflectionClass(LocaleCode::class))->getConstants());
+        $this->assertContains($titles[0]['localeCode'], LocaleCode::definition()->getValues());
         $this->assertContains($work['workType'], ['MONOGRAPH', 'EDITED_BOOK']);
         $this->assertSame('FORTHCOMING', $work['workStatus']);
         $this->assertStringContainsString('/catalog/book/', $work['landingPage']);

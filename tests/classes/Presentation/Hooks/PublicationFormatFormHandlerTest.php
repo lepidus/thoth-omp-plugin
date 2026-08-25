@@ -5,7 +5,6 @@ namespace APP\plugins\generic\thoth\tests\classes\Presentation\Hooks;
 use APP\plugins\generic\thoth\classes\Presentation\Hooks\PublicationFormatFormHandler;
 use APP\plugins\generic\thoth\classes\Presentation\View\TemplateFilter\PublicationFormatTemplateFilter;
 use PKP\tests\PKPTestCase;
-use ReflectionClass;
 
 final class PublicationFormatFormHandlerTest extends PKPTestCase
 {
@@ -60,6 +59,6 @@ final class PublicationFormatFormHandlerTest extends PKPTestCase
 
     private function filter(): PublicationFormatTemplateFilter
     {
-        return (new ReflectionClass(PublicationFormatTemplateFilter::class))->newInstanceWithoutConstructor();
+        return new PublicationFormatTemplateFilter(new \stdClass());
     }
 }
