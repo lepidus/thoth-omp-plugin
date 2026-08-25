@@ -2,16 +2,16 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\Application\Synchronization;
 
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\DomainSynchronizer;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeMetadata;
-use APP\plugins\generic\thoth\classes\Contracts\DomainSynchronizer;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
-use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationResult;
-use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationWarning;
-use PKP\tests\PKPTestCase;
+use APP\plugins\generic\thoth\classes\Domain\Synchronization\SynchronizationResult;
+use APP\plugins\generic\thoth\classes\Domain\Synchronization\SynchronizationWarning;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
+use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use stdClass;
 
-class SynchronizeMetadataTest extends PKPTestCase
+class SynchronizeMetadataTest extends TestCase
 {
     private const WORK_ID = '4c64863b-ce51-4cf5-bedf-0dd911147f6d';
 

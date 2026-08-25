@@ -2,36 +2,36 @@
 
 namespace APP\plugins\generic\thoth\classes\Presentation\Api;
 
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\ExternalFailureReporter;
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\ExternalServiceFailure;
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\InvalidRemoteMetadata;
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\Port\NotificationPublisher;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeMetadata;
-use APP\plugins\generic\thoth\classes\Contracts\NotificationPublisher;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
-use ThothApi\Exception\QueryException;
+use APP\plugins\generic\thoth\classes\Domain\Submission\SubmissionId;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 final class SynchronizeMetadataController
 {
-    private SynchronizeMetadata $synchronizeMetadata;
-    private NotificationPublisher $notifications;
-
     public function __construct(
-        SynchronizeMetadata $synchronizeMetadata,
-        NotificationPublisher $notifications
+        private SynchronizeMetadata $synchronizeMetadata,
+        private NotificationPublisher $notifications,
+        private ExternalFailureReporter $failureReporter
     ) {
-        $this->synchronizeMetadata = $synchronizeMetadata;
-        $this->notifications = $notifications;
     }
 
-    public function synchronize(object $publication, object $submission, int $userId, object $response): object
+    public function synchronize(object $publication, object $submission, int $userId): JsonResponse
     {
         $thothWorkId = $submission->getData('thothWorkId');
         if (!$thothWorkId) {
-            return $response->withStatus(403)->withJson([
-                'error' => 'plugins.generic.thoth.status.unregistered',
-                'errorMessage' => __('plugins.generic.thoth.status.unregistered'),
-            ]);
+            return new JsonResponse(
+                ['errorMessage' => __('plugins.generic.thoth.status.unregistered')],
+                Response::HTTP_FORBIDDEN
+            );
         }
 
-        $submissionId = new SubmissionId((int) $submission->getId());
+        $submissionId = new SubmissionId($submission->getId());
         try {
             $result = $this->synchronizeMetadata->execute($publication, new WorkId($thothWorkId));
             $this->notifications->publishSuccess(
@@ -42,24 +42,30 @@ final class SynchronizeMetadataController
             foreach ($result->getWarnings() as $warning) {
                 $this->notifications->publishWarning($userId, $submissionId, $warning->getMessageKey());
             }
-        } catch (\MetadataSynchronizationException $exception) {
-            return $response->withStatus(409)->withJson([
-                'error' => 'plugins.generic.thoth.synchronize.ambiguousMetadata',
-                'errorMessage' => __('plugins.generic.thoth.synchronize.ambiguousMetadata'),
-            ]);
-        } catch (QueryException $exception) {
-            $this->notifications->publishError(
+        } catch (InvalidRemoteMetadata $exception) {
+            return new JsonResponse(
+                ['errorMessage' => __('plugins.generic.thoth.synchronize.ambiguousMetadata')],
+                Response::HTTP_CONFLICT
+            );
+        } catch (ExternalServiceFailure $exception) {
+            $this->failureReporter->report(
+                $exception,
                 $userId,
                 $submissionId,
-                'plugins.generic.thoth.register.error',
-                $exception->getMessage()
+                [
+                    'submissionId' => $submission->getId(),
+                    'publicationId' => method_exists($publication, 'getId') ? $publication->getId() : null,
+                ],
+                true,
+                'plugins.generic.thoth.register.error'
             );
-            return $response->withStatus(500)->withJson([
-                'error' => 'plugins.generic.thoth.connectionError',
-                'errorMessage' => __('plugins.generic.thoth.connectionError'),
-            ]);
+
+            return new JsonResponse(
+                ['errorMessage' => __('plugins.generic.thoth.connectionError')],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
 
-        return $response->withJson(['status' => true], 200);
+        return new JsonResponse(['status' => true], Response::HTTP_OK);
     }
 }

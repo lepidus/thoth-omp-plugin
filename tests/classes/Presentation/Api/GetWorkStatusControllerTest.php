@@ -3,11 +3,10 @@
 namespace APP\plugins\generic\thoth\tests\classes\Presentation\Api;
 
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
-use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\Application\Work\Port\WorkGateway;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use PKP\tests\PKPTestCase;
-use Slim\Http\Response;
 
 class GetWorkStatusControllerTest extends PKPTestCase
 {
@@ -21,10 +20,10 @@ class GetWorkStatusControllerTest extends PKPTestCase
             ->willReturn('ACTIVE');
         $controller = new GetWorkStatusController(new GetWorkStatus($gateway));
 
-        $response = $controller->get($this->submissionWithWorkId($workId), new Response());
+        $response = $controller->get($this->submissionWithWorkId($workId));
 
         $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame(['workStatus' => 'ACTIVE'], json_decode((string) $response->getBody(), true));
+        $this->assertSame(['workStatus' => 'ACTIVE'], $response->getData(true));
     }
 
     public function testReturnsNotFoundWhenTheWorkDoesNotExist(): void
@@ -34,21 +33,17 @@ class GetWorkStatusControllerTest extends PKPTestCase
         $gateway->method('getStatus')->willReturn(null);
         $controller = new GetWorkStatusController(new GetWorkStatus($gateway));
 
-        $response = $controller->get($this->submissionWithWorkId($workId), new Response());
-        $body = json_decode((string) $response->getBody(), true);
+        $response = $controller->get($this->submissionWithWorkId($workId));
 
         $this->assertSame(404, $response->getStatusCode());
-        $this->assertTrue($body['workNotFound']);
+        $this->assertTrue($response->getData(true)['workNotFound']);
     }
 
     private function submissionWithWorkId(string $workId): object
     {
         return new class ($workId) {
-            private string $workId;
-
-            public function __construct(string $workId)
+            public function __construct(private string $workId)
             {
-                $this->workId = $workId;
             }
 
             public function getData(string $key): ?string

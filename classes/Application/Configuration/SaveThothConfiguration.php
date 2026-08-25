@@ -2,7 +2,7 @@
 
 namespace APP\plugins\generic\thoth\classes\Application\Configuration;
 
-use APP\plugins\generic\thoth\classes\Contracts\ThothConfigurationRepository;
+use APP\plugins\generic\thoth\classes\Application\Configuration\Port\ThothConfigurationRepository;
 use APP\plugins\generic\thoth\classes\Domain\Configuration\ThothConfiguration;
 
 final class SaveThothConfiguration

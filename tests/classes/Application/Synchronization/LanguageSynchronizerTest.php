@@ -4,15 +4,15 @@ namespace APP\plugins\generic\thoth\tests\classes\Application\Synchronization;
 
 require_once __DIR__ . '/../../../../vendor/autoload.php';
 
-use APP\plugins\generic\thoth\classes\Application\Exception\InvalidRemoteMetadata;
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\InvalidRemoteMetadata;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\LanguageSynchronizer;
-use APP\plugins\generic\thoth\classes\Contracts\LanguageMetadataGateway;
-use APP\plugins\generic\thoth\classes\Contracts\LanguageMetadataMapper;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
-use PKP\tests\PKPTestCase;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\LanguageMetadataGateway;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\LanguageMetadataMapper;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
+use PHPUnit\Framework\TestCase;
 use stdClass;
 
-final class LanguageSynchronizerTest extends PKPTestCase
+final class LanguageSynchronizerTest extends TestCase
 {
     private const WORK_ID = '4c64863b-ce51-4cf5-bedf-0dd911147f6d';
 

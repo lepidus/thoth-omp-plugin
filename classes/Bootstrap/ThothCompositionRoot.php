@@ -3,241 +3,301 @@
 namespace APP\plugins\generic\thoth\classes\Bootstrap;
 
 use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
-use APP\plugins\generic\thoth\classes\Application\Exception\ExternalFailureReporter;
+use APP\plugins\generic\thoth\classes\Application\Configuration\Port\ConfigurationVerifier;
+use APP\plugins\generic\thoth\classes\Application\Configuration\Port\ThothConfigurationRepository;
+use APP\plugins\generic\thoth\classes\Application\Configuration\SaveThothConfiguration;
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\ExternalFailureReporter;
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\Port\NotificationPublisher;
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\Port\PluginLogger;
+use APP\plugins\generic\thoth\classes\Application\HostedAssets\GetFeatureVideo;
 use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadFeatureVideo;
 use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadPublicationFile;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
-use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeMetadata;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\UpdatePublicationAfterEdit;
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
-use APP\plugins\generic\thoth\classes\Contracts\BookMetadataUpdater;
-use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
-use APP\plugins\generic\thoth\classes\Contracts\CatalogFileCache;
-use APP\plugins\generic\thoth\classes\Contracts\CatalogFileGateway;
-use APP\plugins\generic\thoth\classes\Contracts\FeatureVideoCache;
-use APP\plugins\generic\thoth\classes\Contracts\FeatureVideoUploader;
-use APP\plugins\generic\thoth\classes\Contracts\NotificationPublisher;
-use APP\plugins\generic\thoth\classes\Contracts\PluginLogger;
-use APP\plugins\generic\thoth\classes\Contracts\PublicationFileUploader;
-use APP\plugins\generic\thoth\classes\Contracts\PublicationReader;
-use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
-use APP\plugins\generic\thoth\classes\Contracts\TemporaryPublicationFileRepository;
-use APP\plugins\generic\thoth\classes\Contracts\TemporaryVideoFileRepository;
-use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyCatalogFileCache;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyFeatureVideoCache;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyFeatureVideoUploader;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyNotificationPublisher;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPluginLogger;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyPublicationReader;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacySubmissionLinkRepository;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyTemporaryPublicationFileRepository;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyTemporaryVideoFileRepository;
-use APP\plugins\generic\thoth\classes\Infrastructure\Legacy\LegacyWorkGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyBookMetadataUpdater;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyCatalogFileGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\ThothPublicationFileUploader;
+use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\Catalog\PkpCatalogPublicationFilesProvider;
+use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\HostedAssets\PkpCatalogFileCache;
+use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\HostedAssets\PkpFeatureVideoCache;
+use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\HostedAssets\PkpPublicationFileContextReader;
+use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\HostedAssets\PkpPublicationFileFormReader;
+use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\HostedAssets\PkpTemporaryPublicationFileRepository;
+use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\HostedAssets\PkpTemporaryUploadReceiver;
+use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\HostedAssets\PkpTemporaryVideoFileRepository;
+use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\Publication\PkpPublicationReader;
+use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\Submission\PkpSubmissionListProvider;
+use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\Submission\PkpSubmissionReader;
+use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\Submission\PkpSubmissionResponseMapper;
+use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\Synchronization\Publications\PkpPublicationMetadataReader;
+use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\Synchronization\Works\PkpWorkMetadataReader;
+use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\Work\PkpSubmissionLinkRepository;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\Catalog\ThothCatalogFileGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\Client\ThothApiUrlGuard;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\Client\ThothRemoteGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\HostedAssets\ThothFeatureVideoReader;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\HostedAssets\ThothFeatureVideoUploader;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\HostedAssets\ThothPresignedFileUploader;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\HostedAssets\ThothPublicationFileUploader;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\Registration\ThothBookRegistrar;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\Registration\ThothPublisherAccessGateway;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\Registration\ThothRegistrationMetadataValidator;
+use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\Work\ThothWorkGateway;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
+use APP\plugins\generic\thoth\classes\Presentation\Api\ThothEndpoint;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UploadFeatureVideoController;
-use PKP\db\DAORegistry;
+use APP\plugins\generic\thoth\classes\Presentation\Forms\Config\CatalogEntryFormConfig;
+use APP\plugins\generic\thoth\classes\Presentation\Forms\Config\ContributorFormConfig;
+use APP\plugins\generic\thoth\classes\Presentation\Forms\Config\PublishFormConfig;
+use APP\plugins\generic\thoth\classes\Presentation\Forms\FeatureVideoForm;
+use APP\plugins\generic\thoth\classes\Presentation\Forms\RegisterForm;
+use APP\plugins\generic\thoth\classes\Presentation\Forms\ThothSettingsForm;
+use APP\plugins\generic\thoth\classes\Presentation\Handlers\FileUpload\Forms\UploadThothPublicationFileForm;
+use APP\plugins\generic\thoth\classes\Presentation\Handlers\FileUpload\UploadThothFileHandler;
+use APP\plugins\generic\thoth\classes\Presentation\Handlers\Modal\RegisterHandler;
+use APP\plugins\generic\thoth\classes\Presentation\Handlers\Pages\ThothCatalogFilesHandler;
+use APP\plugins\generic\thoth\classes\Presentation\Handlers\Pages\ThothHandler;
+use APP\plugins\generic\thoth\classes\Presentation\Hooks\HookRegistrant;
+use APP\plugins\generic\thoth\classes\Presentation\Hooks\PublicationFormatFormHandler;
+use APP\plugins\generic\thoth\classes\Presentation\Hooks\ThothMenuHandler;
+use APP\plugins\generic\thoth\classes\Presentation\Hooks\ThothPageHandler;
+use APP\plugins\generic\thoth\classes\Presentation\Listeners\PublicationEditListener;
+use APP\plugins\generic\thoth\classes\Presentation\Listeners\PublicationPublishListener;
+use APP\plugins\generic\thoth\classes\Presentation\Notification\ThothNotification;
+use APP\plugins\generic\thoth\classes\Presentation\Schema\ThothSchema;
+use APP\plugins\generic\thoth\classes\Presentation\View\PublicationFormatGridModifier;
+use APP\plugins\generic\thoth\classes\Presentation\View\TemplateFilter\PublicationFormatTemplateFilter;
+use APP\plugins\generic\thoth\classes\Presentation\View\TemplateFilter\ThothCatalogFilesTemplateFilter;
+use APP\plugins\generic\thoth\classes\Presentation\View\TemplateFilter\ThothFeatureVideoTemplateFilter;
+use APP\plugins\generic\thoth\classes\Presentation\View\TemplateFilter\ThothFrontcoverTemplateFilter;
+use APP\plugins\generic\thoth\classes\Presentation\View\TemplateFilter\ThothSectionTemplateFilter;
+use APP\plugins\generic\thoth\classes\Presentation\View\ThothListPanel;
+use PKP\plugins\GenericPlugin;
 
 final class ThothCompositionRoot
 {
-    private $workLinkServiceFactory;
-    private $bookRegistrationServiceFactory;
-    private $bookServiceFactory;
-    private $metadataSynchronizersFactory;
-    private $featureVideoServiceFactory;
-    private $catalogFileRepositoryFactory;
-    private object $publicationRepository;
-    private object $submissionRepository;
-    private object $request;
-    private object $notification;
+    private ?HookRegistrant $hooks = null;
 
     public function __construct(
-        callable $workLinkServiceFactory,
-        callable $bookRegistrationServiceFactory,
-        callable $bookServiceFactory,
-        callable $metadataSynchronizersFactory,
-        callable $featureVideoServiceFactory,
-        callable $catalogFileRepositoryFactory,
-        object $publicationRepository,
-        object $submissionRepository,
-        object $request,
-        object $notification
+        private GenericPlugin $plugin,
+        private object $request,
+        private object $templateManager,
+        private int $contextId,
+        private array $userGroups,
+        private array $genres,
+        private array $userRoles,
+        private object $submissions,
+        private object $publications,
+        private object $submissionFiles,
+        private object $categories,
+        private object $sections,
+        private object $chapterDao,
+        private object $publicationFormatDao,
+        private object $genreDao,
+        private object $cache,
+        private object $temporaryFileManager,
+        private ThothConfigurationRepository $configurationRepository,
+        private ConfigurationVerifier $configurationVerifier,
+        private NotificationPublisher $notifications,
+        private PluginLogger $logger,
+        private ThothRemoteGateway $remote,
+        private ThothApiUrlGuard $urlGuard,
+        private ThothPresignedFileUploader $presignedUploader,
+        private MetadataSynchronizationFactory $metadataFactory,
+        private PkpWorkMetadataReader $workMetadataReader,
+        private PkpPublicationMetadataReader $publicationMetadataReader
     ) {
-        $this->workLinkServiceFactory = $workLinkServiceFactory;
-        $this->bookRegistrationServiceFactory = $bookRegistrationServiceFactory;
-        $this->bookServiceFactory = $bookServiceFactory;
-        $this->metadataSynchronizersFactory = $metadataSynchronizersFactory;
-        $this->featureVideoServiceFactory = $featureVideoServiceFactory;
-        $this->catalogFileRepositoryFactory = $catalogFileRepositoryFactory;
-        $this->publicationRepository = $publicationRepository;
-        $this->submissionRepository = $submissionRepository;
-        $this->request = $request;
-        $this->notification = $notification;
     }
 
-    public function register(object $container): void
+    public function register(): void
     {
-        (new \ThothRepositoryProvider())->register($container);
-        (new \ThothServiceProvider())->register($container);
+        $this->hookRegistrant()->register();
+    }
 
-        $container->bind(CatalogFileGateway::class, function (): CatalogFileGateway {
-            return new LegacyCatalogFileGateway(($this->catalogFileRepositoryFactory)());
-        });
-        $container->bind(GetCatalogFiles::class, function ($container): GetCatalogFiles {
-            return new GetCatalogFiles($container->make(CatalogFileGateway::class));
-        });
-        $container->bind(CatalogFileCache::class, function (): CatalogFileCache {
-            return new LegacyCatalogFileCache(new \ThothCatalogFilesCacheService());
-        });
-        $container->bind(PublicationFileUploader::class, function ($container): PublicationFileUploader {
-            return new ThothPublicationFileUploader(
-                DAORegistry::getDAO('ChapterDAO'),
-                DAORegistry::getDAO('PublicationFormatDAO'),
-                $container->make('chapterRepository'),
-                $container->make('publicationRepository'),
-                $container->make('publicationFileUploadRepository'),
-                new \ThothPublicationFactory(),
-                new \ThothFileUploadService()
-            );
-        });
-        $container->bind(
-            TemporaryPublicationFileRepository::class,
-            function (): TemporaryPublicationFileRepository {
-                return new LegacyTemporaryPublicationFileRepository();
-            }
+    public function settingsForm(int $contextId): ThothSettingsForm
+    {
+        return new ThothSettingsForm(
+            $this->plugin,
+            $contextId,
+            $this->configurationRepository,
+            $this->configurationVerifier,
+            new SaveThothConfiguration($this->configurationRepository)
         );
-        $container->bind(UploadPublicationFile::class, function ($container): UploadPublicationFile {
-            return new UploadPublicationFile(
-                $container->make(TemporaryPublicationFileRepository::class),
-                $container->make(PublicationFileUploader::class),
-                $container->make(CatalogFileCache::class)
-            );
-        });
-        $container->bind(FeatureVideoUploader::class, function (): FeatureVideoUploader {
-            return new LegacyFeatureVideoUploader(($this->featureVideoServiceFactory)());
-        });
-        $container->bind(FeatureVideoCache::class, function (): FeatureVideoCache {
-            return new LegacyFeatureVideoCache(new \ThothFeatureVideoCacheService());
-        });
-        $container->bind(TemporaryVideoFileRepository::class, function (): TemporaryVideoFileRepository {
-            return new LegacyTemporaryVideoFileRepository();
-        });
-        $container->bind(UploadFeatureVideo::class, function ($container): UploadFeatureVideo {
-            return new UploadFeatureVideo(
-                $container->make(TemporaryVideoFileRepository::class),
-                $container->make(FeatureVideoUploader::class),
-                $container->make(FeatureVideoCache::class)
-            );
-        });
-        $container->singleton(BookRegistrationPolicy::class, function (): BookRegistrationPolicy {
-            return new BookRegistrationPolicy();
-        });
-        $container->bind(WorkGateway::class, function (): WorkGateway {
-            return new LegacyWorkGateway(($this->workLinkServiceFactory)());
-        });
-        $container->bind(BookRegistrar::class, function (): BookRegistrar {
-            return ($this->bookRegistrationServiceFactory)();
-        });
-        $container->bind(BookMetadataUpdater::class, function (): BookMetadataUpdater {
-            return new LegacyBookMetadataUpdater(($this->bookServiceFactory)());
-        });
-        $container->bind(PublicationReader::class, function (): PublicationReader {
-            return new LegacyPublicationReader($this->publicationRepository);
-        });
-        $container->bind(SubmissionLinkRepository::class, function (): SubmissionLinkRepository {
-            return new LegacySubmissionLinkRepository($this->submissionRepository);
-        });
-        $container->bind(NotificationPublisher::class, function (): NotificationPublisher {
-            return new LegacyNotificationPublisher(
-                $this->request,
-                $this->submissionRepository,
-                $this->notification
-            );
-        });
-        $container->bind(PluginLogger::class, function (): PluginLogger {
-            return new LegacyPluginLogger();
-        });
-        $container->bind(ExternalFailureReporter::class, function ($container): ExternalFailureReporter {
-            return new ExternalFailureReporter(
-                $container->make(NotificationPublisher::class),
-                $container->make(PluginLogger::class)
-            );
-        });
-        $container->bind(GetWorkStatus::class, function ($container): GetWorkStatus {
-            return new GetWorkStatus($container->make(WorkGateway::class));
-        });
-        $container->bind(RegisterBook::class, function ($container): RegisterBook {
-            return new RegisterBook(
-                $container->make(BookRegistrar::class),
-                $container->make(SubmissionLinkRepository::class)
-            );
-        });
-        $container->bind(\PublicationPublishListener::class, function ($container): \PublicationPublishListener {
-            return new \PublicationPublishListener(
-                $container->make(RegisterBook::class),
-                $this->request,
-                $this->notification,
-                $container->make(BookRegistrationPolicy::class),
-                $container->make(ExternalFailureReporter::class)
-            );
-        });
-        $container->bind(UpdatePublicationAfterEdit::class, function ($container): UpdatePublicationAfterEdit {
-            return new UpdatePublicationAfterEdit(
-                $container->make(SubmissionLinkRepository::class),
-                $container->make(BookMetadataUpdater::class)
-            );
-        });
-        $container->bind(\PublicationEditListener::class, function ($container): \PublicationEditListener {
-            return new \PublicationEditListener(
-                $container->make(UpdatePublicationAfterEdit::class),
-                $this->submissionRepository,
-                $this->notification
-            );
-        });
-        $container->bind(UnlinkWork::class, function ($container): UnlinkWork {
-            return new UnlinkWork(
-                $container->make(WorkGateway::class),
-                $container->make(SubmissionLinkRepository::class)
-            );
-        });
-        $container->bind(SynchronizeMetadata::class, function (): SynchronizeMetadata {
-            return new SynchronizeMetadata(...($this->metadataSynchronizersFactory)());
-        });
-        $container->bind(GetWorkStatusController::class, function ($container): GetWorkStatusController {
-            return new GetWorkStatusController($container->make(GetWorkStatus::class));
-        });
-        $container->bind(RegisterBookController::class, function ($container): RegisterBookController {
-            return new RegisterBookController(
-                $container->make(RegisterBook::class),
-                $container->make(BookRegistrationPolicy::class),
-                $container->make(ExternalFailureReporter::class)
-            );
-        });
-        $container->bind(
-            SynchronizeMetadataController::class,
-            function ($container): SynchronizeMetadataController {
-                return new SynchronizeMetadataController(
-                    $container->make(SynchronizeMetadata::class),
-                    $container->make(NotificationPublisher::class)
-                );
-            }
+    }
+
+    public function hookRegistrant(): HookRegistrant
+    {
+        return $this->hooks ??= $this->buildHookRegistrant();
+    }
+
+    private function buildHookRegistrant(): HookRegistrant
+    {
+        $submissionReader = new PkpSubmissionReader($this->submissions);
+        $publicationReader = new PkpPublicationReader($this->publications);
+        $submissionLinks = new PkpSubmissionLinkRepository($this->submissions);
+        $workGateway = new ThothWorkGateway($this->remote);
+        $getWorkStatus = new GetWorkStatus($workGateway);
+        $policy = new BookRegistrationPolicy();
+        $synchronizer = $this->metadataFactory->synchronizer();
+        $failureReporter = new ExternalFailureReporter($this->notifications, $this->logger);
+        $metadataValidator = new ThothRegistrationMetadataValidator(
+            $this->workMetadataReader,
+            $this->publicationFormatDao,
+            $this->remote
         );
-        $container->bind(UnlinkWorkController::class, function ($container): UnlinkWorkController {
-            return new UnlinkWorkController($container->make(UnlinkWork::class));
-        });
-        $container->bind(
-            UploadFeatureVideoController::class,
-            function ($container): UploadFeatureVideoController {
-                return new UploadFeatureVideoController($container->make(UploadFeatureVideo::class));
-            }
+        $publisherAccess = new ThothPublisherAccessGateway($this->remote);
+        $registerBook = new RegisterBook(
+            new ThothBookRegistrar(
+                $this->remote,
+                $this->metadataFactory->workMetadataMapper(),
+                $synchronizer,
+                $policy
+            ),
+            $submissionLinks
+        );
+        $responseMapper = new PkpSubmissionResponseMapper(
+            $this->submissions->getSchemaMap(),
+            $this->userGroups,
+            $this->genres,
+            $this->userRoles
+        );
+        $registerController = new RegisterBookController(
+            $registerBook,
+            $policy,
+            $metadataValidator,
+            $submissionReader,
+            $responseMapper,
+            $getWorkStatus,
+            $this->notifications,
+            $failureReporter
+        );
+        $temporaryFiles = $this->temporaryFileManager;
+        $featureVideoCache = new PkpFeatureVideoCache($this->cache);
+        $featureVideo = new GetFeatureVideo(new ThothFeatureVideoReader($this->remote));
+        $uploadFeatureVideo = new UploadFeatureVideo(
+            new PkpTemporaryVideoFileRepository($temporaryFiles),
+            new ThothFeatureVideoUploader($this->remote, $this->presignedUploader, $this->urlGuard),
+            $featureVideoCache
+        );
+        $publicationFileContext = new PkpPublicationFileContextReader(
+            $this->chapterDao,
+            $this->publicationFormatDao
+        );
+        $uploadPublicationFile = new UploadPublicationFile(
+            new PkpTemporaryPublicationFileRepository($temporaryFiles),
+            new ThothPublicationFileUploader($this->remote, $publicationFileContext, $this->presignedUploader),
+            new PkpCatalogFileCache($this->cache)
+        );
+        $getCatalogFiles = new GetCatalogFiles(new ThothCatalogFileGateway(
+            $this->remote,
+            __('common.download')
+        ));
+        $catalogFiles = new PkpCatalogPublicationFilesProvider(
+            $this->submissions,
+            $this->publications,
+            $this->submissionFiles,
+            $this->chapterDao,
+            $this->publicationFormatDao,
+            $this->publicationMetadataReader,
+            $getCatalogFiles,
+            $this->remote,
+            $this->cache
+        );
+        $endpoint = new ThothEndpoint(
+            new GetWorkStatusController($getWorkStatus),
+            $registerController,
+            new SynchronizeMetadataController($synchronizer, $this->notifications, $failureReporter),
+            new UnlinkWorkController(new UnlinkWork($workGateway, $submissionLinks)),
+            new UploadFeatureVideoController($uploadFeatureVideo),
+            $submissionReader,
+            $publicationReader,
+            $publisherAccess,
+            $featureVideo,
+            $this->request,
+            fn (...$arguments): FeatureVideoForm => new FeatureVideoForm(...$arguments)
+        );
+        $registerHandler = new RegisterHandler(
+            $this->plugin,
+            $this->templateManager,
+            $metadataValidator,
+            $publisherAccess,
+            fn (...$arguments): RegisterForm => new RegisterForm(...$arguments)
+        );
+        $submissionLists = new PkpSubmissionListProvider(
+            $this->submissions,
+            $this->categories,
+            $this->sections,
+            $this->genreDao,
+            fn (int $contextId): array => $contextId === $this->contextId ? $this->userGroups : [],
+            $this->userRoles
+        );
+        $indexHandler = new ThothHandler(
+            $this->plugin,
+            $publisherAccess,
+            $submissionLists,
+            $this->templateManager,
+            fn (...$arguments): ThothListPanel => new ThothListPanel(...$arguments)
+        );
+        $uploadHandler = new UploadThothFileHandler(
+            $this->plugin,
+            $this->templateManager,
+            new PkpPublicationFileFormReader(
+                $this->publications,
+                $this->submissions,
+                $this->publicationFormatDao,
+                $this->chapterDao
+            ),
+            new PkpTemporaryUploadReceiver($temporaryFiles),
+            $catalogFiles,
+            $uploadPublicationFile,
+            $this->notifications,
+            $publisherAccess,
+            fn (...$arguments): UploadThothPublicationFileForm => new UploadThothPublicationFileForm(...$arguments)
+        );
+        $publicationFormatFilter = new PublicationFormatTemplateFilter($this->plugin);
+        $publicationPublishListener = new PublicationPublishListener(
+            $registerBook,
+            $this->request,
+            $this->notifications,
+            $policy,
+            $metadataValidator,
+            $failureReporter
+        );
+        $publicationEditListener = new PublicationEditListener(
+            new UpdatePublicationAfterEdit($submissionLinks, $this->metadataFactory->bookMetadataUpdater()),
+            $this->notifications,
+            $failureReporter
+        );
+
+        return new HookRegistrant(
+            $this->plugin,
+            new ThothSchema(),
+            new PublishFormConfig($submissionReader, $metadataValidator, $publisherAccess),
+            new CatalogEntryFormConfig($publicationReader, $publisherAccess),
+            new ContributorFormConfig(),
+            new PublicationFormatFormHandler($publicationFormatFilter),
+            $publicationPublishListener,
+            $publicationEditListener,
+            $endpoint,
+            new ThothCatalogFilesTemplateFilter(),
+            new ThothFrontcoverTemplateFilter(),
+            new ThothFeatureVideoTemplateFilter($featureVideo),
+            new ThothSectionTemplateFilter(),
+            new ThothNotification(),
+            new ThothMenuHandler($this->request),
+            new ThothPageHandler(
+                $this->plugin,
+                $registerHandler,
+                new ThothCatalogFilesHandler($catalogFiles),
+                $uploadHandler,
+                $indexHandler
+            ),
+            new PublicationFormatGridModifier($this->request),
+            $catalogFiles,
+            $this->request
         );
     }
 }

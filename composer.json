@@ -5,12 +5,9 @@
         "thoth-pub/thoth-client-php": "^2.0"
     },
     "autoload": {
-        "classmap": [
-            "classes/",
-            "controllers/",
-            "pages/",
-            "ThothSettingsForm.inc.php"
-        ]
+        "psr-4": {
+            "APP\\plugins\\generic\\thoth\\": ""
+        }
     },
     "require-dev": {
         "phpstan/phpstan": "^2.2"

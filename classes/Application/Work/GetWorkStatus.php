@@ -2,8 +2,8 @@
 
 namespace APP\plugins\generic\thoth\classes\Application\Work;
 
-use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\Application\Work\Port\WorkGateway;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
 
 final class GetWorkStatus
 {

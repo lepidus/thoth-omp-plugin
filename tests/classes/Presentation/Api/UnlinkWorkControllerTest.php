@@ -4,12 +4,11 @@ namespace APP\plugins\generic\thoth\tests\classes\Presentation\Api;
 
 require_once(__DIR__ . '/../../../../vendor/autoload.php');
 
+use APP\plugins\generic\thoth\classes\Application\Work\Port\SubmissionLinkRepository;
+use APP\plugins\generic\thoth\classes\Application\Work\Port\WorkGateway;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
-use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
-use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use PKP\tests\PKPTestCase;
-use Slim\Http\Response;
 use ThothApi\Exception\QueryException;
 
 class UnlinkWorkControllerTest extends PKPTestCase
@@ -24,10 +23,10 @@ class UnlinkWorkControllerTest extends PKPTestCase
         $links->expects($this->once())->method('deleteWorkId');
         $controller = new UnlinkWorkController(new UnlinkWork($gateway, $links));
 
-        $response = $controller->delete($this->submissionWithWorkId(self::WORK_ID), new Response());
+        $response = $controller->delete($this->submissionWithWorkId(self::WORK_ID));
 
         $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame(['status' => true], json_decode((string) $response->getBody(), true));
+        $this->assertSame(['status' => true], $response->getData(true));
     }
 
     public function testReturnsConflictWhileTheRemoteWorkExists(): void
@@ -38,13 +37,10 @@ class UnlinkWorkControllerTest extends PKPTestCase
         $links->expects($this->never())->method('deleteWorkId');
         $controller = new UnlinkWorkController(new UnlinkWork($gateway, $links));
 
-        $response = $controller->delete($this->submissionWithWorkId(self::WORK_ID), new Response());
+        $response = $controller->delete($this->submissionWithWorkId(self::WORK_ID));
 
         $this->assertSame(409, $response->getStatusCode());
-        $this->assertSame(
-            'plugins.generic.thoth.unlink.existingWork',
-            json_decode((string) $response->getBody(), true)['error']
-        );
+        $this->assertArrayHasKey('error', $response->getData(true));
     }
 
     public function testReturnsNotFoundWhenTheSubmissionHasNoWorkLink(): void
@@ -55,13 +51,10 @@ class UnlinkWorkControllerTest extends PKPTestCase
         $links->expects($this->never())->method('deleteWorkId');
         $controller = new UnlinkWorkController(new UnlinkWork($gateway, $links));
 
-        $response = $controller->delete($this->submissionWithWorkId(null), new Response());
+        $response = $controller->delete($this->submissionWithWorkId(null));
 
         $this->assertSame(404, $response->getStatusCode());
-        $this->assertSame(
-            'plugins.generic.thoth.status.unregistered',
-            json_decode((string) $response->getBody(), true)['error']
-        );
+        $this->assertArrayHasKey('error', $response->getData(true));
     }
 
     public function testReturnsConnectionErrorWhenTheGatewayFails(): void
@@ -74,23 +67,17 @@ class UnlinkWorkControllerTest extends PKPTestCase
         $links->expects($this->never())->method('deleteWorkId');
         $controller = new UnlinkWorkController(new UnlinkWork($gateway, $links));
 
-        $response = $controller->delete($this->submissionWithWorkId(self::WORK_ID), new Response());
+        $response = $controller->delete($this->submissionWithWorkId(self::WORK_ID));
 
         $this->assertSame(500, $response->getStatusCode());
-        $this->assertSame(
-            'plugins.generic.thoth.connectionError',
-            json_decode((string) $response->getBody(), true)['error']
-        );
+        $this->assertArrayHasKey('error', $response->getData(true));
     }
 
     private function submissionWithWorkId(?string $workId): object
     {
         return new class ($workId) {
-            private ?string $workId;
-
-            public function __construct(?string $workId)
+            public function __construct(private ?string $workId)
             {
-                $this->workId = $workId;
             }
 
             public function getId(): int

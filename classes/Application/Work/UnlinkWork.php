@@ -2,10 +2,10 @@
 
 namespace APP\plugins\generic\thoth\classes\Application\Work;
 
-use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
-use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\Application\Work\Port\SubmissionLinkRepository;
+use APP\plugins\generic\thoth\classes\Application\Work\Port\WorkGateway;
+use APP\plugins\generic\thoth\classes\Domain\Submission\SubmissionId;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
 
 final class UnlinkWork
 {

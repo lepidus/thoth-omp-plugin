@@ -2,18 +2,18 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\Application\Registration;
 
+use APP\plugins\generic\thoth\classes\Application\Registration\Port\BookRegistrar;
 use APP\plugins\generic\thoth\classes\Application\Registration\RegisterBook;
-use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
-use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\ImprintId;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
-use APP\plugins\generic\thoth\classes\Domain\Result\RegistrationResult;
-use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationResult;
-use PKP\tests\PKPTestCase;
+use APP\plugins\generic\thoth\classes\Application\Work\Port\SubmissionLinkRepository;
+use APP\plugins\generic\thoth\classes\Domain\Imprint\ImprintId;
+use APP\plugins\generic\thoth\classes\Domain\Registration\RegistrationResult;
+use APP\plugins\generic\thoth\classes\Domain\Submission\SubmissionId;
+use APP\plugins\generic\thoth\classes\Domain\Synchronization\SynchronizationResult;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
+use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class RegisterBookTest extends PKPTestCase
+class RegisterBookTest extends TestCase
 {
     public function testItDelegatesRegistrationAndReturnsTheResult(): void
     {
@@ -33,6 +33,7 @@ class RegisterBookTest extends PKPTestCase
         $this->assertSame($result, $actualResult);
         $this->assertSame($publication, $registrar->publication);
         $this->assertSame($imprintId, $registrar->imprintId);
+        $this->assertSame($publication, $registrar->completedPublication);
     }
 
     public function testItDoesNotCreateALocalLinkWhenRegistrationFails(): void
@@ -84,6 +85,7 @@ class BookRegistrarDouble implements BookRegistrar
     private RegistrationResult $result;
     public ?object $publication = null;
     public ?ImprintId $imprintId = null;
+    public ?object $completedPublication = null;
 
     public function __construct(RegistrationResult $result)
     {
@@ -100,6 +102,11 @@ class BookRegistrarDouble implements BookRegistrar
 
     public function rollback(object $publication): void
     {
+    }
+
+    public function complete(object $publication): void
+    {
+        $this->completedPublication = $publication;
     }
 }
 
@@ -119,5 +126,9 @@ class CompensatingBookRegistrarDouble implements BookRegistrar
     public function rollback(object $publication): void
     {
         $this->compensatedPublication = $publication;
+    }
+
+    public function complete(object $publication): void
+    {
     }
 }

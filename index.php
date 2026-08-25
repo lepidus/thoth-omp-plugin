@@ -18,6 +18,6 @@
  * @ingroup plugins_generic_thoth
  */
 
-require_once('ThothPlugin.inc.php');
+require_once __DIR__ . '/ThothPlugin.php';
 
-return new ThothPlugin();
+return new \APP\plugins\generic\thoth\ThothPlugin();

@@ -3,11 +3,11 @@
 namespace APP\plugins\generic\thoth\tests\classes\Application\Catalog;
 
 use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
-use APP\plugins\generic\thoth\classes\Contracts\CatalogFileGateway;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
-use PKP\tests\PKPTestCase;
+use APP\plugins\generic\thoth\classes\Application\Catalog\Port\CatalogFileGateway;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
+use PHPUnit\Framework\TestCase;
 
-class GetCatalogFilesTest extends PKPTestCase
+class GetCatalogFilesTest extends TestCase
 {
     public function testReturnsNoFilesWithoutAWorkId(): void
     {

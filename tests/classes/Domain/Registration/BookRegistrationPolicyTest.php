@@ -3,9 +3,9 @@
 namespace APP\plugins\generic\thoth\tests\classes\Domain\Registration;
 
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
-use PKP\tests\PKPTestCase;
+use PHPUnit\Framework\TestCase;
 
-class BookRegistrationPolicyTest extends PKPTestCase
+class BookRegistrationPolicyTest extends TestCase
 {
     public function testEligibleRegistrationDoesNotDependOnPublicationState(): void
     {
