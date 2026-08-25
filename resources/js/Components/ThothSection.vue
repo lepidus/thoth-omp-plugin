@@ -257,18 +257,31 @@ function updateMetadata() {
 			'X-Http-Method-Override': 'PUT',
 		},
 		error: function (r) {
-			pkp.eventBus.$emit('notify', r.responseJSON.errorMessage, 'warning');
+			const responseMessage = r.responseJSON?.errorMessage;
+			const message =
+				typeof responseMessage === 'string' && responseMessage.trim()
+					? responseMessage
+					: t('plugins.generic.thoth.connectionError');
+			pkp.eventBus.$emit('notify', message, 'warning');
 		},
 		complete() {
+			const notification =
+				$.pkp?.plugins?.generic?.thothplugin?.notification;
 			if (
-				typeof $.pkp.plugins.generic.thothplugin !== 'undefined' &&
-				typeof $.pkp.plugins.generic.thothplugin.notification !== 'undefined'
+				typeof notification?.notificationUrl === 'string' &&
+				typeof notification?.showNotification === 'function'
 			) {
 				$.ajax({
 					type: 'POST',
-					url: $.pkp.plugins.generic.thothplugin.notification.notificationUrl,
-					success:
-						$.pkp.plugins.generic.thothplugin.notification.showNotification,
+					url: notification.notificationUrl,
+					success: notification.showNotification,
+					error() {
+						pkp.eventBus.$emit(
+							'notify',
+							t('plugins.generic.thoth.connectionError'),
+							'warning',
+						);
+					},
 					complete() {
 						isLoading.value = false;
 					},
@@ -276,6 +289,11 @@ function updateMetadata() {
 					async: false,
 				});
 			} else {
+				pkp.eventBus.$emit(
+					'notify',
+					t('plugins.generic.thoth.connectionError'),
+					'warning',
+				);
 				isLoading.value = false;
 			}
 		},
