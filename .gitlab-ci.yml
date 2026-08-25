@@ -12,6 +12,25 @@ include:
   before_script:
     - composer install
 
+plugin_compatibility_omp_php_8_2:
+  extends: .unit_test_template
+  stage: plugin
+  needs: []
+  variables:
+    CI_APPLICATION_IMAGE: $CI_IMAGE_OMP
+    APPLICATION: 'omp'
+    APPLICATION_VERSION: '3.5.0'
+    MARIADB_USER: 'omp'
+    MARIADB_DATABASE: 'omp'
+    MARIADB_PASSWORD: 'omp'
+    MARIADB_HOST: 'mariadb'
+    MARIADB_ROOT_PASSWORD: 'omp'
+    PHP_VERSION: '8.2'
+  script:
+    - cd "$CI_PROJECT_DIR"
+    - git ls-files -z -- '*.php' | xargs -0 -r -n1 php -l
+    - !reference [.script_plugin_unit_test]
+
 static_analysis:
   stage: validation
   image: $CI_IMAGE_OMP
@@ -21,7 +40,7 @@ static_analysis:
       when: never
     - when: on_success
   variables:
-    PHP_VERSION: '8.4'
+    PHP_VERSION: '8.2'
     THOTH_PKP_ROOT: '/var/www/omp'
   before_script:
     - update-alternatives --set php /usr/bin/php$PHP_VERSION
