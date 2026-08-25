@@ -22,9 +22,10 @@ static_analysis:
     - when: on_success
   variables:
     PHP_VERSION: '8.4'
+    THOTH_PKP_ROOT: '/var/www/omp'
   before_script:
     - update-alternatives --set php /usr/bin/php$PHP_VERSION
     - composer install
   script:
     - cd "$CI_PROJECT_DIR"
-    - vendor/bin/phpstan analyse --no-progress
+    - vendor/bin/phpstan analyse --no-progress --memory-limit=512M
