@@ -13,13 +13,22 @@ import('plugins.generic.thoth.classes.Infrastructure.Pkp.Migration.PasswordEncry
 
 final class PluginLifecycleIntegrationTest extends PKPTestCase
 {
+    private const TEST_API_KEY_SECRET = 'thoth-lifecycle-test-secret';
+
     private $contextId;
+    private $hadApiKeySecret;
+    private $originalApiKeySecret;
     private $previousRequest;
     private $temporaryFile;
 
     protected function setUp(): void
     {
         parent::setUp();
+        $configData = &Config::getData();
+        $this->hadApiKeySecret = array_key_exists('api_key_secret', $configData['security'] ?? []);
+        $this->originalApiKeySecret = $configData['security']['api_key_secret'] ?? null;
+        $configData['security']['api_key_secret'] = self::TEST_API_KEY_SECRET;
+
         Capsule::connection()->beginTransaction();
         $this->contextId = (int) Capsule::table('presses')->value('press_id');
         if ($this->contextId === 0) {
@@ -54,7 +63,16 @@ final class PluginLifecycleIntegrationTest extends PKPTestCase
                 unlink($this->temporaryFile);
             }
         } finally {
-            parent::tearDown();
+            try {
+                $configData = &Config::getData();
+                if ($this->hadApiKeySecret) {
+                    $configData['security']['api_key_secret'] = $this->originalApiKeySecret;
+                } else {
+                    unset($configData['security']['api_key_secret']);
+                }
+            } finally {
+                parent::tearDown();
+            }
         }
     }
 

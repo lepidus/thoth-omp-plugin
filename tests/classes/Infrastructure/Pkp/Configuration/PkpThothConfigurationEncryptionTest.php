@@ -8,6 +8,34 @@ import('lib.pkp.tests.PKPTestCase');
 
 final class PkpThothConfigurationEncryptionTest extends PKPTestCase
 {
+    private const TEST_API_KEY_SECRET = 'thoth-configuration-encryption-test-secret';
+
+    private $hadApiKeySecret;
+    private $originalApiKeySecret;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $configData = &Config::getData();
+        $this->hadApiKeySecret = array_key_exists('api_key_secret', $configData['security'] ?? []);
+        $this->originalApiKeySecret = $configData['security']['api_key_secret'] ?? null;
+        $configData['security']['api_key_secret'] = self::TEST_API_KEY_SECRET;
+    }
+
+    protected function tearDown(): void
+    {
+        try {
+            $configData = &Config::getData();
+            if ($this->hadApiKeySecret) {
+                $configData['security']['api_key_secret'] = $this->originalApiKeySecret;
+            } else {
+                unset($configData['security']['api_key_secret']);
+            }
+        } finally {
+            parent::tearDown();
+        }
+    }
+
     public function testReadsExistingCiphertextAndWritesTheSameHistoricalFormat(): void
     {
         $encrypter = new Encrypter(
