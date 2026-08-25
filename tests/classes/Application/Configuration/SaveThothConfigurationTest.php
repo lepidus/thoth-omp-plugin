@@ -2,13 +2,13 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\Application\Configuration;
 
+use APP\plugins\generic\thoth\classes\Application\Configuration\Port\ThothConfigurationRepository;
 use APP\plugins\generic\thoth\classes\Application\Configuration\SaveThothConfiguration;
-use APP\plugins\generic\thoth\classes\Contracts\ThothConfigurationRepository;
 use APP\plugins\generic\thoth\classes\Domain\Configuration\ThothConfiguration;
 use BadMethodCallException;
-use PKP\tests\PKPTestCase;
+use PHPUnit\Framework\TestCase;
 
-class SaveThothConfigurationTest extends PKPTestCase
+class SaveThothConfigurationTest extends TestCase
 {
     public function testPersistsConfigurationAndInvalidatesContextCache(): void
     {

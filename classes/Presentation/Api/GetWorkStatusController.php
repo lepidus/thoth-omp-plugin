@@ -3,7 +3,7 @@
 namespace APP\plugins\generic\thoth\classes\Presentation\Api;
 
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Throwable;

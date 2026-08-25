@@ -21,217 +21,18 @@ namespace APP\plugins\generic\thoth;
 require_once __DIR__ . '/vendor/autoload.php';
 
 use APP\core\Application;
-use APP\facades\Repo;
-use APP\plugins\generic\thoth\classes\Application\Catalog\GetCatalogFiles;
-use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadPublicationFile;
-use APP\plugins\generic\thoth\classes\Application\Synchronization\AbstractSynchronizer;
-use APP\plugins\generic\thoth\classes\Application\Synchronization\ChapterSynchronizer;
-use APP\plugins\generic\thoth\classes\Application\Synchronization\ContributionSynchronizer;
-use APP\plugins\generic\thoth\classes\Application\Synchronization\FrontcoverSynchronizer;
-use APP\plugins\generic\thoth\classes\Application\Synchronization\LanguageSynchronizer;
-use APP\plugins\generic\thoth\classes\Application\Synchronization\PublicationSynchronizer;
-use APP\plugins\generic\thoth\classes\Application\Synchronization\ReferenceSynchronizer;
-use APP\plugins\generic\thoth\classes\Application\Synchronization\SubjectSynchronizer;
-use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeLocations;
-use APP\plugins\generic\thoth\classes\Application\Synchronization\TitleSynchronizer;
-use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkRelationSynchronizer;
-use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkSynchronizer;
-use APP\plugins\generic\thoth\classes\Bootstrap\ThothCompositionRoot;
-use APP\plugins\generic\thoth\classes\hooks\HookRegistrant;
-use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\PkpContributionAuthorReader;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyAbstractMetadataMapper;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyChapterAbstractMetadataMapper;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyChapterMetadataGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyChapterPublicationMetadataMapper;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyChapterTitleMetadataMapper;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyChapterWorkMetadataMapper;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyContributionMetadataGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyFrontcoverGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyLanguageMetadataGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyLanguageMetadataMapper;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyLocationMetadataGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyPublicationMetadataGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyPublicationMetadataMapper;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyReferenceMetadataGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyReferenceMetadataMapper;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacySubjectMetadataGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacySubjectMetadataMapper;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyTitleMetadataGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyTitleMetadataMapper;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkMetadataGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkMetadataMapper;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkRelationMetadataGateway;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\LegacyWorkRelationMetadataMapper;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\ThothChapterContributionMetadataMapper;
-use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\ThothContributionMetadataMapper;
-use APP\plugins\generic\thoth\classes\listeners\PublicationPublishListener;
-use APP\plugins\generic\thoth\classes\notification\ThothNotification;
-use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
-use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
-use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
-use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
-use APP\plugins\generic\thoth\classes\Presentation\Api\UploadFeatureVideoController;
-use APP\plugins\generic\thoth\classes\services\ThothSubjectClassifier;
-use APP\plugins\generic\thoth\classes\services\ThothWorkLinkService;
-use PKP\core\JSONMessage;
-use PKP\core\PKPContainer;
-use PKP\db\DAORegistry;
-use PKP\linkAction\LinkAction;
-use PKP\linkAction\request\AjaxModal;
+use APP\plugins\generic\thoth\classes\Bootstrap\PluginBootstrap;
 
 class ThothPlugin extends \PKP\plugins\GenericPlugin
 {
+    private ?PluginBootstrap $bootstrap = null;
+
     public function register($category, $path, $mainContextId = null)
     {
-        $success = parent::register($category, $path);
+        $success = parent::register($category, $path, $mainContextId);
 
-        if ($success && $this->getEnabled()) {
-            $compositionRoot = new ThothCompositionRoot(
-                fn (): object => new ThothWorkLinkService(
-                    \PKP\core\PKPContainer::getInstance()->make('workRepository')
-                ),
-                fn (): object => \PKP\core\PKPContainer::getInstance()->make('bookRegistrationService'),
-                fn (): object => \PKP\core\PKPContainer::getInstance()->make('bookService'),
-                function (): array {
-                    $bookService = \PKP\core\PKPContainer::getInstance()->make('bookService');
-                    $abstractService = \PKP\core\PKPContainer::getInstance()->make('abstractService');
-                    $chapterService = \PKP\core\PKPContainer::getInstance()->make('chapterService');
-                    $contributionService = \PKP\core\PKPContainer::getInstance()->make('contributionService');
-                    $languageService = \PKP\core\PKPContainer::getInstance()->make('languageService');
-                    $referenceService = \PKP\core\PKPContainer::getInstance()->make('referenceService');
-                    $subjectService = \PKP\core\PKPContainer::getInstance()->make('subjectService');
-                    $titleService = \PKP\core\PKPContainer::getInstance()->make('titleService');
-                    $workRelationService = \PKP\core\PKPContainer::getInstance()->make('workRelationService');
-                    $publicationService = \PKP\core\PKPContainer::getInstance()->make('publicationService');
-                    $locationService = \PKP\core\PKPContainer::getInstance()->make('locationService');
-                    $frontcoverService = \PKP\core\PKPContainer::getInstance()->make('frontcoverService');
-                    $contributionAuthorReader = new PkpContributionAuthorReader(
-                        Repo::author(),
-                        DAORegistry::getDAO('ChapterDAO')
-                    );
-                    $chapterWorkMapper = new LegacyChapterWorkMetadataMapper($chapterService->factory);
-                    $chapterSynchronizer = new ChapterSynchronizer(
-                        new LegacyChapterMetadataGateway($chapterService->repository),
-                        $chapterWorkMapper,
-                        new WorkSynchronizer(
-                            new LegacyWorkMetadataGateway($chapterService->repository),
-                            $chapterWorkMapper
-                        ),
-                        [
-                            new TitleSynchronizer(
-                                new LegacyTitleMetadataGateway(
-                                    $chapterService->repository,
-                                    $titleService->repository
-                                ),
-                                new LegacyChapterTitleMetadataMapper($titleService->factory)
-                            ),
-                            new AbstractSynchronizer(
-                                new LegacyAbstractMetadataGateway(
-                                    $chapterService->repository,
-                                    $abstractService->repository
-                                ),
-                                new LegacyChapterAbstractMetadataMapper($abstractService->factory)
-                            ),
-                            new ContributionSynchronizer(
-                                new LegacyContributionMetadataGateway($contributionService),
-                                new ThothChapterContributionMetadataMapper(
-                                    $contributionAuthorReader,
-                                    $contributionService->factory
-                                )
-                            ),
-                            new PublicationSynchronizer(
-                                new LegacyPublicationMetadataGateway($publicationService),
-                                new LegacyChapterPublicationMetadataMapper($publicationService),
-                                new SynchronizeLocations(
-                                    new LegacyLocationMetadataGateway($locationService->repository)
-                                )
-                            ),
-                        ]
-                    );
-
-                    return [
-                        new WorkSynchronizer(
-                            new LegacyWorkMetadataGateway($bookService->repository),
-                            new LegacyWorkMetadataMapper($bookService->factory)
-                        ),
-                        new TitleSynchronizer(
-                            new LegacyTitleMetadataGateway(
-                                $bookService->repository,
-                                $titleService->repository
-                            ),
-                            new LegacyTitleMetadataMapper($titleService->factory)
-                        ),
-                        new AbstractSynchronizer(
-                            new LegacyAbstractMetadataGateway(
-                                $bookService->repository,
-                                $abstractService->repository
-                            ),
-                            new LegacyAbstractMetadataMapper($abstractService->factory)
-                        ),
-                        new FrontcoverSynchronizer(
-                            new LegacyFrontcoverGateway($frontcoverService)
-                        ),
-                        new ContributionSynchronizer(
-                            new LegacyContributionMetadataGateway($contributionService),
-                            new ThothContributionMetadataMapper(
-                                $contributionAuthorReader,
-                                $contributionService->factory
-                            )
-                        ),
-                        new PublicationSynchronizer(
-                            new LegacyPublicationMetadataGateway($publicationService),
-                            new LegacyPublicationMetadataMapper($publicationService),
-                            new SynchronizeLocations(
-                                new LegacyLocationMetadataGateway($locationService->repository)
-                            )
-                        ),
-                        new LanguageSynchronizer(
-                            new LegacyLanguageMetadataGateway($languageService->repository),
-                            new LegacyLanguageMetadataMapper()
-                        ),
-                        new SubjectSynchronizer(
-                            new LegacySubjectMetadataGateway($subjectService->repository),
-                            new LegacySubjectMetadataMapper(new ThothSubjectClassifier())
-                        ),
-                        new ReferenceSynchronizer(
-                            new LegacyReferenceMetadataGateway($referenceService->repository),
-                            new LegacyReferenceMetadataMapper(DAORegistry::getDAO('CitationDAO'))
-                        ),
-                        new WorkRelationSynchronizer(
-                            new LegacyWorkRelationMetadataGateway(
-                                $workRelationService->repository,
-                                $chapterSynchronizer
-                            ),
-                            new LegacyWorkRelationMetadataMapper(
-                                DAORegistry::getDAO('ChapterDAO'),
-                                $chapterWorkMapper
-                            )
-                        ),
-                    ];
-                },
-                fn (): object => \PKP\core\PKPContainer::getInstance()->make('featureVideoService'),
-                fn (): object => \PKP\core\PKPContainer::getInstance()->make('publicationRepository'),
-                Repo::publication(),
-                Repo::submission(),
-                Application::get()->getRequest(),
-                new ThothNotification()
-            );
-            $compositionRoot->register(PKPContainer::getInstance());
-
-            $hookRegistrant = new HookRegistrant(
-                $this,
-                PKPContainer::getInstance()->make(GetWorkStatusController::class),
-                PKPContainer::getInstance()->make(RegisterBookController::class),
-                PKPContainer::getInstance()->make(SynchronizeMetadataController::class),
-                PKPContainer::getInstance()->make(UnlinkWorkController::class),
-                PKPContainer::getInstance()->make(UploadFeatureVideoController::class),
-                PKPContainer::getInstance()->make(GetCatalogFiles::class),
-                PKPContainer::getInstance()->make(UploadPublicationFile::class),
-                PKPContainer::getInstance()->make(PublicationPublishListener::class),
-                PKPContainer::getInstance()->make(PublicationEditListener::class)
-            );
-            $hookRegistrant->register();
+        if ($success && $this->getEnabled($mainContextId) && $this->hasRoutableRequest()) {
+            $this->bootstrap($mainContextId)->register();
         }
 
         return $success;
@@ -247,60 +48,38 @@ class ThothPlugin extends \PKP\plugins\GenericPlugin
         return __('plugins.generic.thoth.description');
     }
 
-    public function getActions($request, $verb)
+    public function getActions($request, $actionArgs)
     {
-        $parentActions = parent::getActions($request, $verb);
+        $actions = parent::getActions($request, $actionArgs);
 
-        if (!$this->getEnabled()) {
-            return $parentActions;
-        }
-
-        $router = $request->getRouter();
-        $linkAction = new LinkAction(
-            'settings',
-            new AjaxModal(
-                $router->url(
-                    $request,
-                    null,
-                    null,
-                    'manage',
-                    null,
-                    [
-                        'verb' => 'settings',
-                        'plugin' => $this->getName(),
-                        'category' => 'generic'
-                    ]
-                ),
-                $this->getDisplayName()
-            ),
-            __('manager.plugins.settings'),
-            null
-        );
-
-        array_unshift($parentActions, $linkAction);
-
-        return $parentActions;
+        return $this->getEnabled()
+            ? $this->bootstrap()->prependSettingsAction($request, $actions)
+            : $actions;
     }
 
     public function manage($args, $request)
     {
-        if ($request->getUserVar('verb') !== 'settings') {
-            return parent::manage($args, $request);
+        $response = $this->bootstrap()->manageSettings($request);
+
+        return $response ?? parent::manage($args, $request);
+    }
+
+    private function bootstrap(?int $mainContextId = null): PluginBootstrap
+    {
+        return $this->bootstrap ??= new PluginBootstrap($this, $mainContextId);
+    }
+
+    protected function _registerTemplateResource($inCore = false)
+    {
+        if (!$this->hasRoutableRequest()) {
+            return;
         }
 
-        $context = $request->getContext();
-        $form = new ThothSettingsForm($this, $context->getId());
+        parent::_registerTemplateResource($inCore);
+    }
 
-        if ($request->getUserVar('save')) {
-            $form->readInputData();
-            if ($form->validate()) {
-                $form->execute();
-                return new JSONMessage(true);
-            }
-        } else {
-            $form->initData();
-        }
-
-        return new JSONMessage(true, $form->fetch($request));
+    private function hasRoutableRequest(): bool
+    {
+        return Application::get()->getRequest()->getRouter() !== null;
     }
 }

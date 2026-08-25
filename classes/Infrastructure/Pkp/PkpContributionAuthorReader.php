@@ -3,7 +3,7 @@
 namespace APP\plugins\generic\thoth\classes\Infrastructure\Pkp;
 
 use APP\monograph\ChapterDAO;
-use APP\plugins\generic\thoth\classes\Contracts\ContributionAuthorReader;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\ContributionAuthorReader;
 
 final class PkpContributionAuthorReader implements ContributionAuthorReader
 {

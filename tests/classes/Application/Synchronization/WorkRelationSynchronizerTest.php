@@ -4,15 +4,15 @@ namespace APP\plugins\generic\thoth\tests\classes\Application\Synchronization;
 
 require_once __DIR__ . '/../../../../vendor/autoload.php';
 
-use APP\plugins\generic\thoth\classes\Application\Exception\InvalidRemoteMetadata;
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\InvalidRemoteMetadata;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\WorkRelationMetadataGateway;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\WorkRelationMetadataMapper;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkRelationSynchronizer;
-use APP\plugins\generic\thoth\classes\Contracts\WorkRelationMetadataGateway;
-use APP\plugins\generic\thoth\classes\Contracts\WorkRelationMetadataMapper;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
-use PKP\tests\PKPTestCase;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
+use PHPUnit\Framework\TestCase;
 use stdClass;
 
-final class WorkRelationSynchronizerTest extends PKPTestCase
+final class WorkRelationSynchronizerTest extends TestCase
 {
     private const WORK_ID = '4c64863b-ce51-4cf5-bedf-0dd911147f6d';
     private const WARNING = 'plugins.generic.thoth.synchronize.activeWorkPublicationDeletionsSkipped';

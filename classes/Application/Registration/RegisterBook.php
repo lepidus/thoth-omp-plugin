@@ -2,11 +2,11 @@
 
 namespace APP\plugins\generic\thoth\classes\Application\Registration;
 
-use APP\plugins\generic\thoth\classes\Contracts\BookRegistrar;
-use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\ImprintId;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
-use APP\plugins\generic\thoth\classes\Domain\Result\RegistrationResult;
+use APP\plugins\generic\thoth\classes\Application\Registration\Port\BookRegistrar;
+use APP\plugins\generic\thoth\classes\Application\Work\Port\SubmissionLinkRepository;
+use APP\plugins\generic\thoth\classes\Domain\Imprint\ImprintId;
+use APP\plugins\generic\thoth\classes\Domain\Registration\RegistrationResult;
+use APP\plugins\generic\thoth\classes\Domain\Submission\SubmissionId;
 
 final class RegisterBook
 {
@@ -24,6 +24,7 @@ final class RegisterBook
         try {
             $result = $this->registrar->register($publication, $imprintId);
             $this->submissionLinks->saveWorkId($submissionId, $result->getWorkId());
+            $this->registrar->complete($publication);
         } catch (\Throwable $exception) {
             try {
                 $this->registrar->rollback($publication);

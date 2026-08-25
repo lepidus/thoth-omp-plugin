@@ -2,15 +2,15 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\Application\Work;
 
+use APP\plugins\generic\thoth\classes\Application\Work\Port\SubmissionLinkRepository;
+use APP\plugins\generic\thoth\classes\Application\Work\Port\WorkGateway;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
-use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
-use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
-use PKP\tests\PKPTestCase;
+use APP\plugins\generic\thoth\classes\Domain\Submission\SubmissionId;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
+use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
-class UnlinkWorkTest extends PKPTestCase
+class UnlinkWorkTest extends TestCase
 {
     private const WORK_ID = '4c64863b-ce51-4cf5-bedf-0dd911147f6d';
 

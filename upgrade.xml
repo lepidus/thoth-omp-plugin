@@ -2,5 +2,5 @@
 <!DOCTYPE install SYSTEM "../../../lib/pkp/dtd/install.dtd">
 
 <install version="0.3.0.0">
-    <migration class="APP\plugins\generic\thoth\classes\migrations\LaravelEncryptionMigration" />
+    <migration class="APP\plugins\generic\thoth\classes\Infrastructure\Pkp\Migration\LaravelEncryptionMigration" />
 </install>

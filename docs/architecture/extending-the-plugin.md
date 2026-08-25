@@ -10,16 +10,16 @@ The plugin uses five main areas:
 
 ```text
 Presentation -> Application -> Domain
+                    ^
                     |
-                    v
-                 Contracts <- Infrastructure
+             Infrastructure
 ```
 
 - `Domain` contains rules, identifiers, and operation results that do not depend on OMP, PKP, HTTP, or Thoth
   client classes.
-- `Application` coordinates a workflow and depends on domain types and ports from `Contracts`.
-- `Contracts` defines only the capabilities needed by the application. A port belongs here when it protects a
-  real boundary, such as PKP persistence, a Thoth request, files, cache, notifications, or logging.
+- `Application` coordinates a workflow and owns ports under `Application/<Capability>/Port`.
+- A port protects a real boundary needed by its capability, such as PKP persistence, a Thoth request, files,
+  cache, notifications, or logging.
 - `Infrastructure` implements those ports with PKP APIs, the Thoth client, storage, or an existing service.
 - `Presentation` adapts hooks, listeners, handlers, forms, and API requests to application inputs and translates
   results or exceptions into responses and notifications.
@@ -35,7 +35,8 @@ Use this sequence for a new feature:
 
 1. Define the observable behavior and the affected OMP and plugin versions.
 2. Add or reuse domain identifiers, value objects, policies, and results only when they protect an invariant.
-3. Define the smallest port needed by the use case in `classes/Contracts`.
+3. Define the smallest port needed by the use case in
+   `classes/Application/<Capability>/Port`.
 4. Add the use case under a feature-oriented directory in `classes/Application` and inject every dependency
    through its constructor.
 5. Implement the port in `classes/Infrastructure`. Keep PKP entities and Thoth client objects inside this layer
@@ -53,16 +54,16 @@ cross a boundary or when multiple implementations are meaningful.
 
 `GetWorkStatus` is the smallest reference flow:
 
-- `Contracts/WorkGateway` declares the remote capability using the domain `WorkId`.
+- `Application/Work/Port/WorkGateway` declares the remote capability using the domain `WorkId`.
 - `Application/Work/GetWorkStatus` receives that port and coordinates the operation.
-- `Infrastructure/Legacy/LegacyWorkGateway` translates the domain identifier to the existing integration.
+- `Infrastructure/Thoth/Work/ThothWorkGateway` translates the domain identifier to the remote integration.
 - `Bootstrap/ThothCompositionRoot` binds `WorkGateway`, `GetWorkStatus`, and its controller.
 - `Presentation/Api/GetWorkStatusController` adapts the HTTP-facing call.
 - `tests/classes/Application/Work/GetWorkStatusTest` proves orchestration without bootstrapping OMP.
 - Infrastructure, composition-root, and Presentation tests prove the target-specific integration.
 
-Use the `Legacy` prefix only when an adapter deliberately wraps an existing legacy service. A new direct
-implementation should be named for the technology or capability it adapts.
+Name an adapter for the technology and capability it integrates. Do not introduce compatibility adapters,
+aliases, or dual resolution paths.
 
 ## Defining a port and use case
 
@@ -80,7 +81,7 @@ A use case should:
 - avoid constructing repositories, clients, or adapters internally.
 
 If an external API can fail, translate client exceptions in Infrastructure into the exceptions defined under
-`Application/Exception`. Presentation may then publish a sanitized notification while
+`Application/FailureReporting`. Presentation may then publish a sanitized notification while
 `ExternalFailureReporter` records technical context without secrets or complete payloads.
 
 ## Implementing adapters
@@ -98,6 +99,29 @@ Only `thothWorkId` on the submission is a persistent local-to-remote link. Other
 inside the current snapshot, result, or operation. Resolve them from the remote snapshot by normalized semantic
 identity, and report a conflict when more than one match remains.
 
+Local persistence adapters live under capability directories in `Infrastructure/Pkp`. Pass the matching PKP
+repository, cache repository, or temporary-file manager explicitly when assembling them. In particular,
+`PkpSubmissionLinkRepository` is the exclusive writer of the submission's `thothWorkId`,
+`PkpPublicationReader` reads publications through the core repository, and the hosted-assets adapters preserve
+file ownership, hashes, MIME validation, and the established cache keys. `PkpPublicationFileContextReader`
+isolates `ChapterDAO` and `PublicationFormatDAO`, reads persisted localized format names without relying on the
+current request, and exposes only the local context required by the remote publication-file adapter. Schema
+registration and object-graph assembly remain responsibilities of Presentation/Bootstrap.
+
+Use `Infrastructure/Thoth/Client/ThothClientProvider` to create the remote boundary for an explicit context.
+It reads credentials through `ThothConfigurationRepository`, validates a custom HTTPS endpoint before creating
+the provider client, and returns `ThothRemoteGateway`. The gateway is the single place where provider query
+failures are translated to sanitized application failures; adapters must supply the business operation name and
+must not expose credentials or complete payloads in failure context. Configuration persistence belongs in
+`Infrastructure/Pkp/Configuration` and must preserve the existing encrypted `token` setting.
+
+Remote reads and hosted assets are capability adapters under `Infrastructure/Thoth`: `ThothWorkGateway` owns
+the exact missing-work contract, `ThothCatalogFileGateway` exposes only safe HTTPS download links, and the two
+hosted-asset uploaders use the generated Thoth input/schema objects through `ThothRemoteGateway`.
+`ThothPresignedFileUploader` is the single HTTP PUT boundary: it validates the presigned URL against public DNS
+addresses, forwards only the provider headers, streams a readable local file, and disables redirects. It does
+not complete the remote upload; the capability adapter that initiated the upload owns that GraphQL transition.
+
 Do not hide a missing required entity with a default value. Use a guard clause and preserve a useful,
 non-sensitive identifier in the error report. Treat an optional missing collection as empty only when that is
 part of the confirmed contract.
@@ -108,11 +132,10 @@ Register container bindings in `ThothCompositionRoot::register()`. Bind ports to
 use case that consumes them. Use a singleton only for stateless values or policies whose lifetime is intentionally
 shared; context-sensitive clients and mutable operation state must not leak between requests.
 
-Metadata synchronizers are a special case. Their ordered list is assembled by the
-`metadataSynchronizersFactory` passed from the plugin bootstrap to the composition root. When adding a
-synchronizer:
+Metadata synchronizers are a special case. Their ordered list is assembled explicitly by
+`Bootstrap/MetadataSynchronizationFactory`. When adding a synchronizer:
 
-1. implement `Contracts/DomainSynchronizer`;
+1. implement `Application/Synchronization/Port/DomainSynchronizer`;
 2. construct it with its gateways and mappers in the version-specific plugin bootstrap;
 3. insert it at the required position in the factory result;
 4. test ordering, warning aggregation, and interruption after a failure.
@@ -155,6 +178,18 @@ Add the cheapest test that proves the behavior, then cover the integration bound
   entrypoint.
 - An integrated test against the matching OMP checkout proves hooks, repositories, forms, routes, or persistence
   when those behaviors are part of the change.
+
+Run the framework-independent core suite with the PHPUnit binary from the matching OMP checkout, but only the
+plugin autoloader:
+
+```sh
+php /path/to/omp/lib/pkp/lib/vendor/bin/phpunit \
+  --no-configuration \
+  --bootstrap vendor/autoload.php \
+  --no-coverage \
+  --do-not-cache-result \
+  tests/classes/Domain tests/classes/Application
+```
 
 Run PHP lint with the minimum PHP supported by the branch. Run the branch's PHPUnit command and
 `vendor/bin/phpstan analyse --no-progress`. Apply the core PHP-CS-Fixer configuration where available and finish

@@ -3,8 +3,8 @@
 namespace APP\plugins\generic\thoth\classes\Presentation\Api;
 
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\Domain\Submission\SubmissionId;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;

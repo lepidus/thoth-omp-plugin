@@ -5,18 +5,18 @@ namespace APP\plugins\generic\thoth\tests\classes\Application\Synchronization;
 require_once __DIR__ . '/../../../../vendor/autoload.php';
 
 use APP\plugins\generic\thoth\classes\Application\Synchronization\ChapterSynchronizer;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\ChapterMetadataGateway;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\DomainSynchronizer;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\WorkMetadataGateway;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\WorkMetadataMapper;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkSynchronizer;
-use APP\plugins\generic\thoth\classes\Contracts\ChapterMetadataGateway;
-use APP\plugins\generic\thoth\classes\Contracts\DomainSynchronizer;
-use APP\plugins\generic\thoth\classes\Contracts\WorkMetadataGateway;
-use APP\plugins\generic\thoth\classes\Contracts\WorkMetadataMapper;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
-use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationResult;
-use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationWarning;
-use PKP\tests\PKPTestCase;
+use APP\plugins\generic\thoth\classes\Domain\Synchronization\SynchronizationResult;
+use APP\plugins\generic\thoth\classes\Domain\Synchronization\SynchronizationWarning;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
+use PHPUnit\Framework\TestCase;
 use stdClass;
 
-final class ChapterSynchronizerTest extends PKPTestCase
+final class ChapterSynchronizerTest extends TestCase
 {
     private const NEW_WORK_ID = '9805634b-eb47-4381-99e9-77813ae98168';
     private const EXISTING_WORK_ID = '8b9f66e9-e663-4d96-91a9-a9c47563fa2f';

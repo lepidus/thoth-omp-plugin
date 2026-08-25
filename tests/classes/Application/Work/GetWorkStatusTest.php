@@ -3,12 +3,12 @@
 namespace APP\plugins\generic\thoth\tests\classes\Application\Work;
 
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
-use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\Application\Work\Port\WorkGateway;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PKP\tests\PKPTestCase;
+use PHPUnit\Framework\TestCase;
 
-class GetWorkStatusTest extends PKPTestCase
+class GetWorkStatusTest extends TestCase
 {
     private const WORK_ID = '4c64863b-ce51-4cf5-bedf-0dd911147f6d';
 

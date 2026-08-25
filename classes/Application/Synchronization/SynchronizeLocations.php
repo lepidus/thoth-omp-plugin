@@ -2,8 +2,8 @@
 
 namespace APP\plugins\generic\thoth\classes\Application\Synchronization;
 
-use APP\plugins\generic\thoth\classes\Application\Exception\InvalidRemoteMetadata;
-use APP\plugins\generic\thoth\classes\Contracts\LocationMetadataGateway;
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\InvalidRemoteMetadata;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\LocationMetadataGateway;
 
 final class SynchronizeLocations
 {

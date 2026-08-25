@@ -2,14 +2,14 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\Application\Synchronization;
 
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\WorkMetadataGateway;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\WorkMetadataMapper;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\WorkSynchronizer;
-use APP\plugins\generic\thoth\classes\Contracts\WorkMetadataGateway;
-use APP\plugins\generic\thoth\classes\Contracts\WorkMetadataMapper;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
-use PKP\tests\PKPTestCase;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
+use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class WorkSynchronizerTest extends PKPTestCase
+class WorkSynchronizerTest extends TestCase
 {
     private const WORK_ID = '4c64863b-ce51-4cf5-bedf-0dd911147f6d';
 

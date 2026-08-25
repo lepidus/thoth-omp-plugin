@@ -2,20 +2,22 @@
 
 namespace APP\plugins\generic\thoth\classes\Presentation\Api;
 
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\ExternalFailureReporter;
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\ExternalServiceFailure;
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\InvalidRemoteMetadata;
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\Port\NotificationPublisher;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\SynchronizeMetadata;
-use APP\plugins\generic\thoth\classes\Contracts\NotificationPublisher;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
-use APP\plugins\generic\thoth\classes\exceptions\MetadataSynchronizationException;
+use APP\plugins\generic\thoth\classes\Domain\Submission\SubmissionId;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
-use ThothApi\Exception\QueryException;
 
 final class SynchronizeMetadataController
 {
     public function __construct(
         private readonly SynchronizeMetadata $synchronizeMetadata,
-        private readonly NotificationPublisher $notifications
+        private readonly NotificationPublisher $notifications,
+        private readonly ExternalFailureReporter $failureReporter
     ) {
     }
 
@@ -40,18 +42,24 @@ final class SynchronizeMetadataController
             foreach ($result->getWarnings() as $warning) {
                 $this->notifications->publishWarning($userId, $submissionId, $warning->getMessageKey());
             }
-        } catch (MetadataSynchronizationException $exception) {
+        } catch (InvalidRemoteMetadata $exception) {
             return response()->json(
                 ['errorMessage' => __('plugins.generic.thoth.synchronize.ambiguousMetadata')],
                 Response::HTTP_CONFLICT
             );
-        } catch (QueryException $exception) {
-            $this->notifications->publishError(
+        } catch (ExternalServiceFailure $exception) {
+            $this->failureReporter->report(
+                $exception,
                 $userId,
                 $submissionId,
-                'plugins.generic.thoth.register.error',
-                $exception->getMessage()
+                [
+                    'submissionId' => $submission->getId(),
+                    'publicationId' => method_exists($publication, 'getId') ? $publication->getId() : null,
+                ],
+                true,
+                'plugins.generic.thoth.register.error'
             );
+
             return response()->json(
                 ['errorMessage' => __('plugins.generic.thoth.connectionError')],
                 Response::HTTP_INTERNAL_SERVER_ERROR

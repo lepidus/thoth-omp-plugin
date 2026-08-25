@@ -2,16 +2,16 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\Application\Synchronization;
 
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\BookMetadataUpdater;
 use APP\plugins\generic\thoth\classes\Application\Synchronization\UpdatePublicationAfterEdit;
-use APP\plugins\generic\thoth\classes\Contracts\BookMetadataUpdater;
-use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\SubmissionId;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
-use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationResult;
-use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationWarning;
-use PKP\tests\PKPTestCase;
+use APP\plugins\generic\thoth\classes\Application\Work\Port\SubmissionLinkRepository;
+use APP\plugins\generic\thoth\classes\Domain\Submission\SubmissionId;
+use APP\plugins\generic\thoth\classes\Domain\Synchronization\SynchronizationResult;
+use APP\plugins\generic\thoth\classes\Domain\Synchronization\SynchronizationWarning;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
+use PHPUnit\Framework\TestCase;
 
-class UpdatePublicationAfterEditTest extends PKPTestCase
+class UpdatePublicationAfterEditTest extends TestCase
 {
     public function testDoiAssignmentUpdatesWorkWithoutRequestingSuccessNotification(): void
     {

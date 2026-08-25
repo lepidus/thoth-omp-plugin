@@ -2,10 +2,10 @@
 
 namespace APP\plugins\generic\thoth\classes\Application\HostedAssets;
 
-use APP\plugins\generic\thoth\classes\Contracts\CatalogFileCache;
-use APP\plugins\generic\thoth\classes\Contracts\PublicationFileUploader;
-use APP\plugins\generic\thoth\classes\Contracts\TemporaryPublicationFileRepository;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\Application\HostedAssets\Port\CatalogFileCache;
+use APP\plugins\generic\thoth\classes\Application\HostedAssets\Port\PublicationFileUploader;
+use APP\plugins\generic\thoth\classes\Application\HostedAssets\Port\TemporaryPublicationFileRepository;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
 use InvalidArgumentException;
 
 final class UploadPublicationFile

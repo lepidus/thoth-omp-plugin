@@ -4,9 +4,9 @@ namespace APP\plugins\generic\thoth\tests\classes\Presentation\Api;
 
 require_once(__DIR__ . '/../../../../vendor/autoload.php');
 
+use APP\plugins\generic\thoth\classes\Application\Work\Port\SubmissionLinkRepository;
+use APP\plugins\generic\thoth\classes\Application\Work\Port\WorkGateway;
 use APP\plugins\generic\thoth\classes\Application\Work\UnlinkWork;
-use APP\plugins\generic\thoth\classes\Contracts\SubmissionLinkRepository;
-use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
 use PKP\tests\PKPTestCase;
 use ThothApi\Exception\QueryException;

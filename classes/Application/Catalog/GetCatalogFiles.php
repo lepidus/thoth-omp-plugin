@@ -2,8 +2,8 @@
 
 namespace APP\plugins\generic\thoth\classes\Application\Catalog;
 
-use APP\plugins\generic\thoth\classes\Contracts\CatalogFileGateway;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\Application\Catalog\Port\CatalogFileGateway;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
 
 final class GetCatalogFiles
 {

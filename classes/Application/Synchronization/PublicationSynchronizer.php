@@ -2,15 +2,15 @@
 
 namespace APP\plugins\generic\thoth\classes\Application\Synchronization;
 
-use APP\plugins\generic\thoth\classes\Application\Exception\InvalidRemoteMetadata;
-use APP\plugins\generic\thoth\classes\Contracts\DomainSynchronizer;
-use APP\plugins\generic\thoth\classes\Contracts\PublicationMetadataGateway;
-use APP\plugins\generic\thoth\classes\Contracts\PublicationMetadataMapper;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\InvalidRemoteMetadata;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\DomainSynchronizer;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\PublicationMetadataGateway;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\PublicationMetadataMapper;
 use APP\plugins\generic\thoth\classes\Domain\Publication\PublicationDiff;
 use APP\plugins\generic\thoth\classes\Domain\Publication\PublicationMatcher;
-use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationResult;
-use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationWarning;
+use APP\plugins\generic\thoth\classes\Domain\Synchronization\SynchronizationResult;
+use APP\plugins\generic\thoth\classes\Domain\Synchronization\SynchronizationWarning;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
 
 final class PublicationSynchronizer implements DomainSynchronizer
 {

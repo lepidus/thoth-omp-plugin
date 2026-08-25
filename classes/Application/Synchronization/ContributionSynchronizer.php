@@ -2,15 +2,15 @@
 
 namespace APP\plugins\generic\thoth\classes\Application\Synchronization;
 
-use APP\plugins\generic\thoth\classes\Application\Exception\InvalidRemoteMetadata;
-use APP\plugins\generic\thoth\classes\Contracts\ContributionMetadataGateway;
-use APP\plugins\generic\thoth\classes\Contracts\ContributionMetadataMapper;
-use APP\plugins\generic\thoth\classes\Contracts\DomainSynchronizer;
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\InvalidRemoteMetadata;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\ContributionMetadataGateway;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\ContributionMetadataMapper;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\DomainSynchronizer;
 use APP\plugins\generic\thoth\classes\Domain\Contribution\ContributionDiff;
 use APP\plugins\generic\thoth\classes\Domain\Contribution\ContributionMatcher;
 use APP\plugins\generic\thoth\classes\Domain\Contribution\ContributorIdentity;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
-use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationResult;
+use APP\plugins\generic\thoth\classes\Domain\Synchronization\SynchronizationResult;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
 
 final class ContributionSynchronizer implements DomainSynchronizer
 {

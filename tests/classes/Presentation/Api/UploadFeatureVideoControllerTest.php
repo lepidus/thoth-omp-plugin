@@ -2,11 +2,11 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\Presentation\Api;
 
+use APP\plugins\generic\thoth\classes\Application\HostedAssets\Port\FeatureVideoCache;
+use APP\plugins\generic\thoth\classes\Application\HostedAssets\Port\FeatureVideoUploader;
+use APP\plugins\generic\thoth\classes\Application\HostedAssets\Port\TemporaryVideoFileRepository;
 use APP\plugins\generic\thoth\classes\Application\HostedAssets\UploadFeatureVideo;
-use APP\plugins\generic\thoth\classes\Contracts\FeatureVideoCache;
-use APP\plugins\generic\thoth\classes\Contracts\FeatureVideoUploader;
-use APP\plugins\generic\thoth\classes\Contracts\TemporaryVideoFileRepository;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
 use APP\plugins\generic\thoth\classes\Presentation\Api\UploadFeatureVideoController;
 use PKP\tests\PKPTestCase;
 

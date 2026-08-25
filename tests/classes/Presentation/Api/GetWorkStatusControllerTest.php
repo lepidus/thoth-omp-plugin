@@ -3,8 +3,8 @@
 namespace APP\plugins\generic\thoth\tests\classes\Presentation\Api;
 
 use APP\plugins\generic\thoth\classes\Application\Work\GetWorkStatus;
-use APP\plugins\generic\thoth\classes\Contracts\WorkGateway;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\Application\Work\Port\WorkGateway;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
 use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
 use PKP\tests\PKPTestCase;
 

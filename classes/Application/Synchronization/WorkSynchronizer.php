@@ -2,12 +2,12 @@
 
 namespace APP\plugins\generic\thoth\classes\Application\Synchronization;
 
-use APP\plugins\generic\thoth\classes\Contracts\DomainSynchronizer;
-use APP\plugins\generic\thoth\classes\Contracts\WorkMetadataGateway;
-use APP\plugins\generic\thoth\classes\Contracts\WorkMetadataMapper;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\DomainSynchronizer;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\WorkMetadataGateway;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\WorkMetadataMapper;
 use APP\plugins\generic\thoth\classes\Domain\Registration\BookRegistrationPolicy;
-use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationResult;
+use APP\plugins\generic\thoth\classes\Domain\Synchronization\SynchronizationResult;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
 
 final class WorkSynchronizer implements DomainSynchronizer
 {

@@ -2,12 +2,12 @@
 
 namespace APP\plugins\generic\thoth\classes\Application\Synchronization;
 
-use APP\plugins\generic\thoth\classes\Application\Exception\InvalidRemoteMetadata;
-use APP\plugins\generic\thoth\classes\Contracts\AbstractMetadataGateway;
-use APP\plugins\generic\thoth\classes\Contracts\AbstractMetadataMapper;
-use APP\plugins\generic\thoth\classes\Contracts\DomainSynchronizer;
-use APP\plugins\generic\thoth\classes\Domain\Identifier\WorkId;
-use APP\plugins\generic\thoth\classes\Domain\Result\SynchronizationResult;
+use APP\plugins\generic\thoth\classes\Application\FailureReporting\InvalidRemoteMetadata;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\AbstractMetadataGateway;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\AbstractMetadataMapper;
+use APP\plugins\generic\thoth\classes\Application\Synchronization\Port\DomainSynchronizer;
+use APP\plugins\generic\thoth\classes\Domain\Synchronization\SynchronizationResult;
+use APP\plugins\generic\thoth\classes\Domain\Work\WorkId;
 
 final class AbstractSynchronizer implements DomainSynchronizer
 {
