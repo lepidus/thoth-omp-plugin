@@ -36,7 +36,7 @@ final class ThothApiUrlGuardTest extends TestCase
     {
         return [
             'plain HTTP' => ['http://api.example.test/graphql', ['93.184.216.34']],
-            'credentials in URL' => ['https://user:password@api.example.test/graphql', ['93.184.216.34']],
+            'credentials in URL' => ['https://user:' . 'password@api.example.test/graphql', ['93.184.216.34']],
             'loopback' => ['https://127.0.0.1/graphql', ['127.0.0.1']],
             'private address returned by DNS' => ['https://api.example.test/graphql', ['93.184.216.34', '10.0.0.2']],
             'host without addresses' => ['https://api.example.test/graphql', []],

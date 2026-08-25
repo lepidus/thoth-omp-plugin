@@ -9,6 +9,7 @@ use APP\core\Request;
 use APP\plugins\generic\thoth\classes\Infrastructure\Pkp\Configuration\PkpTokenCipher;
 use APP\plugins\generic\thoth\ThothPlugin;
 use Illuminate\Support\Facades\DB;
+use PKP\config\Config;
 use PKP\core\Registry;
 use PKP\db\DAORegistry;
 use PKP\site\VersionCheck;
@@ -17,13 +18,22 @@ use RuntimeException;
 
 final class PluginLifecycleIntegrationTest extends PKPTestCase
 {
+    private const TEST_API_KEY_SECRET = 'thoth-lifecycle-test-secret';
+
     private int $contextId;
+    private bool $hadApiKeySecret;
+    private $originalApiKeySecret;
     private $previousRequest;
     private string $temporaryFile;
 
     protected function setUp(): void
     {
         parent::setUp();
+        $configData = &Config::getData();
+        $this->hadApiKeySecret = array_key_exists('api_key_secret', $configData['security'] ?? []);
+        $this->originalApiKeySecret = $configData['security']['api_key_secret'] ?? null;
+        $configData['security']['api_key_secret'] = self::TEST_API_KEY_SECRET;
+
         DB::beginTransaction();
         $this->contextId = (int) DB::table('presses')->value('press_id');
         if ($this->contextId === 0) {
@@ -60,7 +70,16 @@ final class PluginLifecycleIntegrationTest extends PKPTestCase
                 unlink($this->temporaryFile);
             }
         } finally {
-            parent::tearDown();
+            try {
+                $configData = &Config::getData();
+                if ($this->hadApiKeySecret) {
+                    $configData['security']['api_key_secret'] = $this->originalApiKeySecret;
+                } else {
+                    unset($configData['security']['api_key_secret']);
+                }
+            } finally {
+                parent::tearDown();
+            }
         }
     }
 
