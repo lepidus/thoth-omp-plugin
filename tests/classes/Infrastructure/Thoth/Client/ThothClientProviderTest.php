@@ -2,6 +2,8 @@
 
 namespace APP\plugins\generic\thoth\tests\classes\Infrastructure\Thoth\Client;
 
+require_once dirname(__DIR__, 5) . '/vendor/autoload.php';
+
 use APP\plugins\generic\thoth\classes\Application\Configuration\Port\ThothConfigurationRepository;
 use APP\plugins\generic\thoth\classes\Domain\Configuration\ThothConfiguration;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\Client\ThothApiUrlGuard;
@@ -9,30 +11,27 @@ use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\Client\ThothClientPro
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\Client\ThothRemoteGateway;
 use APP\plugins\generic\thoth\classes\Infrastructure\Thoth\FailureReporting\ThothErrorTranslator;
 use PHPUnit\Framework\TestCase;
-use ReflectionProperty;
 use ThothApi\GraphQL\Client;
 use UnexpectedValueException;
 
 final class ThothClientProviderTest extends TestCase
 {
-    public function testBuildsTheOfficialClientWithTheStoredToken(): void
+    public function testAuthenticatesAnOfficialClientThroughItsPublicContract(): void
     {
         $repository = $this->createMock(ThothConfigurationRepository::class);
         $repository->method('get')->with(5)->willReturn(new ThothConfiguration(false, '', 'stored-token'));
+        $client = new RecordingOfficialClient();
         $provider = new ThothClientProvider(
             $repository,
             new ThothApiUrlGuard(),
-            new ThothErrorTranslator()
+            new ThothErrorTranslator(),
+            static fn (): Client => $client
         );
 
         $gateway = $provider->forContext(5);
-        $gatewayClient = new ReflectionProperty(ThothRemoteGateway::class, 'client');
-        $gatewayClient->setAccessible(true);
-        $token = new ReflectionProperty(Client::class, 'token');
-        $token->setAccessible(true);
 
-        $this->assertInstanceOf(Client::class, $gatewayClient->getValue($gateway));
-        $this->assertSame('stored-token', $token->getValue($gatewayClient->getValue($gateway)));
+        $this->assertSame('stored-token', $gateway->call('authentication', 'recordedToken'));
+        $this->assertSame('stored-token', $client->recordedToken());
     }
 
     public function testCreatesAnAuthenticatedBoundaryForEachExplicitContextWithoutSharingClients(): void
@@ -138,5 +137,22 @@ final class RecordingClient
         $this->token = $token;
 
         return $this;
+    }
+}
+
+final class RecordingOfficialClient extends Client
+{
+    private string $recordedToken = '';
+
+    public function setToken(string $token): self
+    {
+        $this->recordedToken = $token;
+
+        return $this;
+    }
+
+    public function recordedToken(): string
+    {
+        return $this->recordedToken;
     }
 }

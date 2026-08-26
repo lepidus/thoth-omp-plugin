@@ -3,40 +3,22 @@
 namespace APP\plugins\generic\thoth\tests\classes\Presentation\Api;
 
 use APP\API\v1\_submissions\BackendSubmissionsHandler;
-use APP\plugins\generic\thoth\classes\Application\HostedAssets\GetFeatureVideo;
-use APP\plugins\generic\thoth\classes\Application\HostedAssets\Port\FeatureVideoReader;
 use APP\plugins\generic\thoth\classes\Application\Publication\Port\PublicationReader;
-use APP\plugins\generic\thoth\classes\Application\Registration\Port\PublisherAccessGateway;
 use APP\plugins\generic\thoth\classes\Application\Submission\Port\SubmissionReader;
-use APP\plugins\generic\thoth\classes\Presentation\Api\GetWorkStatusController;
-use APP\plugins\generic\thoth\classes\Presentation\Api\RegisterBookController;
-use APP\plugins\generic\thoth\classes\Presentation\Api\SynchronizeMetadataController;
 use APP\plugins\generic\thoth\classes\Presentation\Api\ThothEndpoint;
-use APP\plugins\generic\thoth\classes\Presentation\Api\UnlinkWorkController;
-use APP\plugins\generic\thoth\classes\Presentation\Api\UploadFeatureVideoController;
+use APP\plugins\generic\thoth\tests\classes\Support\BuildsValidPresentationGraph;
 use PKP\context\Context;
 use PKP\core\PKPRequest;
 use PKP\tests\PKPTestCase;
-use ReflectionClass;
 use Slim\Http\Response;
 
 final class ThothEndpointTest extends PKPTestCase
 {
+    use BuildsValidPresentationGraph;
+
     public function testEndpointRegistersTheSixScopedSlimRoutes(): void
     {
-        $endpoint = new ThothEndpoint(
-            $this->withoutConstructor(GetWorkStatusController::class),
-            $this->withoutConstructor(RegisterBookController::class),
-            $this->withoutConstructor(SynchronizeMetadataController::class),
-            $this->withoutConstructor(UnlinkWorkController::class),
-            $this->withoutConstructor(UploadFeatureVideoController::class),
-            $this->createMock(SubmissionReader::class),
-            $this->createMock(PublicationReader::class),
-            $this->createMock(PublisherAccessGateway::class),
-            new GetFeatureVideo($this->createMock(FeatureVideoReader::class)),
-            $this->createMock(PKPRequest::class),
-            static fn (): object => new \stdClass()
-        );
+        $endpoint = $this->buildEndpoint();
         $endpoints = [];
         $args = [&$endpoints, $this->createMock(BackendSubmissionsHandler::class)];
 
@@ -85,18 +67,10 @@ final class ThothEndpointTest extends PKPTestCase
         $context->method('getId')->willReturn(1);
         $request->method('getContext')->willReturn($context);
 
-        return new ThothEndpoint(
-            $this->withoutConstructor(GetWorkStatusController::class),
-            $this->withoutConstructor(RegisterBookController::class),
-            $this->withoutConstructor(SynchronizeMetadataController::class),
-            $this->withoutConstructor(UnlinkWorkController::class),
-            $this->withoutConstructor(UploadFeatureVideoController::class),
+        return $this->buildEndpoint(
             $submissionReader,
             $publicationReader ?? $this->createMock(PublicationReader::class),
-            $this->createMock(PublisherAccessGateway::class),
-            new GetFeatureVideo($this->createMock(FeatureVideoReader::class)),
-            $request,
-            static fn (): object => new \stdClass()
+            $request
         );
     }
 
@@ -158,8 +132,4 @@ final class ThothEndpointTest extends PKPTestCase
         };
     }
 
-    private function withoutConstructor(string $className): object
-    {
-        return (new ReflectionClass($className))->newInstanceWithoutConstructor();
-    }
 }
