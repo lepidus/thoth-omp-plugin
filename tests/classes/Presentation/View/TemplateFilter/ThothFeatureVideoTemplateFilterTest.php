@@ -58,6 +58,22 @@ final class ThothFeatureVideoTemplateFilterTest extends PKPTestCase
         $this->assertSame($output, $templateManager->applyOutputFilter($output));
     }
 
+    public function testAddsFeatureVideoTabToTheWorkflow(): void
+    {
+        $filter = $this->filter([]);
+        $templateManager = new FeatureVideoTemplateManagerDouble(self::WORK_ID);
+        $output = '<tabs><tab id="publicationDates">Dates</tab></tabs>';
+
+        $filter->registerFilter($templateManager, 'workflow/workflow.tpl');
+        $result = $templateManager->applyOutputFilter($output);
+
+        $this->assertStringContainsString('<tab id="featureVideo"', $result);
+        $this->assertStringContainsString(
+            '<feature-video-form :submission-id="submission.id"></feature-video-form>',
+            $result
+        );
+    }
+
     private function filter(array $video): ThothFeatureVideoTemplateFilter
     {
         return new ThothFeatureVideoTemplateFilter(new GetFeatureVideo(new FeatureVideoReaderDouble($video)));

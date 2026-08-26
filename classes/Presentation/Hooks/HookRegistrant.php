@@ -97,6 +97,7 @@ final class HookRegistrant
         $this->catalogFilesFilter->registerFilter($templateManager, $template);
         $this->frontcoverFilter->registerFilter($templateManager, $template);
         $this->featureVideoFilter->registerFilter($templateManager, $template);
+        $this->sectionFilter->registerFilter($templateManager, $template, $this->plugin);
         return false;
     }
 

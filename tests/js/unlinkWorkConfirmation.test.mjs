@@ -1,34 +1,52 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import {openUnlinkWorkConfirmation} from '../../resources/js/unlinkWorkConfirmation.mjs';
+import {initializeThothWorkflow} from '../../resources/js/thothWorkflow.mjs';
 
 test('only unlinks the Work after confirmation', () => {
-	let dialog;
-	let unlinkCalls = 0;
-	const closedDialogs = [];
-	const close = () => closedDialogs.push(true);
-
-	openUnlinkWorkConfirmation({
-		openDialog: (config) => {
-			dialog = config;
-		},
-		title: 'Unlink',
-		message: 'Confirm unlink',
-		cancelLabel: 'Cancel',
-		onConfirm: () => {
-			unlinkCalls++;
+	let modalOptions;
+	const requests = [];
+	const jquery = () => ({
+		pkpHandler: (handler, options) => {
+			assert.equal(
+				handler,
+				'$.pkp.controllers.modal.ConfirmationModalHandler',
+			);
+			modalOptions = options;
 		},
 	});
+	jquery.ajax = (request) => requests.push(request);
+	jquery.pkp = {
+		classes: {Helper: {uuid: () => 'fixture-id'}},
+		plugins: {
+			generic: {
+				thothplugin: {
+					workflow: {
+						cancelLabel: 'Cancel',
+						connectionError: 'Connection error',
+						hasLinkedWork: false,
+						unlinkConfirm: 'Confirm unlink',
+						unlinkTitle: 'Unlink',
+						unlinkUrl: '/unlink',
+						workStatusLabels: {},
+					},
+				},
+			},
+		},
+	};
+	const pkpApi = {
+		const: {STATUS_PUBLISHED: 3},
+		currentUser: {csrfToken: 'csrf-token'},
+		eventBus: {$emit: () => {}, $on: () => {}},
+		registry: {_instances: {app: {refreshSubmission: () => {}}}},
+	};
+	const workflow = initializeThothWorkflow({jquery, pkpApi, windowApi: {}});
 
-	assert.equal(unlinkCalls, 0);
-	assert.equal(dialog.message, 'Confirm unlink');
+	workflow.confirmUnlink();
+	assert.equal(requests.length, 0);
+	assert.equal(modalOptions.dialogText, 'Confirm unlink');
 
-	dialog.actions[1].callback(close);
-	assert.equal(unlinkCalls, 0);
-	assert.equal(closedDialogs.length, 1);
-
-	dialog.actions[0].callback(close);
-	assert.equal(unlinkCalls, 1);
-	assert.equal(closedDialogs.length, 2);
+	modalOptions.callback();
+	assert.equal(requests.length, 1);
+	assert.equal(requests[0].url, '/unlink');
 });

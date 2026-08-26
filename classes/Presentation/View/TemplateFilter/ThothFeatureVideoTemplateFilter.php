@@ -17,6 +17,11 @@ final class ThothFeatureVideoTemplateFilter
 
     public function registerFilter(object $templateManager, string $template): bool
     {
+        if ($template === 'workflow/workflow.tpl') {
+            $templateManager->registerFilter('output', [$this, 'addWorkflowTab']);
+            return false;
+        }
+
         if ($template !== 'frontend/pages/book.tpl') {
             return false;
         }
@@ -47,6 +52,21 @@ final class ThothFeatureVideoTemplateFilter
         $templateManager->registerFilter('output', [$this, 'addVideo']);
 
         return false;
+    }
+
+    public function addWorkflowTab(string $output, ?object $templateManager = null): string
+    {
+        $label = htmlspecialchars(__('plugins.generic.thoth.featureVideo'), ENT_QUOTES, 'UTF-8');
+        $tab = '<tab id="featureVideo" label="' . $label . '">'
+            . '<feature-video-form :submission-id="submission.id"></feature-video-form>'
+            . '</tab>';
+
+        return (string) preg_replace(
+            '/(<tab id="publicationDates"[\s\S]*?<\/tab>)/',
+            '$1' . $tab,
+            $output,
+            1
+        );
     }
 
     public function addVideo(string $output, ?object $templateManager = null): string

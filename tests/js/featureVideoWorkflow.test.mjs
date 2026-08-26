@@ -1,47 +1,42 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import {
-	addFeatureVideoMenuItem,
-	getFeatureVideoPrimaryItems,
-} from '../../resources/js/featureVideoWorkflow.mjs';
+import {registerVue2Components} from '../../resources/js/vue2Components.mjs';
 
-test('adds feature video immediately after publication dates', () => {
-	const menuItems = [
-		{
-			key: 'marketing',
-			items: [
-				{key: 'marketing_audience'},
-				{key: 'marketing_publicationDates'},
-			],
+test('loads the feature video form through the OMP 3.4 API contract', () => {
+	const components = {};
+	const requests = [];
+	const jquery = () => ({});
+	jquery.ajax = (request) => requests.push(request);
+	jquery.pkp = {
+		plugins: {
+			generic: {
+				thothplugin: {
+					workflow: {
+						featureVideoUrl: '/submissions/__submissionId__/featureVideo',
+					},
+				},
+			},
 		},
-	];
-
-	const result = addFeatureVideoMenuItem(menuItems, 'Feature video');
-
-	assert.deepEqual(
-		result[0].items.map(({key}) => key),
-		[
-			'marketing_audience',
-			'marketing_publicationDates',
-			'marketing_featureVideo',
-		],
-	);
-});
-
-test('shows feature video form for its marketing item', () => {
-	const result = getFeatureVideoPrimaryItems([], {
-		selectedMenuState: {
-			primaryMenuItem: 'marketing',
-			secondaryMenuItem: 'featureVideo',
+	};
+	const pkpApi = {
+		Vue: {
+			compile: () => ({render: () => {}, staticRenderFns: []}),
+			component: (name, definition) => {
+				components[name] = definition;
+			},
 		},
-		submission: {id: 12},
-	});
+		currentUser: {csrfToken: 'csrf-token'},
+		eventBus: {$emit: () => {}},
+	};
+	registerVue2Components({jquery, pkpApi});
+	const instance = {submissionId: 12, form: null};
 
-	assert.deepEqual(result, [
-		{
-			component: 'FeatureVideoForm',
-			props: {submission: {id: 12}},
-		},
-	]);
+	components['feature-video-form'].mounted.call(instance);
+	assert.equal(requests.length, 1);
+	assert.equal(requests[0].url, '/submissions/12/featureVideo');
+	assert.equal(requests[0].headers['X-Csrf-Token'], 'csrf-token');
+
+	requests[0].success({id: 'featureVideo'});
+	assert.deepEqual(instance.form, {id: 'featureVideo'});
 });

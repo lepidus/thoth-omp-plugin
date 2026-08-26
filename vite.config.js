@@ -1,21 +1,43 @@
 import {resolve} from 'path';
 import {defineConfig} from 'vite';
-import vue from '@vitejs/plugin-vue';
 import i18nExtractKeys from './i18nExtractKeys.vite.js';
 
 export default defineConfig({
 	plugins: [
 		i18nExtractKeys({
 			extraKeys: [
+				'common.cancel',
+				'common.error',
+				'common.filter',
+				'common.loading',
+				'common.selectAll',
+				'common.selectNone',
+				'common.view',
+				'list.viewLess',
+				'list.viewMore',
+				'plugins.generic.thoth.actions.register.label',
+				'plugins.generic.thoth.actions.register.prompt',
+				'plugins.generic.thoth.actions.register.success',
+				'plugins.generic.thoth.connectionError',
+				'plugins.generic.thoth.featureVideo',
+				'plugins.generic.thoth.imprint',
+				'plugins.generic.thoth.imprint.required',
+				'plugins.generic.thoth.register',
+				'plugins.generic.thoth.status.notFound',
+				'plugins.generic.thoth.status.unregistered',
+				'plugins.generic.thoth.unlink',
+				'plugins.generic.thoth.unlink.confirm',
+				'plugins.generic.thoth.update',
+				'plugins.generic.thoth.workStatus',
 				'plugins.generic.thoth.workStatus.active',
 				'plugins.generic.thoth.workStatus.forthcoming',
 				'plugins.generic.thoth.workStatus.withdrawn',
+				'semicolon',
 				'plugins.generic.thoth.workStatus.superseded',
 				'plugins.generic.thoth.workStatus.postponedIndefinitely',
 				'plugins.generic.thoth.workStatus.cancelled',
 			],
 		}),
-		vue(),
 	],
 	build: {
 		lib: {
@@ -25,13 +47,5 @@ export default defineConfig({
 			formats: ['iife'],
 		},
 		outDir: resolve(__dirname, 'public/build'),
-		rollupOptions: {
-			external: ['vue'],
-			output: {
-				globals: {
-					vue: 'pkp.modules.vue',
-				},
-			},
-		},
 	},
 });
