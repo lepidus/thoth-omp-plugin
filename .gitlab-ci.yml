@@ -17,6 +17,28 @@ plugin_unit_tests_omp:
     matrix:
       - PHP_VERSION: ["8.1", "7.4"]
 
+plugin_compatibility_omp_php_7_4:
+  extends: .unit_test_template
+  stage: plugin
+  needs: []
+  variables:
+    CI_APPLICATION_IMAGE: $CI_IMAGE_OMP
+    APPLICATION: 'omp'
+    APPLICATION_VERSION: '3.3.0'
+    PHP_VERSION: '7.4'
+    MARIADB_USER: 'omp'
+    MARIADB_DATABASE: 'omp'
+    MARIADB_PASSWORD: 'omp'
+    MARIADB_HOST: 'mariadb'
+    MARIADB_ROOT_PASSWORD: 'omp'
+  script:
+    - update-alternatives --set php /usr/bin/php$PHP_VERSION
+    - php --version
+    - test "$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')" = "$PHP_VERSION"
+    - cd "$CI_PROJECT_DIR"
+    - git ls-files -z -- '*.php' | xargs -0 -r -n1 php -l
+    - !reference [.script_plugin_unit_test]
+
 application_unit_tests_omp:
   parallel:
     matrix:
