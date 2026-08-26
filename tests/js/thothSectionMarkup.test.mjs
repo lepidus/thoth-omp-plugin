@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 
-const componentSource = readFileSync(
-	new URL('../../resources/js/Components/ThothSection.vue', import.meta.url),
+const templateSource = readFileSync(
+	new URL('../../templates/workflow/thothSection.tpl', import.meta.url),
 	'utf8',
 );
 const englishLocale = readFileSync(
@@ -14,10 +14,6 @@ const portugueseLocale = readFileSync(
 	new URL('../../locale/pt_BR/locale.po', import.meta.url),
 	'utf8',
 );
-const templateSource = componentSource.match(
-	/<template>([\s\S]*?)<\/template>/,
-)[1];
-
 test('uses the short missing Work labels in English and Portuguese', () => {
 	assert.match(
 		englishLocale,
@@ -30,16 +26,15 @@ test('uses the short missing Work labels in English and Portuguese', () => {
 });
 
 test('uses the standard OMP button markup for every Thoth action', () => {
-	const actionTags = templateSource.match(/<PkpButton\b[\s\S]*?>/g) || [];
+	const actionTags = templateSource.match(/<pkp-button\b[\s\S]*?>/g) || [];
 
 	assert.equal(actionTags.length, 4);
 	actionTags.forEach((actionTag) =>
-		assert.match(actionTag, /\bis-link\b/),
+		assert.match(actionTag, /:is-link="true"/),
 	);
 	assert.doesNotMatch(templateSource, /<a\b/);
-	assert.doesNotMatch(templateSource, /\belement="a"/);
 	assert.match(
 		templateSource,
-		/<PkpButton\s+v-if="actionVisibility\.view"\s+is-link\s+@click="viewWork"/,
+		/<pkp-button\s+v-if="[^\n]+actionVisibility\(\)\.view"/,
 	);
 });

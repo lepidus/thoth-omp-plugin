@@ -2,16 +2,74 @@
 
 final class ThothSectionTemplateFilter
 {
+    private ?object $plugin = null;
+
+    public function registerFilter(object $templateManager, string $template, object $plugin): bool
+    {
+        if ($template !== 'workflow/workflow.tpl') {
+            return false;
+        }
+
+        $this->plugin = $plugin;
+        $templateManager->registerFilter('output', [$this, 'addSection']);
+
+        return false;
+    }
+
+    public function addSection(string $output, object $templateManager): string
+    {
+        if ($this->plugin === null) {
+            return $output;
+        }
+
+        $pattern = '/<span\s+class="pkpPublication__status">([\s\S]*?)<\/span>[^<]+<\/span>/';
+        if (!preg_match($pattern, $output, $matches, PREG_OFFSET_CAPTURE)) {
+            return $output;
+        }
+
+        $match = $matches[0][0];
+        $offset = $matches[0][1] + strlen($match);
+        $section = $templateManager->fetch(
+            $this->plugin->getTemplateResource('workflow/thothSection.tpl')
+        );
+        $templateManager->unregisterFilter('output', [$this, 'addSection']);
+
+        return substr($output, 0, $offset) . $section . substr($output, $offset);
+    }
+
     public function addJavaScriptData(object $request, object $templateManager, string $template): bool
     {
-        if ($template !== 'dashboard/editors.tpl') {
+        if ($template !== 'workflow/workflow.tpl') {
+            return false;
+        }
+
+        $submission = $templateManager->getTemplateVars('submission');
+        if (!$submission) {
             return false;
         }
 
         $dispatcher = $request->getDispatcher();
         $contextPath = $request->getContext()->getData('urlPath');
         $data = [
+            'hasLinkedWork' => (bool) $submission->getData('thothWorkId'),
+            'thothWorkId' => (string) $submission->getData('thothWorkId'),
+            'submissionStatus' => (int) $submission->getData('status'),
             'registerTitle' => __('plugins.generic.thoth.register'),
+            'unlinkTitle' => __('plugins.generic.thoth.unlink'),
+            'unlinkConfirm' => __('plugins.generic.thoth.unlink.confirm'),
+            'cancelLabel' => __('common.cancel'),
+            'connectionError' => __('plugins.generic.thoth.connectionError'),
+            'statusError' => __('common.error'),
+            'statusNotFound' => __('plugins.generic.thoth.status.notFound'),
+            'statusUnregistered' => __('plugins.generic.thoth.status.unregistered'),
+            'workStatusLabels' => [
+                'ACTIVE' => __('plugins.generic.thoth.workStatus.active'),
+                'FORTHCOMING' => __('plugins.generic.thoth.workStatus.forthcoming'),
+                'WITHDRAWN' => __('plugins.generic.thoth.workStatus.withdrawn'),
+                'SUPERSEDED' => __('plugins.generic.thoth.workStatus.superseded'),
+                'POSTPONED_INDEFINITELY' => __('plugins.generic.thoth.workStatus.postponedIndefinitely'),
+                'CANCELLED' => __('plugins.generic.thoth.workStatus.cancelled'),
+            ],
             'registerUrl' => $dispatcher->url(
                 $request,
                 ROUTE_PAGE,
@@ -19,37 +77,37 @@ final class ThothSectionTemplateFilter
                 'thoth',
                 'register',
                 null,
-                ['submissionId' => '__submissionId__', 'publicationId' => '__publicationId__']
+                ['submissionId' => $submission->getId(), 'publicationId' => '__publicationId__']
             ),
             'synchronizeUrl' => $dispatcher->url(
                 $request,
                 ROUTE_API,
                 $contextPath,
-                'submissions/__submissionId__/publications/__publicationId__/synchronize'
+                'submissions/' . $submission->getId() . '/publications/__publicationId__/synchronize'
             ),
             'workStatusUrl' => $dispatcher->url(
                 $request,
                 ROUTE_API,
                 $contextPath,
-                'submissions/__submissionId__/thothWorkStatus'
+                'submissions/' . $submission->getId() . '/thothWorkStatus'
             ),
             'unlinkUrl' => $dispatcher->url(
                 $request,
                 ROUTE_API,
                 $contextPath,
-                'submissions/__submissionId__/thothWork'
+                'submissions/' . $submission->getId() . '/thothWork'
             ),
             'featureVideoUrl' => $dispatcher->url(
                 $request,
                 ROUTE_API,
                 $contextPath,
-                'submissions/__submissionId__/featureVideo'
+                'submissions/' . $submission->getId() . '/featureVideo'
             ),
         ];
-        $output = 'pkp.plugins = pkp.plugins || {};';
-        $output .= 'pkp.plugins.generic = pkp.plugins.generic || {};';
-        $output .= 'pkp.plugins.generic.thoth = pkp.plugins.generic.thoth || {};';
-        $output .= 'pkp.plugins.generic.thoth.workflow = '
+        $output = '$.pkp.plugins.generic = $.pkp.plugins.generic || {};';
+        $output .= '$.pkp.plugins.generic.thothplugin = '
+            . '$.pkp.plugins.generic.thothplugin || {};';
+        $output .= '$.pkp.plugins.generic.thothplugin.workflow = '
             . json_encode($data, JSON_UNESCAPED_SLASHES) . ';';
         $templateManager->addJavaScript('workflowData', $output, [
             'inline' => true,

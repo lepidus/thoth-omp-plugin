@@ -1,3 +1,112 @@
+.pkpPublication__thoth {
+	margin: 0 1.5rem;
+}
+
+.pkpPublication__thoth .pkpButton {
+	padding: 0.5rem;
+}
+
+.thothWorkStatus__indicator {
+	border-radius: 50%;
+	display: inline-block;
+	height: 0.75rem;
+	margin-left: 0.25rem;
+	vertical-align: middle;
+	width: 0.75rem;
+}
+
+.thothWorkStatus__indicator--active {
+	background: #00b24e;
+}
+
+.thothWorkStatus__indicator--forthcoming {
+	background: #ded15d;
+}
+
+.thothWorkStatus__indicator--declined {
+	background: #d00a0a;
+}
+
+.thothWorkStatus__indicator--superseded {
+	background: #777;
+}
+
+.thothWorkStatus__indicator--postponed {
+	background: #e08914;
+}
+
+.listPanel--thoth .listPanel__itemIdentity {
+	padding: 0;
+	position: relative;
+}
+
+.listPanel__selectWrapper {
+	align-items: center;
+	display: flex;
+	flex: 1;
+	margin-left: -1rem;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.listPanel--thoth .listPanel__itemSummary {
+	align-items: center;
+}
+
+.listPanel--thoth .listPanel__itemActions {
+	align-items: center;
+	align-self: stretch;
+}
+
+.listPanel__selector {
+	padding-left: 1rem;
+	width: 3rem;
+}
+
+.listPanel__itemMetadata {
+	color: #222;
+	font-size: 0.75rem;
+	line-height: 1.5em;
+	margin-left: 0.75rem;
+}
+
+.listPanel__itemMetadata--badge {
+	margin-right: 0.25rem;
+}
+
+.listPanel__itemExpanded--thoth {
+	padding-left: 2rem;
+}
+
+.listPanel--thoth .expander {
+	background: transparent;
+	border: 1px solid #ddd;
+	border-radius: 2px;
+	box-shadow: 0 1px 0 rgb(0 0 0 / 4%);
+	color: #006798;
+	cursor: pointer;
+	font-size: 0.875rem;
+	line-height: 2rem;
+	padding: 0 0.5em;
+}
+
+.listPanel--thoth .expander:hover,
+.listPanel--thoth .expander:focus {
+	border-color: #006798;
+	color: #006798;
+	outline: 0;
+}
+
+.thothListItem__error {
+	align-items: baseline;
+	display: flex;
+	gap: 0.5rem;
+}
+
+.thothListItem__error + .thothListItem__error {
+	margin-top: 0.25rem;
+}
+
 .thothAccessibilityHeader {
 	align-items: center;
 	display: flex;
