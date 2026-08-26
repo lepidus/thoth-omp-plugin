@@ -57,6 +57,6 @@ final class PublicationFormatFormHandlerTest extends PKPTestCase
 
     private function filter(): PublicationFormatTemplateFilter
     {
-        return (new ReflectionClass(PublicationFormatTemplateFilter::class))->newInstanceWithoutConstructor();
+        return new PublicationFormatTemplateFilter(new \stdClass());
     }
 }

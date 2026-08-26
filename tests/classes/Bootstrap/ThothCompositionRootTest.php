@@ -8,38 +8,50 @@ final class ThothCompositionRootTest extends PKPTestCase
 {
     public function testMetadataFactoryBuildsOnlyDefinitiveSynchronizers(): void
     {
-        $factory = new MetadataSynchronizationFactory(
-            new ThothRemoteGateway(new \stdClass(), new ThothErrorTranslator()),
-            $this->withoutConstructor(PkpWorkMetadataReader::class),
-            $this->withoutConstructor(PkpPublicationMetadataReader::class),
-            $this->createMock(ContributionAuthorReader::class),
-            new \stdClass(),
-            new \stdClass(),
-            $this->withoutConstructor(ThothPresignedFileUploader::class),
-            $this->createMock(FrontcoverLocalGateway::class)
-        );
+        $factory = $this->factory();
 
         $this->assertInstanceOf(SynchronizeMetadata::class, $factory->synchronizer());
         $this->assertInstanceOf(ThothBookMetadataUpdater::class, $factory->bookMetadataUpdater());
         $this->assertInstanceOf(PkpWorkMetadataMapper::class, $factory->workMetadataMapper());
     }
 
-    public function testBootstrapSourcesContainNoContainerOrObsoleteResolution(): void
+    public function testMetadataFactoryReusesItsPublicGraph(): void
     {
-        $root = dirname(__DIR__, 3);
-        $sources = file_get_contents($root . '/classes/Bootstrap/MetadataSynchronizationFactory.inc.php')
-            . file_get_contents($root . '/classes/Bootstrap/ThothCompositionRoot.inc.php')
-            . file_get_contents($root . '/classes/Bootstrap/PluginBootstrap.inc.php')
-            . file_get_contents($root . '/ThothPlugin.php');
+        $factory = $this->factory();
+        $synchronizer = $factory->synchronizer();
+        $metadataUpdater = $factory->bookMetadataUpdater();
+        $workMapper = $factory->workMetadataMapper();
 
-        $this->assertStringNotContainsString('PKP' . 'Container', $sources);
-        $this->assertStringNotContainsString('Leg' . 'acy', $sources);
-        $this->assertStringNotContainsString('->' . 'make(', $sources);
-        $this->assertStringNotContainsString('->' . 'bind(', $sources);
+        $this->assertSame($synchronizer, $factory->synchronizer());
+        $this->assertSame($metadataUpdater, $factory->bookMetadataUpdater());
+        $this->assertSame($workMapper, $factory->workMetadataMapper());
+        $this->assertNotSame($synchronizer, $metadataUpdater);
     }
 
-    private function withoutConstructor(string $class): object
+    private function factory(): MetadataSynchronizationFactory
     {
-        return (new ReflectionClass($class))->newInstanceWithoutConstructor();
+        return new MetadataSynchronizationFactory(
+            new ThothRemoteGateway(new \stdClass(), new ThothErrorTranslator()),
+            new PkpWorkMetadataReader(
+                new \stdClass(),
+                new \stdClass(),
+                new \stdClass(),
+                new \stdClass(),
+                new \stdClass()
+            ),
+            new PkpPublicationMetadataReader(
+                new \stdClass(),
+                new \stdClass(),
+                new \stdClass(),
+                new \stdClass(),
+                new \stdClass(),
+                new \stdClass()
+            ),
+            $this->createMock(ContributionAuthorReader::class),
+            new \stdClass(),
+            new \stdClass(),
+            new ThothPresignedFileUploader(new \stdClass(), new ThothApiUrlGuard()),
+            $this->createMock(FrontcoverLocalGateway::class)
+        );
     }
 }

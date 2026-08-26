@@ -4,9 +4,12 @@ require_once dirname(__DIR__, 4) . '/vendor/autoload.php';
 
 import('lib.pkp.tests.PKPTestCase');
 import('lib.pkp.classes.plugins.GenericPlugin');
+require_once dirname(__DIR__, 2) . '/Support/BuildsValidPresentationGraph.php';
 
 final class HookRegistrantTest extends PKPTestCase
 {
+    use BuildsValidPresentationGraph;
+
     private const HOOKS = [
         'Schema::get::submission',
         'Form::config::before',
@@ -32,27 +35,7 @@ final class HookRegistrantTest extends PKPTestCase
         foreach (self::HOOKS as $hook) {
             HookRegistry::clear($hook);
         }
-        $registrant = new HookRegistrant(
-            $this->createMock(GenericPlugin::class),
-            new ThothSchema(),
-            $this->withoutConstructor(PublishFormConfig::class),
-            $this->withoutConstructor(CatalogEntryFormConfig::class),
-            new ContributorFormConfig(),
-            $this->withoutConstructor(PublicationFormatFormHandler::class),
-            $this->withoutConstructor(PublicationPublishListener::class),
-            $this->withoutConstructor(PublicationEditListener::class),
-            $this->withoutConstructor(ThothEndpoint::class),
-            new ThothCatalogFilesTemplateFilter(),
-            new ThothFrontcoverTemplateFilter(),
-            $this->withoutConstructor(ThothFeatureVideoTemplateFilter::class),
-            new ThothSectionTemplateFilter(),
-            new ThothNotification(),
-            $this->withoutConstructor(ThothMenuHandler::class),
-            $this->withoutConstructor(ThothPageHandler::class),
-            $this->withoutConstructor(PublicationFormatGridModifier::class),
-            $this->createMock(CatalogPublicationFilesProvider::class),
-            new \stdClass()
-        );
+        $registrant = $this->buildHookRegistrant($this->createMock(GenericPlugin::class));
 
         $registrant->register();
 
@@ -61,8 +44,4 @@ final class HookRegistrantTest extends PKPTestCase
         }
     }
 
-    private function withoutConstructor(string $class): object
-    {
-        return (new ReflectionClass($class))->newInstanceWithoutConstructor();
-    }
 }

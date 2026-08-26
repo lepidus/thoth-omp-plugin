@@ -4,18 +4,19 @@ require_once dirname(__DIR__, 4) . '/vendor/autoload.php';
 
 import('lib.pkp.tests.PKPTestCase');
 import('lib.pkp.classes.plugins.GenericPlugin');
+require_once dirname(__DIR__, 2) . '/Support/BuildsValidPresentationGraph.php';
 
 final class ThothPageHandlerTest extends PKPTestCase
 {
+    use BuildsValidPresentationGraph;
+
     public function testItRoutesOnlyKnownThothOperationsToInjectedHandlers(): void
     {
         $plugin = $this->createMock(GenericPlugin::class);
         $plugin->method('getEnabled')->willReturn(true);
-        $register = $this->withoutConstructor(RegisterHandler::class);
-        $catalog = $this->withoutConstructor(ThothCatalogFilesHandler::class);
-        $upload = $this->withoutConstructor(UploadThothFileHandler::class);
-        $index = $this->withoutConstructor(ThothHandler::class);
-        $router = new ThothPageHandler($plugin, $register, $catalog, $upload, $index);
+        $graph = $this->buildPageHandler($plugin);
+        $register = $graph['register'];
+        $router = $graph['router'];
 
         $handler = null;
         self::assertTrue($router->addHandlers('LoadHandler', ['thoth', 'register', null, &$handler]));
@@ -26,8 +27,4 @@ final class ThothPageHandlerTest extends PKPTestCase
         self::assertNull($handler);
     }
 
-    private function withoutConstructor(string $className): object
-    {
-        return (new ReflectionClass($className))->newInstanceWithoutConstructor();
-    }
 }
