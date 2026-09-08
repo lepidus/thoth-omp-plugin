@@ -35,6 +35,7 @@ use APP\publication\Publication;
 use APP\submission\Repository as SubmissionRepository;
 use APP\submission\Submission;
 use Illuminate\Database\ConnectionInterface;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PKP\tests\PKPTestCase;
 use RuntimeException;
@@ -121,14 +122,14 @@ class ThothBookRegistrationServiceTest extends PKPTestCase
 
     public function testRollsBackLocalWritesWhenPersistenceFails(): void
     {
-        $connection = new \Illuminate\Database\SQLiteConnection(new \PDO('sqlite::memory:'));
-        $connection->statement('CREATE TABLE work_links (work_id TEXT)');
+        $connection = DB::connection();
+        $connection->statement('CREATE TEMPORARY TABLE thoth_registration_test_work_links (work_id TEXT) ENGINE=InnoDB');
         $failure = new RuntimeException('Persistence failed after writing');
         $service = $this->createService(
             'persist',
             $failure,
             connection: $connection,
-            persist: fn ($data) => $connection->table('work_links')->insert(['work_id' => $data['thothWorkId']])
+            persist: fn ($data) => $connection->table('thoth_registration_test_work_links')->insert(['work_id' => $data['thothWorkId']])
         );
 
         try {
@@ -136,8 +137,10 @@ class ThothBookRegistrationServiceTest extends PKPTestCase
             self::fail('The persistence failure must be propagated.');
         } catch (RuntimeException $exception) {
             self::assertSame($failure, $exception);
-            self::assertSame(0, $connection->table('work_links')->count());
+            self::assertSame(0, $connection->table('thoth_registration_test_work_links')->count());
             self::assertSame(['create', 'metadata', 'activate', 'persist', 'delete'], $this->steps);
+        } finally {
+            $connection->statement('DROP TEMPORARY TABLE thoth_registration_test_work_links');
         }
     }
 
