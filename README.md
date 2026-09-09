@@ -207,6 +207,8 @@ into OMP 3.5 is also recognized automatically.
 
 ## Development
 
+See [Architecture](docs/architecture.md) for layer responsibilities, registration failure handling, and service contracts.
+
 ### Requirements
 
 - PHP 8.2+
