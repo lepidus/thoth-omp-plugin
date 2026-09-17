@@ -23,6 +23,22 @@ class EnvironmentTests(unittest.TestCase):
                 self.assertIn('Plan:', result.stdout)
             self.assertFalse((pathlib.Path(temp) / '.state').exists())
 
+    def test_cypress_plan_requires_dataset_and_never_calls_docker(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = pathlib.Path(temp)
+            script = root / 'environment.py'
+            shutil.copyfile(pathlib.Path(__file__).with_name('environment.py'), script)
+            command = [sys.executable, str(script), 'cypress', '--dataset', str(root)]
+            invalid = subprocess.run(command, env={'PATH': ''}, capture_output=True, text=True)
+            self.assertNotEqual(invalid.returncode, 0)
+            (root / 'database.sql').touch()
+            (root / 'files').mkdir()
+            (root / 'public').mkdir()
+            plan = subprocess.run(command, env={'PATH': ''}, capture_output=True, text=True)
+            self.assertEqual(plan.returncode, 0, plan.stderr)
+            self.assertIn('omp-db/thoth_cypress only', plan.stdout)
+            self.assertFalse((root / '.state').exists())
+
     def test_invalid_port_is_rejected_before_mutation(self):
         result = subprocess.run([sys.executable, str(pathlib.Path(__file__).with_name('environment.py')),
                                  'up', '--apply', '--port', '80'], capture_output=True, text=True)

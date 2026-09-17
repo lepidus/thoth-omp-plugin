@@ -69,6 +69,57 @@ monografia. A monografia de prova é excluída; a editora e o selo permanecem di
 Isso ainda não prova publicação/ativação, todos os metadados do plugin, upload,
 interface OMP ou comportamento do navegador.
 
+## Primeiro cenário Cypress: registro pelo botão
+
+O comando abaixo prepara um OMP descartável em outro container, com banco MySQL
+`thoth_cypress` no serviço `omp-db`, sem portas publicadas. O dump deve ser o
+dataset MySQL de OMP `stable-3_5_0`, contexto `publicknowledge` (Public Knowledge
+Press), acompanhado dos diretórios `files/` e `public/` do mesmo snapshot.
+Nenhum checkout ou banco OMP do host é alterado.
+
+```sh
+python3 tests/environment/environment.py up --apply
+python3 tests/environment/environment.py cypress \
+  --dataset /home/lepidus/Work/pkp/datasets/omp/stable-3_5_0/mysql
+# Após conferir o plano, adicionar --apply ao comando acima.
+python3 tests/environment/environment.py down --apply
+```
+
+O cenário cria uma monografia publicada com título único, faz login como o admin
+do dataset, abre a publicação, clica em Register e confirma o selo Cypress Imprint.
+Confere a resposta, o estado Active, o vínculo persistido no OMP e título/tipo/selo
+na API Thoth real. O runner executa a spec duas vezes sem restaurar dados entre
+elas. Não há mocks das respostas de registro.
+
+A configuração e os comandos Cypress são os do OMP. O router PHP exclusivo de
+testes injeta o cliente HTTP real conectado a `http://api:8000`; as regras de URL
+do plugin em produção permanecem intactas. O token fica fora da raiz web e não é
+enviado ao Cypress. Configuração do plugin e criação da fixture são precondições,
+não comportamentos cobertos por este cenário.
+
+As obras Active não podem ser excluídas pelo usuário restrito. Os dados criados
+permanecem somente nos bancos descartáveis até `down --apply`, que remove todo o
+projeto. O container Cypress fica disponível após o término para inspecionar
+`/tmp/thoth-omp-server.log` e screenshots em `/var/www/omp/cypress/screenshots`.
+Não reutilizar o banco descartável como instalação de desenvolvimento.
+
+A organização acompanha o plugin `customQuestions`:
+
+- `cypress/tests/functional/ThothRegistration.cy.js`: jornada e assertions;
+- `cypress/support/thoth.js`: helpers de preparação e consulta;
+- `cypress/support/ThothTestData.php`: criação da fixture e leitura do vínculo/API;
+- `tests/environment/`: infraestrutura Docker, configuração e inicialização.
+
+A configuração Cypress continua pertencendo ao OMP. A CI atual da Thoth não inclui
+o template de Cypress: antes de incluí-lo, o job precisa provisionar estes serviços.
+Esta etapa fornece o runner Docker local; o job GitLab abaixo continua sendo a prova
+da API, não a execução do Cypress.
+
+Validação em 17/09/2026: OMP 3.5 da imagem fixada, PHP 8.4.23, Node 20.19.2,
+Cypress 14.5.4 e Electron 130 headless. O cenário passou duas vezes consecutivas
+(cerca de 6 segundos cada), sem restaurar dados entre elas, consultando a Thoth real.
+O dataset usado foi `omp/stable-3_5_0/mysql` do checkout local de datasets PKP.
+
 ## Prova opt-in no GitLab
 
 A raiz `.gitlab-ci.yml` carrega `.gitlab/thoth-environment.yml` somente quando

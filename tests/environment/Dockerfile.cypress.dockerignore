@@ -1,0 +1,17 @@
+*
+!composer.json
+!composer.lock
+!ThothPlugin.php
+!ThothSettingsForm.php
+!version.xml
+!upgrade.xml
+!classes/**
+!locale/**
+!public/**
+!templates/**
+!registry/**
+!js/**
+!cypress/**
+!tests/environment/cypress-*.php
+!tests/environment/cypress-entrypoint.sh
+!tests/environment/cypress-configure.py
