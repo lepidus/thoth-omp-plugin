@@ -1,6 +1,11 @@
 variables:
     PLUGIN_NAME : 'thoth'
 
+# Keep workflow rules from the shared template (or the optional API probe).
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+
 include:
   - local: /.gitlab/thoth-services.yml
   - local: /.gitlab/thoth-environment.yml

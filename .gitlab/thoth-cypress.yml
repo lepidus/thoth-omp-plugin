@@ -1,5 +1,6 @@
 # Keep the shared OMP job, rules, dependency validation and artifact contract.
 plugin_integration_tests_omp:
+  interruptible: true
   extends: [.integration_tests_template, .thoth_environment]
   image: !reference [.thoth_environment, image]
   needs: [build_thoth_environment]

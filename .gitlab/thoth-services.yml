@@ -1,4 +1,5 @@
 build_thoth_environment:
+  interruptible: true
   stage: .pre
   rules:
     - if: '$THOTH_ENVIRONMENT_PROBE == "1"'
