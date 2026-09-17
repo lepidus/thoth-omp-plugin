@@ -13,5 +13,5 @@
 !js/**
 !cypress/**
 !tests/environment/cypress-*.php
-!tests/environment/cypress-entrypoint.sh
+!tests/environment/cypress-*.sh
 !tests/environment/cypress-configure.py

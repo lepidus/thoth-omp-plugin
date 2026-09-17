@@ -9,6 +9,7 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 
 from common import graphql, request
+from environment import execute_cypress
 
 
 class EnvironmentTests(unittest.TestCase):
@@ -16,7 +17,7 @@ class EnvironmentTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             script = pathlib.Path(temp) / 'environment.py'
             shutil.copyfile(pathlib.Path(__file__).with_name('environment.py'), script)
-            for action in ['up', 'down', 'smoke']:
+            for action in ['up', 'down', 'smoke', 'open', 'run']:
                 result = subprocess.run([sys.executable, str(script), action],
                                         env={'PATH': ''}, capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
@@ -38,6 +39,55 @@ class EnvironmentTests(unittest.TestCase):
             self.assertEqual(plan.returncode, 0, plan.stderr)
             self.assertIn('omp-db/thoth_cypress only', plan.stdout)
             self.assertFalse((root / '.state').exists())
+
+    def test_prepare_plan_requires_dataset_without_creating_state(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = pathlib.Path(temp)
+            script = root / 'environment.py'
+            shutil.copyfile(pathlib.Path(__file__).with_name('environment.py'), script)
+            command = [sys.executable, str(script), 'prepare', '--dataset', str(root)]
+            result = subprocess.run(command, env={'PATH': ''}, capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            (root / 'database.sql').touch()
+            (root / 'files').mkdir()
+            (root / 'public').mkdir()
+            result = subprocess.run(command, env={'PATH': ''}, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn('omp-db/thoth_cypress only', result.stdout)
+            self.assertFalse((root / '.state').exists())
+
+    def test_run_rejects_spec_outside_plugin_before_mutation(self):
+        with tempfile.TemporaryDirectory() as temp:
+            script = pathlib.Path(temp) / 'environment.py'
+            shutil.copyfile(pathlib.Path(__file__).with_name('environment.py'), script)
+            for spec in ['../other.cy.js', '/tmp/other.cy.js', 'missing.cy.js']:
+                result = subprocess.run([sys.executable, str(script), 'run', '--spec', spec, '--apply'],
+                                        env={'PATH': ''}, capture_output=True, text=True)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('--spec must name', result.stderr)
+            self.assertFalse((pathlib.Path(temp) / '.state').exists())
+
+    def test_spec_is_only_accepted_for_run(self):
+        result = subprocess.run([sys.executable, str(pathlib.Path(__file__).with_name('environment.py')),
+                                 'up', '--spec', 'ThothRegistration.cy.js'], capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('--spec is only supported by run', result.stderr)
+
+    def test_interrupted_cypress_still_requests_remote_process_cleanup(self):
+        calls = []
+
+        def docker(*args):
+            calls.append(args)
+            if 'setsid' in args:
+                raise KeyboardInterrupt()
+
+        with self.assertRaises(KeyboardInterrupt):
+            execute_cypress(docker, 'entrypoint.sh', '--open', display=':0', authority='/root/.Xauthority')
+        self.assertEqual(len(calls), 2)
+        self.assertIn('setsid', calls[0])
+        self.assertIn('python3', calls[1])
+        self.assertIn('os.killpg', calls[1][-2])
+        self.assertIn(calls[1][-1], calls[0])
 
     def test_invalid_port_is_rejected_before_mutation(self):
         result = subprocess.run([sys.executable, str(pathlib.Path(__file__).with_name('environment.py')),

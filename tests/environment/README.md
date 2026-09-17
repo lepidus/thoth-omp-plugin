@@ -25,6 +25,29 @@ python3 tests/environment/environment.py cypress \
 To repeat the tests, run the `cypress` command again. It restores the disposable OMP
 database and runs the suite twice. Without `--apply`, the commands only show the plan.
 
+## Interactive use
+
+After `up`, prepare OMP and open Cypress:
+
+```sh
+python3 tests/environment/environment.py prepare --dataset /path/to/omp-dataset --apply
+python3 tests/environment/environment.py open --apply
+```
+
+Requires a local X11/XWayland session and `xauth`. The container accesses your X11
+session; use only trusted images and tests.
+
+Select a spec in the Cypress window. Test edits are available without rebuilding.
+Closing Cypress keeps OMP running. To run a spec without the GUI, replace `example.cy.js`
+with a filename from `cypress/tests/functional`:
+
+```sh
+python3 tests/environment/environment.py run --spec example.cy.js --apply
+```
+
+Omit `--spec` to run all tests once. `open` and `run` reuse the prepared database;
+`prepare` restores it. Close Cypress before running another environment command.
+
 ## Shut down
 
 ```sh

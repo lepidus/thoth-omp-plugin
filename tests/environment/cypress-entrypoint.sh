@@ -4,39 +4,36 @@ test "${THOTH_DISPOSABLE:-}" = 1
 test "$PWD" = /var/www/omp
 test -f /thoth-state/client.json
 
-if [[ "${1:-}" = --image-dataset ]]; then
-    # The OMP CI image ships this dump and its matching files/public directories.
-    dataset_dump=/tmp/dump.sql
-elif [[ $# = 0 ]]; then
-    dataset_dump=/dataset/database.sql
-    test -d /dataset/files
-    test -d /dataset/public
-    cp -a /dataset/files/. files/
-    cp -a /dataset/public/. public/
-else
-    echo 'Expected no argument or --image-dataset' >&2
-    exit 1
-fi
-test -f "$dataset_dump"
+mode=${1:-}
+spec_pattern='plugins/generic/thoth/cypress/tests/functional/*.cy.js'
+reporter_args=()
+run_args=()
+case "$mode" in
+    --open)
+        test $# = 1
+        exec npx --no-install cypress open --e2e --browser electron \
+          --config "{\"baseUrl\":\"http://127.0.0.1:8001\",\"specPattern\":\"$spec_pattern\",\"watchForFileChanges\":true,\"numTestsKeptInMemory\":50}"
+        ;;
+    --run)
+        test $# -le 2
+        if [[ $# = 2 ]]; then
+            test "${2##*/}" = "$2"
+            [[ "$2" = *.cy.js ]]
+            test -f "plugins/generic/thoth/cypress/tests/functional/$2"
+            run_args=(--spec "plugins/generic/thoth/cypress/tests/functional/$2")
+        fi
+        ;;
+    --serve)
+        test $# = 1
+        bash plugins/generic/thoth/tests/environment/cypress-prepare.sh
+        ;;
+    ''|--image-dataset)
+        bash plugins/generic/thoth/tests/environment/cypress-prepare.sh "$@"
+        ;;
+    *) echo 'Expected --serve, --run [spec.cy.js], --open or --image-dataset' >&2; exit 1 ;;
+esac
 
-python3 plugins/generic/thoth/tests/environment/cypress-configure.py
-# This hostname and database belong only to the Compose test project.
-for attempt in {1..60}; do
-    if MYSQL_PWD=disposable-omp-only mysql --skip-ssl -h omp-db -u omp thoth_cypress \
-      -e 'SELECT 1' >/dev/null 2>&1; then
-        break
-    fi
-    if [[ "$attempt" = 60 ]]; then
-        echo 'Disposable OMP database did not become ready' >&2
-        exit 1
-    fi
-    sleep 1
-done
-MYSQL_PWD=disposable-omp-only mysql --skip-ssl -h omp-db -u omp thoth_cypress < "$dataset_dump"
-php -v | head -1
-php lib/pkp/tools/installPluginVersion.php plugins/generic/thoth/version.xml
-php lib/pkp/tools/appKey.php generate --force
-php plugins/generic/thoth/cypress/support/ThothTestData.php configure
+if [[ "$mode" != --run ]]; then
 php -S 127.0.0.1:8001 plugins/generic/thoth/tests/environment/cypress-router.php > /tmp/thoth-omp-server.log 2>&1 &
 server_pid=$!
 trap 'kill "$server_pid" 2>/dev/null || true' EXIT
@@ -53,15 +50,24 @@ else:
     raise SystemExit('OMP server did not become ready; inspect /tmp/thoth-omp-server.log')
 PY
 
-# Reuse OMP's Cypress configuration and support commands. Repeat without restoring data.
-for run in 1 2; do
+
+    if [[ "$mode" = --serve ]]; then
+        echo 'Disposable OMP ready; use environment.py open or run.'
+        wait "$server_pid"
+        exit
+    fi
+fi
+
+# CI and the one-shot local command repeat without restoring data between runs.
+runs=2
+[[ "$mode" = --run ]] && runs=1
+for ((run = 1; run <= runs; run++)); do
     echo "Thoth scenarios, run $run"
-    reporter_args=()
     if [[ -n "${CI_PROJECT_DIR:-}" ]]; then
         mkdir -p "$CI_PROJECT_DIR/results"
         reporter_args=(--reporter junit --reporter-options "mochaFile=$CI_PROJECT_DIR/results/spec-$run-[hash].xml")
     fi
     npx --no-install cypress run --headless --browser electron \
-      "${reporter_args[@]}" \
-      --config '{"baseUrl":"http://127.0.0.1:8001","specPattern":"plugins/generic/thoth/cypress/tests/functional/*.cy.js"}'
+      "${reporter_args[@]}" "${run_args[@]}" \
+      --config "{\"baseUrl\":\"http://127.0.0.1:8001\",\"specPattern\":\"$spec_pattern\"}"
 done
