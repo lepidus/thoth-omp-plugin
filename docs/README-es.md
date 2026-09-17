@@ -237,12 +237,8 @@ npm run build
 php lib/pkp/lib/vendor/bin/phpunit -c lib/pkp/tests/phpunit.xml --no-coverage plugins/generic/thoth/tests
 ```
 
-Los escenarios Cypress de registro mediante el botón, registro al publicar, registro masivo y
-actualización de metadatos están en `cypress/tests/functional`, con funciones auxiliares en `cypress/support`.
-Ejecútelos en el [entorno desechable OMP y Thoth](../tests/environment/README-es.md)
-para evitar escrituras en las instancias públicas de Thoth. La pipeline habitual de GitLab ejecuta
-estos escenarios en `plugin_integration_tests_omp`, utilizando servicios aislados y publicando
-informes JUnit y capturas de pantalla en caso de fallo.
+Ejecute las pruebas Cypress en el [entorno desechable OMP y Thoth](../tests/environment/README-es.md).
+Las mismas pruebas también se ejecutan en GitLab CI.
 
 ## Créditos
 
