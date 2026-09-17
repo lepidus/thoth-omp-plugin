@@ -2,8 +2,7 @@
 
 # Cypress tests
 
-The tests cover registration by button, registration on publication, bulk registration
-and metadata updates. They use disposable OMP and Thoth instances without changing your
+The Cypress tests use disposable OMP and Thoth instances without changing your
 local installation or writing to public Thoth APIs.
 
 ## Requirements

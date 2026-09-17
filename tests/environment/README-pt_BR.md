@@ -2,8 +2,7 @@
 
 # Testes Cypress
 
-Os testes cobrem registro pelo botão, registro ao publicar, registro em massa e
-atualização de metadados. Usam OMP e Thoth descartáveis, sem alterar sua instalação
+Os testes Cypress usam OMP e Thoth descartáveis, sem alterar sua instalação
 local nem gravar nas APIs públicas da Thoth.
 
 ## Requisitos

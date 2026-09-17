@@ -2,8 +2,7 @@
 
 # Pruebas Cypress
 
-Las pruebas cubren el registro mediante el botón, el registro al publicar, el registro
-masivo y la actualización de metadatos. Utilizan instancias desechables de OMP y Thoth,
+Las pruebas Cypress utilizan instancias desechables de OMP y Thoth,
 sin modificar su instalación local ni escribir en las APIs públicas de Thoth.
 
 ## Requisitos
