@@ -89,6 +89,18 @@ class EnvironmentTests(unittest.TestCase):
         self.assertIn('os.killpg', calls[1][-2])
         self.assertIn(calls[1][-1], calls[0])
 
+    def test_graphical_launch_preserves_x11_access_without_affecting_headless(self):
+        for display in (':0', None):
+            calls = []
+            execute_cypress(lambda *args: calls.append(args), 'entrypoint.sh',
+                            '--open' if display else '--run',
+                            display=display, authority='/root/.Xauthority' if display else None)
+            option = 'CYPRESS_INTERNAL_DEV_DEBUG=--in-process-gpu'
+            if display:
+                self.assertIn(option, calls[0])
+            else:
+                self.assertNotIn(option, calls[0])
+
     def test_invalid_port_is_rejected_before_mutation(self):
         result = subprocess.run([sys.executable, str(pathlib.Path(__file__).with_name('environment.py')),
                                  'up', '--apply', '--port', '80'], capture_output=True, text=True)

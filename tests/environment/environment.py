@@ -149,7 +149,11 @@ def execute_cypress(run, entrypoint, *arguments, display=None, authority=None):
     # Docker exec does not forward Ctrl+C reliably. Own a separate process group
     # and stop it explicitly before releasing the CLI lock or removing X authority.
     pid_file = "/tmp/thoth-cypress-" + secrets.token_hex(8) + ".pid"
-    environment = ["-e", "DISPLAY=" + display, "-e", "XAUTHORITY=" + authority] if display else []
+    # Electron's separate GPU process fails X11 authorization under XWayland.
+    # Cypress 14.5.4 forwards this single Chromium switch before its CLI arguments;
+    # keep graphics in the authorized process only for the disposable GUI session.
+    environment = ["-e", "DISPLAY=" + display, "-e", "XAUTHORITY=" + authority,
+                   "-e", "CYPRESS_INTERNAL_DEV_DEBUG=--in-process-gpu"] if display else []
     try:
         run("exec", "-T", *environment, "cypress", "setsid", "--wait", "bash", "-c",
             'echo $$ > "$1"; shift; exec "$@"', "thoth-cypress", pid_file,
