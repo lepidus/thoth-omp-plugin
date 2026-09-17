@@ -55,7 +55,7 @@ PY
 
 # Reuse OMP's Cypress configuration and support commands. Repeat without restoring data.
 for run in 1 2; do
-    echo "Registration scenario, run $run"
+    echo "Thoth scenarios, run $run"
     reporter_args=()
     if [[ -n "${CI_PROJECT_DIR:-}" ]]; then
         mkdir -p "$CI_PROJECT_DIR/results"

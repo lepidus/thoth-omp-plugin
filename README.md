@@ -233,9 +233,10 @@ npm run build
 php lib/pkp/lib/vendor/bin/phpunit -c lib/pkp/tests/phpunit.xml --no-coverage plugins/generic/thoth/tests
 ```
 
-The Cypress registration scenario lives in `cypress/tests/functional`, with helpers
-in `cypress/support`. Run it against the [disposable OMP and Thoth environment](tests/environment/README.md)
-to avoid writing to public Thoth instances. The regular GitLab pipeline runs the same scenario in `plugin_integration_tests_omp`,
+The Cypress scenarios for registration by button, registration on publication, bulk registration,
+and metadata updates live in `cypress/tests/functional`, with helpers
+in `cypress/support`. Run them against the [disposable OMP and Thoth environment](tests/environment/README.md)
+to avoid writing to public Thoth instances. The regular GitLab pipeline runs these scenarios in `plugin_integration_tests_omp`,
 using isolated services and publishing JUnit reports and failure screenshots.
 
 ## Credits

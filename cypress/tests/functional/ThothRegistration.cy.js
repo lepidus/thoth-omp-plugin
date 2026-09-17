@@ -15,7 +15,8 @@ describe('Thoth book registration', function () {
 		cy.login('admin', 'admin', 'publicknowledge');
 		cy.visit(`/index.php/publicknowledge/en/workflow/access/${this.book.submissionId}`);
 		cy.openWorkflowMenu('Title & Abstract');
-		cy.contains('span', 'Thoth Status:').parent().contains('Unregistered').scrollIntoView().should('be.visible');
+		cy.contains('span', 'Thoth Status:').parent().contains('Unregistered').scrollIntoView();
+		cy.contains('span', 'Thoth Status:').parent().contains('Unregistered').should('be.visible');
 
 		// Confirm registration with the disposable publisher's imprint.
 		// PKP submits forms as POST with a method override for the PUT endpoint.
@@ -30,7 +31,8 @@ describe('Thoth book registration', function () {
 			expect(response.body.thothWorkId).to.match(/^[a-f0-9-]{36}$/);
 		});
 		cy.get('.pkpWorkflow__thothRegisterModal form').should('not.exist');
-		cy.contains('span', 'Thoth Status:').parent().contains('span', /^\s*Active\s*$/).scrollIntoView().should('be.visible');
+		cy.contains('span', 'Thoth Status:').parent().contains('span', /^\s*Active\s*$/).scrollIntoView();
+		cy.contains('span', 'Thoth Status:').parent().contains('span', /^\s*Active\s*$/).should('be.visible');
 
 		// Check persisted OMP linkage and metadata in the real, isolated Thoth API.
 		readRegisteredWork(this.book.key).then((work) => {
@@ -40,7 +42,8 @@ describe('Thoth book registration', function () {
 			expect(work.imprintId).to.eq(this.book.imprintId);
 		});
 		cy.reload();
-		cy.contains('span', 'Thoth Status:').parent().contains('span', /^\s*Active\s*$/).scrollIntoView().should('be.visible');
+		cy.contains('span', 'Thoth Status:').parent().contains('span', /^\s*Active\s*$/).scrollIntoView();
+		cy.contains('span', 'Thoth Status:').parent().contains('span', /^\s*Active\s*$/).should('be.visible');
 		cy.contains('span', 'Thoth Status:').parent().contains('button', /^\s*Register\s*$/).should('not.exist');
 	});
 });

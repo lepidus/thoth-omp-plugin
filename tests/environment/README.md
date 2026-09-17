@@ -3,7 +3,7 @@
 Este ambiente sobe uma API Thoth real, autenticação Zitadel e duas bases PostgreSQL.
 O bootstrap cria uma editora, um selo e uma conta de serviço restrita a essa editora,
 com `PUBLISHER_USER` e `WORK_LIFECYCLE`. Não usa credenciais nem APIs públicas da Thoth.
-Ainda não configura o OMP e não executa Cypress.
+Também prepara um OMP descartável para executar os cenários Cypress descritos abaixo.
 
 ## Uso local
 
@@ -36,8 +36,8 @@ O bootstrap não é idempotente. Não reiniciar containers individualmente nem t
 reaproveitar seus bancos: usar `down --apply` e depois `up --apply`. Após falha na
 preparação, os recursos ficam disponíveis para diagnóstico; o mesmo comando `down`
 faz o descarte. A imagem construída fica em cache, para acelerar a próxima criação.
-O reset do OMP e o reset por caso Cypress serão implementados quando esses testes
-forem integrados.
+Cada execução do comando Cypress restaura o dataset OMP; cada caso cria livros próprios
+com identificadores únicos, sem depender dos dados deixados pelos outros casos.
 
 ## Componentes e isolamento
 
@@ -69,7 +69,7 @@ monografia. A monografia de prova é excluída; a editora e o selo permanecem di
 Isso ainda não prova publicação/ativação, todos os metadados do plugin, upload,
 interface OMP ou comportamento do navegador.
 
-## Primeiro cenário Cypress: registro pelo botão
+## Cenários Cypress
 
 O comando abaixo prepara um OMP descartável em outro container, com banco MySQL
 `thoth_cypress` no serviço `omp-db`, sem portas publicadas. O dump deve ser o
@@ -85,17 +85,26 @@ python3 tests/environment/environment.py cypress \
 python3 tests/environment/environment.py down --apply
 ```
 
-O cenário cria uma monografia publicada com título único, faz login como o admin
-do dataset, abre a publicação, clica em Register e confirma o selo Cypress Imprint.
-Confere a resposta, o estado Active, o vínculo persistido no OMP e título/tipo/selo
-na API Thoth real. O runner executa a spec duas vezes sem restaurar dados entre
-elas. Não há mocks das respostas de registro.
+A suíte cobre quatro jornadas pela interface, com livros únicos por caso:
+
+- **Registro pelo botão:** registra uma monografia publicada e confere o vínculo,
+  título, tipo, selo e estado Active na Thoth.
+- **Registro ao publicar:** publica um rascunho com consentimento de registro e selo,
+  conferindo a publicação no OMP e a obra Active na Thoth.
+- **Registro em massa:** seleciona dois de três livros de um grupo próprio e confirma
+  os registros; o terceiro permanece sem requisição de registro e sem vínculo.
+- **Atualização de metadados:** sincroniza pelo botão um rascunho já vinculado cuja
+  obra remota tem título antigo; confere o título atualizado no mesmo identificador.
+
+O runner executa a suíte duas vezes sem restaurar dados entre elas. Não há mocks
+nas respostas da Thoth. Para preparar o caso de atualização, a fixture cria uma obra
+Forthcoming com título antigo na API descartável e persiste seu vínculo no OMP.
 
 A configuração e os comandos Cypress são os do OMP. O router PHP exclusivo de
 testes injeta o cliente HTTP real conectado a `http://api:8000`; as regras de URL
 do plugin em produção permanecem intactas. O token fica fora da raiz web e não é
 enviado ao Cypress. Configuração do plugin e criação da fixture são precondições,
-não comportamentos cobertos por este cenário.
+não comportamentos cobertos por esses cenários.
 
 As obras Active não podem ser excluídas pelo usuário restrito. Os dados criados
 permanecem somente nos bancos descartáveis até `down --apply`, que remove todo o
@@ -105,7 +114,7 @@ Não reutilizar o banco descartável como instalação de desenvolvimento.
 
 A organização acompanha o plugin `customQuestions`:
 
-- `cypress/tests/functional/ThothRegistration.cy.js`: jornada e assertions;
+- `cypress/tests/functional/*.cy.js`: uma jornada por arquivo e suas assertions;
 - `cypress/support/thoth.js`: helpers de preparação e consulta;
 - `cypress/support/ThothTestData.php`: criação da fixture e leitura do vínculo/API;
 - `tests/environment/`: infraestrutura Docker, configuração e inicialização.
@@ -130,8 +139,8 @@ a definição atual em YAML possui comentário `gitleaks:allow`. Não exclui arq
 inteiros nem regras de detecção. Esta instância não habilita rulesets personalizados.
 
 Validação em 17/09/2026: OMP 3.5 da imagem fixada, PHP 8.4.23, Node 20.19.2,
-Cypress 14.5.4 e Electron 130 headless. O cenário passou duas vezes consecutivas
-(cerca de 6 segundos cada), sem restaurar dados entre elas, consultando a Thoth real.
+Cypress 14.5.4 e Electron 130 headless. A execução consulta a Thoth real nos quatro
+cenários e repete a suíte sem restaurar os dados entre as execuções.
 O dataset usado foi `omp/stable-3_5_0/mysql` do checkout local de datasets PKP.
 
 ## Prova opt-in no GitLab
