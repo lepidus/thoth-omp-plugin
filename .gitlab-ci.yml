@@ -2,6 +2,7 @@ variables:
     PLUGIN_NAME : 'thoth'
 
 include:
+  - local: /.gitlab/thoth-services.yml
   - local: /.gitlab/thoth-environment.yml
     rules:
       - if: '$THOTH_ENVIRONMENT_PROBE == "1"'
@@ -12,6 +13,10 @@ include:
     file:
       - 'templates/groups/pkp_plugin.yml'
       - 'templates/groups/omp/unit_tests.yml'
+      - 'templates/groups/omp/cypress_tests.yml'
+  - local: /.gitlab/thoth-cypress.yml
+    rules:
+      - if: '$THOTH_ENVIRONMENT_PROBE != "1"'
 
 .unit_test_template:
   before_script:

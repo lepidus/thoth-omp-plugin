@@ -110,10 +110,22 @@ A organização acompanha o plugin `customQuestions`:
 - `cypress/support/ThothTestData.php`: criação da fixture e leitura do vínculo/API;
 - `tests/environment/`: infraestrutura Docker, configuração e inicialização.
 
-A configuração Cypress continua pertencendo ao OMP. A CI atual da Thoth não inclui
-o template de Cypress: antes de incluí-lo, o job precisa provisionar estes serviços.
-Esta etapa fornece o runner Docker local; o job GitLab abaixo continua sendo a prova
-da API, não a execução do Cypress.
+A configuração Cypress continua pertencendo ao OMP. A pipeline regular inclui
+`templates/groups/omp/cypress_tests.yml` e adapta `plugin_integration_tests_omp`
+em `.gitlab/thoth-cypress.yml`. Reutiliza regras, cache, validação de dependências
+e artefatos do template; altera somente serviços e preparação/execução necessários
+à Thoth. A suíte completa `omp_integration_tests` fica desativada.
+
+O build BuildKit em `.pre` publica a imagem auxiliar por SHA; o Cypress aguarda
+esse job e o bootstrap dos serviços Thoth/Zitadel/PostgreSQL. Um MySQL separado
+recebe `/tmp/dump.sql` e os arquivos correspondentes, já incluídos na imagem OMP
+fixada. O entrypoint compartilhado aceita `--image-dataset` nesse caso. O token
+restrito é copiado para `/thoth-state` fora da raiz web e removido em `after_script`.
+Os dois runs geram XMLs JUnit separados; screenshots e logs seguem o contrato
+de artefatos compartilhado. A CI usa rede exclusiva por job, sem Docker-in-Docker.
+
+O scanner de segredos mantém as regras padrão com uma exceção estrita à URL
+fictícia do banco Thoth descartável. Não exclui arquivos nem padrões de tokens.
 
 Validação em 17/09/2026: OMP 3.5 da imagem fixada, PHP 8.4.23, Node 20.19.2,
 Cypress 14.5.4 e Electron 130 headless. O cenário passou duas vezes consecutivas
@@ -123,10 +135,10 @@ O dataset usado foi `omp/stable-3_5_0/mysql` do checkout local de datasets PKP.
 ## Prova opt-in no GitLab
 
 A raiz `.gitlab-ci.yml` carrega `.gitlab/thoth-environment.yml` somente quando
-`THOTH_ENVIRONMENT_PROBE=1`. Sem essa variável, preserva os templates normais.
+`THOTH_ENVIRONMENT_PROBE=1`. Sem essa variável, executa os templates normais, incluindo o Cypress integrado.
 Não é necessário mudar os templates compartilhados.
 
-- Build: runner com tag `buildkit-rootless`, construção sem Docker-in-Docker e push
+- Build compartilhado com Cypress: runner com tag `buildkit-rootless`, construção sem Docker-in-Docker e push
   da imagem auxiliar para `$CI_REGISTRY_IMAGE/test-environment:$CI_COMMIT_SHA`.
 - Prova: imagem OMP 3.5 já adotada pela CI, runner com tag `atualizacoes2`, dois
   PostgreSQLs, Zitadel e Thoth como serviços. `FF_NETWORK_PER_BUILD=true` permite

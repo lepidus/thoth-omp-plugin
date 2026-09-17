@@ -235,8 +235,8 @@ php lib/pkp/lib/vendor/bin/phpunit -c lib/pkp/tests/phpunit.xml --no-coverage pl
 
 The Cypress registration scenario lives in `cypress/tests/functional`, with helpers
 in `cypress/support`. Run it against the [disposable OMP and Thoth environment](tests/environment/README.md)
-to avoid writing to public Thoth instances. The current GitLab environment probe
-tests the API only; the Cypress scenario is run locally with the documented Docker runner.
+to avoid writing to public Thoth instances. The regular GitLab pipeline runs the same scenario in `plugin_integration_tests_omp`,
+using isolated services and publishing JUnit reports and failure screenshots.
 
 ## Credits
 
