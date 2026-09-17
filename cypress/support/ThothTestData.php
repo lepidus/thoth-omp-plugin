@@ -33,18 +33,38 @@ try {
         $published = $command === 'create';
         $status = $published ? Submission::STATUS_PUBLISHED : Submission::STATUS_QUEUED;
         $key = bin2hex(random_bytes(16));
-        $group = $argv[2] ?? $key;
-        if (!preg_match('/^[a-zA-Z0-9-]{1,64}$/D', $group)) {
+        $group = $argv[2] ?? null;
+        if ($group !== null && !preg_match('/^[a-zA-Z0-9-]{1,64}$/D', $group)) {
             throw new RuntimeException('Invalid fixture group');
         }
-        $title = 'Cypress ' . $group . ' ' . $key;
+        // Fixed fictional books keep failures reproducible; only the test suffix varies.
+        $books = [
+            'create' => [
+                'title' => 'Open Science and Scholarly Publishing',
+                'abstract' => 'An introduction to open research practices and the role of university presses '
+                    . 'in making scholarly knowledge accessible to wider audiences.',
+            ],
+            'create-draft' => [
+                'title' => 'Libraries and the Preservation of Digital Memory',
+                'abstract' => 'A study of how academic libraries preserve digital collections and support '
+                    . 'long-term access to the cultural and scientific record.',
+            ],
+            'create-linked-draft' => [
+                'title' => 'Open Access and University Presses',
+                'abstract' => 'An examination of editorial practices, sustainable publishing models and '
+                    . 'the changing relationship between university presses and their readers.',
+            ],
+        ];
+        $book = $books[$command];
+        $suffix = ' [' . ($group !== null ? $group . '-' : '') . substr($key, 0, 10) . ']';
+        $title = $book['title'] . $suffix;
         $submission = Repo::submission()->newDataObject([
             'contextId' => 1, 'locale' => 'en', 'status' => $status,
             'stageId' => WORKFLOW_STAGE_ID_PRODUCTION, 'submissionProgress' => '',
             'workType' => Submission::WORK_TYPE_AUTHORED_WORK,
         ]);
         $publication = Repo::publication()->newDataObject([
-            'locale' => 'en', 'title' => ['en' => $title],
+            'locale' => 'en', 'title' => ['en' => $title], 'abstract' => ['en' => $book['abstract']],
             'urlPath' => 'thoth-cypress-' . $key,
             'status' => $status, 'datePublished' => $published ? '2020-01-01' : null,
         ]);
@@ -54,7 +74,7 @@ try {
             'imprintId' => $credentials['imprintId']];
         if ($command === 'create-linked-draft') {
             // Seed an existing remote work with stale metadata; synchronization is tested through the UI.
-            $oldTitle = $title . ' old metadata';
+            $oldTitle = 'Scholarly Communication in Transition' . $suffix;
             $work = thothFixtureGraphql(
                 $credentials,
                 'mutation($data: NewWork!) { createWork(data: $data) { workId } }',

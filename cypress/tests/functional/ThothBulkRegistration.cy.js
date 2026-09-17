@@ -8,7 +8,7 @@ import {seedPublishedBook, readRegisteredWork, readBookState} from '../../suppor
 describe('Thoth bulk registration', function () {
 	beforeEach(function () {
 		// OMP searches punctuation-separated words with OR; keep the group a single token.
-		this.group = `bulk${Date.now()}${Cypress._.random(1000, 9999)}`;
+		this.group = `batch${Date.now().toString(36)}${Cypress._.random(0, 65535).toString(16)}`;
 		seedPublishedBook(this.group).as('firstBook');
 		seedPublishedBook(this.group).as('secondBook');
 		seedPublishedBook(this.group).as('unselectedBook');
