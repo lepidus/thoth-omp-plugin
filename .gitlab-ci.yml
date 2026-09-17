@@ -2,7 +2,12 @@ variables:
     PLUGIN_NAME : 'thoth'
 
 include:
+  - local: /.gitlab/thoth-environment.yml
+    rules:
+      - if: '$THOTH_ENVIRONMENT_PROBE == "1"'
   - project: 'documentacao-e-tarefas/modelosparaintegracaocontinua'
+    rules:
+      - if: '$THOTH_ENVIRONMENT_PROBE != "1"'
     ref: stable-3_5_0
     file:
       - 'templates/groups/pkp_plugin.yml'
