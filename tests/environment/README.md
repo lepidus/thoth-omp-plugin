@@ -125,6 +125,11 @@ em `.gitlab/thoth-cypress.yml`. Reutiliza regras, cache, validação de dependê
 e artefatos do template; altera somente serviços e preparação/execução necessários
 à Thoth. A suíte completa `omp_integration_tests` fica desativada.
 
+O workflow compartilhado executa a pipeline da branch enquanto não há MR aberto
+e passa a executar somente a pipeline do MR quando ele existe. Um novo commit
+cancela os jobs antigos de Cypress e de build do ambiente descartável, marcados
+como `interruptible`. Os demais jobs mantêm sua política de cancelamento.
+
 O build BuildKit em `.pre` publica a imagem auxiliar por SHA; o Cypress aguarda
 esse job e o bootstrap dos serviços Thoth/Zitadel/PostgreSQL. Um MySQL separado
 recebe `/tmp/dump.sql` e os arquivos correspondentes, já incluídos na imagem OMP
