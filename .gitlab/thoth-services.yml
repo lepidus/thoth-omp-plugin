@@ -33,7 +33,7 @@ build_thoth_environment:
     FF_NETWORK_PER_BUILD: "true"
     THOTH_DISPOSABLE: "1"
     THOTH_STATE_DIR: /builds/thoth-environment-$CI_JOB_ID
-    DATABASE_URL: postgres://thoth:isolated-test-only@thoth-db/thoth
+    DATABASE_URL: postgres://thoth:isolated-test-only@thoth-db/thoth # gitleaks:allow -- public disposable fixture
     ZITADEL_URL: http://zitadel:8080
     THOTH_GRAPHQL_API: http://thoth:8000
     GRAPHQL_API_HOST: 0.0.0.0

@@ -124,8 +124,10 @@ restrito é copiado para `/thoth-state` fora da raiz web e removido em `after_sc
 Os dois runs geram XMLs JUnit separados; screenshots e logs seguem o contrato
 de artefatos compartilhado. A CI usa rede exclusiva por job, sem Docker-in-Docker.
 
-O scanner de segredos mantém as regras padrão com uma exceção estrita à URL
-fictícia do banco Thoth descartável. Não exclui arquivos nem padrões de tokens.
+O scanner de segredos mantém as regras padrão. `.gitleaksignore` identifica apenas
+os três achados históricos da URL fictícia do PostgreSQL por commit/arquivo/regra/linha;
+a definição atual em YAML possui comentário `gitleaks:allow`. Não exclui arquivos
+inteiros nem regras de detecção. Esta instância não habilita rulesets personalizados.
 
 Validação em 17/09/2026: OMP 3.5 da imagem fixada, PHP 8.4.23, Node 20.19.2,
 Cypress 14.5.4 e Electron 130 headless. O cenário passou duas vezes consecutivas
