@@ -45,7 +45,7 @@
         "ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINE_USERNAME": "bootstrap",
         "ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINE_NAME": "Disposable bootstrap",
         "ZITADEL_FIRSTINSTANCE_PATPATH": "/state/admin.pat",
-        "ZITADEL_FIRSTINSTANCE_ORG_MACHINE_PAT_EXPIRATIONDATE": "${BOOTSTRAP_PAT_EXPIRES:?Set a short future RFC3339 timestamp}",
+        "ZITADEL_FIRSTINSTANCE_ORG_MACHINE_PAT_EXPIRATIONDATE": "${BOOTSTRAP_PAT_EXPIRES:?Set the disposable bootstrap expiry}",
         "THOTH_DISPOSABLE": "1",
         "ZITADEL_MASTERKEY": "${ZITADEL_MASTERKEY:?Set an ephemeral 32-character key}"
       },
@@ -90,7 +90,8 @@
         "THOTH_DISPOSABLE": "1"
       },
       "volumes": [
-        "bootstrap:/state"
+        "bootstrap:/state",
+        "client:/client"
       ],
       "healthcheck": {
         "test": [
@@ -147,7 +148,8 @@
   "volumes": {
     "thoth-data": {},
     "zitadel-data": {},
-    "bootstrap": {}
+    "bootstrap": {},
+    "client": {}
   },
   "networks": {
     "default": {

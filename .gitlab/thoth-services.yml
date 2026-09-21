@@ -34,6 +34,7 @@ build_thoth_environment:
     FF_NETWORK_PER_BUILD: "true"
     THOTH_DISPOSABLE: "1"
     THOTH_STATE_DIR: /builds/thoth-environment-$CI_JOB_ID
+    THOTH_CLIENT_DIR: /builds/thoth-environment-$CI_JOB_ID/client
     DATABASE_URL: postgres://thoth:isolated-test-only@thoth-db/thoth # gitleaks:allow -- public disposable fixture
     ZITADEL_URL: http://zitadel:8080
     THOTH_GRAPHQL_API: http://thoth:8000
@@ -91,5 +92,7 @@ build_thoth_environment:
       variables:
         HEALTHCHECK_TCP_PORT: "8000"
   after_script:
-    - rm -f "$THOTH_STATE_DIR/client.json" "$THOTH_STATE_DIR/admin.pat" "$THOTH_STATE_DIR/ready"
+    - rm -f "$THOTH_CLIENT_DIR/client.json"
+    - rmdir "$THOTH_CLIENT_DIR" 2>/dev/null || true
+    - rm -f "$THOTH_STATE_DIR/admin.pat" "$THOTH_STATE_DIR/ready" "$THOTH_STATE_DIR/bootstrap.json" "$THOTH_STATE_DIR/fixture.json" "$THOTH_STATE_DIR/refresh.lock" "$THOTH_STATE_DIR/initializing"
     - rmdir "$THOTH_STATE_DIR" 2>/dev/null || true

@@ -17,13 +17,28 @@ plugin_integration_tests_omp:
   script:
     - python3 tests/environment/ci_probe.py
     - install -d -m 700 /thoth-state
-    - install -m 600 "$THOTH_STATE_DIR/client.json" /thoth-state/client.json
+    - install -m 600 "$THOTH_CLIENT_DIR/client.json" /thoth-state/client.json
     - composer install --no-dev --no-interaction --prefer-dist --no-progress
     - cp -r "$CI_PROJECT_DIR" /var/www/omp/plugins/generic/thoth
     - cd /var/www/omp
     - export CYPRESS_baseUrl=http://127.0.0.1:8001
     - export CYPRESS_screenshotsFolder="$CI_PROJECT_DIR/cypress/screenshots"
-    - bash plugins/generic/thoth/tests/environment/cypress-entrypoint.sh --image-dataset
+    - |
+      bash plugins/generic/thoth/tests/environment/cypress-entrypoint.sh prepare --image-dataset &
+      omp_pid=$!
+      trap 'kill "$omp_pid" 2>/dev/null || true' EXIT
+      ready=0
+      for attempt in $(seq 1 180); do
+        kill -0 "$omp_pid" || exit 1
+        if curl -fsS -o /dev/null http://127.0.0.1:8001/index.php/publicknowledge/en/login; then
+          ready=1
+          break
+        fi
+        sleep 1
+      done
+      test "$ready" = 1
+      bash plugins/generic/thoth/tests/environment/cypress-entrypoint.sh run
+      bash plugins/generic/thoth/tests/environment/cypress-entrypoint.sh run
   after_script:
     - cp /tmp/thoth-omp-server.log "$CI_PROJECT_DIR/integration_tests_php_error.log" 2>/dev/null || true
     - cp -r /var/www/omp/cypress/logs "$CI_PROJECT_DIR/cypress/" 2>/dev/null || true

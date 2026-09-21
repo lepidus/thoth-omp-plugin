@@ -2,8 +2,8 @@
 
 # Testes Cypress
 
-Os testes Cypress usam OMP e Thoth descartáveis, sem alterar sua instalação
-local nem gravar nas APIs públicas da Thoth.
+Os testes usam OMP 3.5 e Thoth descartáveis, sem alterar sua instalação local
+nem gravar nas APIs públicas do Thoth.
 
 ## Requisitos
 
@@ -12,49 +12,68 @@ local nem gravar nas APIs públicas da Thoth.
 - Dataset MySQL do OMP `stable-3_5_0`, contexto `publicknowledge`, com
   `database.sql`, `files/` e `public/` do mesmo snapshot.
 
-## Executar
+## Preparar e executar
 
-Na raiz do plugin, substitua `/path/to/omp-dataset` pelo diretório do dataset:
-
-```sh
-python3 tests/environment/environment.py up --apply
-python3 tests/environment/environment.py cypress \
-  --dataset /path/to/omp-dataset --apply
-```
-
-Para repetir os testes, execute novamente o comando `cypress`. Ele restaura o banco
-OMP descartável e executa a suíte duas vezes. Sem `--apply`, os comandos apenas mostram o plano.
-
-## Uso interativo
-
-Após `up`, prepare o OMP e abra o Cypress:
+Na raiz do plugin:
 
 ```sh
 python3 tests/environment/environment.py prepare --dataset /path/to/omp-dataset --apply
+python3 tests/environment/environment.py run --apply
+```
+
+`prepare` constrói as imagens, inicia ou retoma Thoth e seus bancos, renova o token
+quando necessário e restaura o dataset no OMP descartável. Não precisa de `up`.
+A restauração substitui os dados de teste do OMP; o dataset de origem permanece intacto.
+Publisher e imprint do Thoth são preservados entre preparações.
+
+`run` executa a suíte uma vez. Para executar somente uma spec:
+
+```sh
+python3 tests/environment/environment.py run --spec ThothRegistration.cy.js --apply
+```
+
+Sem `--apply`, os comandos de alteração apenas mostram o plano. `status` consulta
+os contêineres do projeto sem modificá-los.
+
+## Uso interativo
+
+Depois de `prepare`, na mesma sessão gráfica:
+
+```sh
 python3 tests/environment/environment.py open --apply
 ```
 
-Requer uma sessão local X11/XWayland e `xauth`. O container acessa sua sessão X11;
-use apenas imagens e testes confiáveis.
+Requer X11/XWayland e `xauth`. O contêiner acessa sua sessão X11; use somente imagens
+e testes confiáveis. Alterações nas specs ficam disponíveis sem reconstruir a imagem.
+Fechar Cypress mantém o ambiente ativo. Feche-o antes de executar outro comando.
 
-Selecione uma spec na janela do Cypress. Alterações nos testes ficam disponíveis sem
-reconstruir a imagem. Fechar o Cypress mantém o OMP ativo. Para executar uma spec sem
-interface gráfica, substitua `example.cy.js` por um arquivo de `cypress/tests/functional`:
+`open` e `run` reutilizam os dados e verificam a comunicação autenticada do OMP com
+Thoth, sem usar o cache do plugin. Se os serviços estiverem parados ou a autenticação
+falhar, interrompem antes de abrir Cypress e orientam executar `prepare` novamente.
+Essa preparação restaura o dataset; não há restauração implícita ao abrir os testes.
 
-```sh
-python3 tests/environment/environment.py run --spec example.cy.js --apply
-```
+## Credenciais e retomada
 
-Omita `--spec` para executar todos os testes uma vez. `open` e `run` reutilizam o banco
-preparado; `prepare` o restaura. Feche o Cypress antes de executar outro comando do ambiente.
+O token da conta de testes dura dois dias. `prepare` renova tokens expirados,
+revogados ou com menos de uma hora restante. A API também verifica o token ao reiniciar.
+A identidade da API e o PAT administrativo ficam no volume privado `bootstrap`;
+o OMP recebe somente o volume `client`, em leitura. O PAT administrativo usa validade
+longa apenas nesta instância isolada e é removido com `down`.
 
-## Encerrar
+Na CI, o runner compartilha `/builds` entre job e serviços: os arquivos administrativos
+ficam acessíveis ao job até a limpeza final. A separação por volumes descrita acima
+é do Compose local. A CI usa os mesmos comandos internos `prepare` e `run`, executando
+a suíte duas vezes após uma preparação.
+
+## Encerrar ou recriar
 
 ```sh
 python3 tests/environment/environment.py down --apply
 ```
 
-Isso remove os serviços e dados de teste. Para recriar um ambiente existente,
-execute `down` antes de `up`.
+Remove somente os serviços, volumes e dados de teste deste projeto. Para começar do
+zero, execute `prepare` novamente. Após reiniciar o computador, basta `prepare`.
 
-Os mesmos testes também são executados pela CI do GitLab.
+Ambientes criados pela versão antiga exigem `down` uma vez antes do novo `prepare`,
+pois não guardavam a chave necessária para retomar a API. Os comandos antigos `up`,
+`cypress` e `smoke` foram removidos; use `prepare`, `run` e `status`.

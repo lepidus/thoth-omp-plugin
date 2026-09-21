@@ -2,59 +2,51 @@
 
 # Cypress tests
 
-The Cypress tests use disposable OMP and Thoth instances without changing your
-local installation or writing to public Thoth APIs.
+The tests use disposable OMP 3.5 and Thoth instances, without changing your local
+installation or writing to public Thoth APIs.
 
 ## Requirements
 
-- Docker with Compose v2 and Python 3.9 or later.
-- A Linux/amd64 host or compatible emulation.
-- The OMP `stable-3_5_0` MySQL dataset, context `publicknowledge`, with
-  `database.sql`, `files/` and `public/` from the same snapshot.
+Docker Compose v2, Python 3.9+, Linux/amd64 (or compatible emulation), and an OMP
+`stable-3_5_0` MySQL dataset for context `publicknowledge`, containing `database.sql`,
+`files/` and `public/` from the same snapshot.
 
-## Run
-
-From the plugin root, replace `/path/to/omp-dataset` with your dataset directory:
-
-```sh
-python3 tests/environment/environment.py up --apply
-python3 tests/environment/environment.py cypress \
-  --dataset /path/to/omp-dataset --apply
-```
-
-To repeat the tests, run the `cypress` command again. It restores the disposable OMP
-database and runs the suite twice. Without `--apply`, the commands only show the plan.
-
-## Interactive use
-
-After `up`, prepare OMP and open Cypress:
+## Prepare and run
 
 ```sh
 python3 tests/environment/environment.py prepare --dataset /path/to/omp-dataset --apply
-python3 tests/environment/environment.py open --apply
+python3 tests/environment/environment.py run --apply
 ```
 
-Requires a local X11/XWayland session and `xauth`. The container accesses your X11
-session; use only trusted images and tests.
+`prepare` builds images, starts or resumes all services, renews credentials when
+needed, and restores the disposable OMP dataset. It replaces OMP test data without
+changing the source dataset. Thoth publisher and imprint are preserved.
 
-Select a spec in the Cypress window. Test edits are available without rebuilding.
-Closing Cypress keeps OMP running. To run a spec without the GUI, replace `example.cy.js`
-with a filename from `cypress/tests/functional`:
+`run` executes the suite once; add `--spec ThothRegistration.cy.js` for one spec.
+After preparation, use `open --apply` for the GUI. This requires X11/XWayland and
+`xauth` in the same graphical session. The container accesses your X11 session;
+use trusted images and tests. Spec edits are mounted without rebuilding.
+Close Cypress before another environment command; closing it leaves services running.
 
-```sh
-python3 tests/environment/environment.py run --spec example.cy.js --apply
-```
+`open` and `run` check authenticated OMP-to-Thoth connectivity without the plugin
+cache. They reuse data and never restore it implicitly. On failure, run `prepare`
+again. After reboot, `prepare` resumes Thoth and restores OMP.
 
-Omit `--spec` to run all tests once. `open` and `run` reuse the prepared database;
-`prepare` restores it. Close Cypress before running another environment command.
+Without `--apply`, mutation commands only show a plan. `status` reports containers
+without changing them. `down --apply` removes this project's disposable services,
+volumes and credentials. Run `prepare` again to start fresh.
 
-## Shut down
+## Credentials and CI
 
-```sh
-python3 tests/environment/environment.py down --apply
-```
+Scoped test tokens last two days. Preparation and API startup renew expired,
+revoked or nearly expired tokens (less than one hour remaining). The API identity
+and long-lived administrative PAT stay in the private `bootstrap` volume. OMP
+receives only the read-only `client` volume. `down` removes both.
 
-This removes the test services and data. To recreate an existing environment,
-run `down` before `up`.
+In CI, `/builds` is shared with the job: administrative files remain accessible to
+the job until final cleanup. Private-volume separation applies to local Compose.
+CI uses the same internal `prepare` and `run` commands, running twice after one preparation.
 
-The same tests also run in GitLab CI.
+Old environments require `down --apply` once before the new `prepare`, because they
+did not persist the API key. The old `up`, `cypress` and `smoke` commands were removed;
+use `prepare`, `run` and `status`.

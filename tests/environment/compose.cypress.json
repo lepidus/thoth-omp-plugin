@@ -17,7 +17,7 @@
     "cypress": {
       "build": {"context": "../..", "dockerfile": "tests/environment/Dockerfile.cypress"},
       "environment": {"THOTH_DISPOSABLE": "1", "CYPRESS_baseUrl": "http://127.0.0.1:8001"},
-      "volumes": ["bootstrap:/thoth-state:ro", "${OMP_DATASET:?Set the OMP MySQL dataset directory}:/dataset:ro"],
+      "volumes": ["client:/thoth-state:ro", "${OMP_DATASET:?Set the OMP MySQL dataset directory}:/dataset:ro"],
       "shm_size": "1gb",
       "depends_on": {"omp-db": {"condition": "service_healthy"}, "api": {"condition": "service_healthy"}}
     }
