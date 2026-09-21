@@ -50,3 +50,18 @@ CI uses the same internal `prepare` and `run` commands, running twice after one 
 Old environments require `down --apply` once before the new `prepare`, because they
 did not persist the API key. The old `up`, `cypress` and `smoke` commands were removed;
 use `prepare`, `run` and `status`.
+
+## Registration coverage
+
+`ThothRegistration.cy.js` seeds a complete published book in OMP, registers it through
+the UI and checks the persisted Thoth metadata with an independent GraphQL query.
+The fixture covers bilingual titles, abstracts and biographies, DOI, date, edition,
+place, page/image counts, license, copyright holder, cover URL, contributor identity,
+ORCID, website, ROR affiliation, language, subjects (BISAC, BIC, THEMA, LCC, custom and
+keywords), references, PDF/EPUB/paperback formats, ISBN, accessibility and digital
+locations, plus a chapter with its own DOI, pages, translated metadata and contribution.
+
+The full fixture is exclusive to this scenario; other tests keep their smaller fixtures.
+Accessibility conformance and exemption are exercised on separate digital formats,
+as required by Thoth. Cover hosting/upload to S3 and chapter-specific files/locations
+are outside this scenario. It covers metadata families, not every combination of values.

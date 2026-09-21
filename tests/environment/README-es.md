@@ -50,3 +50,17 @@ CI utiliza los mismos comandos internos `prepare` y `run`, ejecutando la suite d
 Los entornos antiguos requieren `down --apply` una vez antes del nuevo `prepare`,
 porque no conservaban la clave de la API. Se eliminaron `up`, `cypress` y `smoke`;
 utilice `prepare`, `run` y `status`.
+
+## Cobertura del registro
+
+`ThothRegistration.cy.js` prepara en OMP un libro publicado con metadatos completos,
+lo registra mediante la interfaz y verifica los datos persistidos en Thoth con una
+consulta GraphQL independiente. Cubre títulos, resúmenes y biografías bilingües; DOI,
+fecha, edición, lugar, páginas e imágenes; licencia, derechos y URL de portada; autoría,
+ORCID, sitio web y afiliación ROR; idioma, temas y referencias; PDF, EPUB e impreso,
+ISBN, accesibilidad y enlaces digitales; y un capítulo con DOI, páginas y autoría.
+
+La fixture completa es exclusiva de este caso. Las normas y la excepción de accesibilidad
+se prueban en formatos digitales distintos, conforme a Thoth. La carga/alojamiento de
+portada en S3 y los archivos/enlaces propios de capítulos quedan fuera de este escenario.
+La cobertura abarca las familias de metadatos, no todas las combinaciones de valores.

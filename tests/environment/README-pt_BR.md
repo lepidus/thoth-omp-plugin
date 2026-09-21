@@ -77,3 +77,17 @@ zero, execute `prepare` novamente. Após reiniciar o computador, basta `prepare`
 Ambientes criados pela versão antiga exigem `down` uma vez antes do novo `prepare`,
 pois não guardavam a chave necessária para retomar a API. Os comandos antigos `up`,
 `cypress` e `smoke` foram removidos; use `prepare`, `run` e `status`.
+
+## Cobertura do registro
+
+`ThothRegistration.cy.js` prepara no OMP um livro publicado com metadados completos,
+registra pela interface e verifica os dados persistidos na Thoth por uma consulta GraphQL
+independente. Cobre títulos, resumos e biografias em dois idiomas; DOI, data, edição,
+local, páginas e imagens; licença, direitos autorais e URL da capa; autoria, ORCID,
+website e afiliação ROR; idioma, assuntos e referências; PDF, EPUB e impresso, ISBN,
+acessibilidade e links digitais; e um capítulo com DOI, páginas, metadados traduzidos e autoria.
+
+A fixture completa é exclusiva desse cenário. Padrões e exceção de acessibilidade ficam
+em formatos digitais distintos, conforme as regras da Thoth. Upload/hospedagem da capa
+em S3 e arquivos/links próprios de capítulo ficam fora desse cenário. A cobertura abrange
+os grupos de metadados, não todas as combinações de valores.

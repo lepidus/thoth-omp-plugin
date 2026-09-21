@@ -29,8 +29,8 @@ try {
         $settings->updateSetting(1, 'thothplugin', 'enabled', true, 'bool');
         $settings->updateSetting(1, 'thothplugin', 'token', Crypt::encrypt($credentials['token']), 'string');
         echo "Disposable plugin configured\n";
-    } elseif (in_array($command, ['create', 'create-draft', 'create-linked-draft'], true)) {
-        $published = $command === 'create';
+    } elseif (in_array($command, ['create', 'create-complete', 'create-draft', 'create-linked-draft'], true)) {
+        $published = in_array($command, ['create', 'create-complete'], true);
         $status = $published ? Submission::STATUS_PUBLISHED : Submission::STATUS_QUEUED;
         $key = bin2hex(random_bytes(16));
         $group = $argv[2] ?? null;
@@ -55,7 +55,7 @@ try {
                     . 'the changing relationship between university presses and their readers.',
             ],
         ];
-        $book = $books[$command];
+        $book = $books[$command === 'create-complete' ? 'create' : $command];
         $suffix = ' [' . ($group !== null ? $group . '-' : '') . substr($key, 0, 10) . ']';
         $title = $book['title'] . $suffix;
         $submission = Repo::submission()->newDataObject([
@@ -72,6 +72,10 @@ try {
         $publicationId = Repo::submission()->get($id)->getData('currentPublicationId');
         $fixture = ['publicationId' => $publicationId, 'key' => $key, 'submissionId' => $id, 'title' => $title,
             'imprintId' => $credentials['imprintId']];
+        if ($command === 'create-complete') {
+            require __DIR__ . '/CompleteBookFixture.php';
+            $fixture += seedCompleteMetadata($fixture, $credentials);
+        }
         if ($command === 'create-linked-draft') {
             // Seed an existing remote work with stale metadata; synchronization is tested through the UI.
             $oldTitle = 'Scholarly Communication in Transition' . $suffix;
@@ -117,15 +121,18 @@ try {
         if (!$workId) {
             throw new RuntimeException('Registration did not persist its Thoth link');
         }
+        $selection = isset($fixture['metadata'])
+            ? file_get_contents(__DIR__ . '/completeWork.graphql')
+            : 'query($id: Uuid!) { work(workId: $id) { workId workStatus workType '
+                . 'imprint { imprintId } titles { title } } }';
         $work = thothFixtureGraphql(
             $credentials,
-            'query($id: Uuid!) { work(workId: $id) { workId workStatus workType '
-                . 'imprint { imprintId } titles { title } } }',
+            $selection,
             ['id' => $workId]
         )['work'];
         echo json_encode(['workId' => $work['workId'], 'workStatus' => $work['workStatus'],
             'workType' => $work['workType'], 'title' => $work['titles'][0]['title'],
-            'imprintId' => $work['imprint']['imprintId']], JSON_THROW_ON_ERROR);
+            'imprintId' => $work['imprint']['imprintId']] + $work, JSON_THROW_ON_ERROR);
     } else {
         throw new RuntimeException('Unknown fixture operation');
     }

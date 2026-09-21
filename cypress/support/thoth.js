@@ -11,6 +11,7 @@ const runHelper = (operation, key) => {
 };
 
 export const seedPublishedBook = (group) => runHelper('create', group);
+export const seedCompleteBook = () => runHelper('create-complete');
 export const seedDraftBook = () => runHelper('create-draft');
 export const seedLinkedDraftBook = () => runHelper('create-linked-draft');
 export const readBookState = (key) => runHelper('inspect', key);

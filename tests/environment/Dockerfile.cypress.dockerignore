@@ -11,6 +11,7 @@
 !templates/**
 !registry/**
 !js/**
+!resources/thema-v1.6-codes.json
 !cypress/**
 !tests/environment/cypress-*.php
 !tests/environment/cypress-*.sh
