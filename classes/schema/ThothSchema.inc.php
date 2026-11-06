@@ -16,6 +16,9 @@
 
 class ThothSchema
 {
+    /** Publication props written only by the plugin (frontcover CDN sync); never through the API. */
+    public const API_WRITE_DISABLED_PUBLICATION_PROPS = ['thothFrontcoverSha256', 'thothFrontcoverUrl'];
+
     public function addWorkIdToSchema($hookName, $args)
     {
         $schema = & $args[0];
@@ -79,6 +82,20 @@ class ThothSchema
             'apiSummary' => true,
             'validation' => ['nullable'],
         ];
+
+        return false;
+    }
+
+    public function rejectApiWritesToPublicationProps($hookName, $args)
+    {
+        $errors = & $args[0];
+        $props = $args[2];
+
+        foreach (self::API_WRITE_DISABLED_PUBLICATION_PROPS as $propName) {
+            if (array_key_exists($propName, $props)) {
+                $errors[$propName] = [__('api.400.propReadOnly', ['prop' => $propName])];
+            }
+        }
 
         return false;
     }
