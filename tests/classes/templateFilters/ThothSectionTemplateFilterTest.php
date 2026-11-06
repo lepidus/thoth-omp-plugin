@@ -16,7 +16,7 @@ class ThothSectionTemplateFilterTest extends PKPTestCase
         $filter->addJavaScriptData(new ThothSectionRequestStub(), $templateManager, 'workflow/workflow.tpl');
 
         $this->assertStringContainsString(
-            '"synchronizeUrl":"api\/_submissions\/13\/publications\/__publicationId__\/synchronize"',
+            '"synchronizeUrl":"api\/submissions\/13\/publications\/__publicationId__\/synchronize"',
             $templateManager->script
         );
     }
@@ -29,11 +29,11 @@ class ThothSectionTemplateFilterTest extends PKPTestCase
         $filter->addJavaScriptData(new ThothSectionRequestStub(), $templateManager, 'workflow/workflow.tpl');
 
         $this->assertStringContainsString(
-            '"workStatusUrl":"api\/_submissions\/13\/thothWorkStatus"',
+            '"workStatusUrl":"api\/submissions\/13\/thothWorkStatus"',
             $templateManager->script
         );
         $this->assertStringContainsString(
-            '"unlinkUrl":"api\/_submissions\/13\/thothWork"',
+            '"unlinkUrl":"api\/submissions\/13\/thothWork"',
             $templateManager->script
         );
         $this->assertStringContainsString('"unlinkConfirm":', $templateManager->script);

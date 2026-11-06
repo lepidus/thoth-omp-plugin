@@ -47,7 +47,7 @@ class ThothFeatureVideoWorkflowTemplateFilterTest extends PKPTestCase
             return $field['name'] === 'video';
         }))[0];
         $this->assertSame('api/temporaryFiles', $videoField['options']['url']);
-        $this->assertSame('api/_submissions/12/featureVideo', $form['action']);
+        $this->assertSame('api/submissions/12/featureVideo', $form['action']);
     }
 
     public function testKeepsWorkflowAvailableWhenFeatureVideoLookupFails(): void

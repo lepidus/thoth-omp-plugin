@@ -19,7 +19,7 @@ describe('Thoth metadata synchronization', function () {
 		cy.get('.pkpPublication').should('be.visible');
 
 		// Explicitly synchronize the linked draft through the plugin action.
-		cy.intercept('PUT', `**/_submissions/${this.book.submissionId}/publications/${this.book.publicationId}/synchronize`)
+		cy.intercept('PUT', `**/api/v1/submissions/${this.book.submissionId}/publications/${this.book.publicationId}/synchronize`)
 			.as('synchronize');
 		cy.intercept('POST', '**/notification/fetchNotification').as('notification');
 		cy.get('.pkpPublication__thoth')

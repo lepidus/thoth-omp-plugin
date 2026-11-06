@@ -32,15 +32,25 @@ require_once __DIR__ . '/../notification/ThothErrorFormatter.inc.php';
 
 class ThothEndpoint
 {
+    /** @var string[] Routes that act on one submission and need the core SubmissionAccessPolicy */
+    public const SUBMISSION_ACCESS_ROUTES = ['getWorkStatus', 'unlinkWork', 'synchronize', 'uploadFeatureVideo'];
+
     public function addEndpoints($hookName, $args)
     {
         $endpoints = & $args[0];
         $handler = $args[1];
 
-        if (!is_a($handler, 'APP\API\v1\_submissions\BackendSubmissionsHandler')) {
-            return false;
+        if (is_a($handler, 'APP\API\v1\_submissions\BackendSubmissionsHandler')) {
+            $this->addBackendEndpoints($endpoints);
+        } elseif (is_a($handler, 'PKP\API\v1\submissions\PKPSubmissionHandler')) {
+            $this->addSubmissionEndpoints($endpoints, $handler);
         }
 
+        return false;
+    }
+
+    private function addBackendEndpoints(&$endpoints)
+    {
         $rootPattern = '/{contextPath}/api/{version}/_submissions';
 
         $endpoints['PUT'][] = [
@@ -51,52 +61,50 @@ class ThothEndpoint
                 Role::ROLE_ID_MANAGER,
             ],
         ];
+    }
+
+    /**
+     * Routes on the submissions API, whose handler applies SubmissionAccessPolicy
+     * to the route names listed in requiresSubmissionAccess.
+     */
+    private function addSubmissionEndpoints(&$endpoints, $handler)
+    {
+        $rootPattern = $handler->getEndpointPattern();
+        $roles = [
+            Role::ROLE_ID_SITE_ADMIN,
+            Role::ROLE_ID_MANAGER,
+            Role::ROLE_ID_SUB_EDITOR,
+            Role::ROLE_ID_ASSISTANT,
+        ];
 
         $endpoints['GET'][] = [
             'pattern' => "{$rootPattern}/{submissionId:\d+}/thothWorkStatus",
             'handler' => [$this, 'getWorkStatus'],
-            'roles' => [
-                Role::ROLE_ID_SITE_ADMIN,
-                Role::ROLE_ID_MANAGER,
-                Role::ROLE_ID_SUB_EDITOR,
-                Role::ROLE_ID_ASSISTANT,
-            ],
+            'roles' => $roles,
         ];
 
         $endpoints['DELETE'][] = [
             'pattern' => "{$rootPattern}/{submissionId:\d+}/thothWork",
             'handler' => [$this, 'unlinkWork'],
-            'roles' => [
-                Role::ROLE_ID_SITE_ADMIN,
-                Role::ROLE_ID_MANAGER,
-                Role::ROLE_ID_SUB_EDITOR,
-                Role::ROLE_ID_ASSISTANT,
-            ],
+            'roles' => $roles,
         ];
 
         $endpoints['PUT'][] = [
             'pattern' => "{$rootPattern}/{submissionId:\d+}/publications/{publicationId:\d+}/synchronize",
             'handler' => [$this, 'synchronize'],
-            'roles' => [
-                Role::ROLE_ID_SITE_ADMIN,
-                Role::ROLE_ID_MANAGER,
-                Role::ROLE_ID_SUB_EDITOR,
-                Role::ROLE_ID_ASSISTANT,
-            ],
+            'roles' => $roles,
         ];
 
         $endpoints['POST'][] = [
             'pattern' => "{$rootPattern}/{submissionId:\d+}/featureVideo",
             'handler' => [$this, 'uploadFeatureVideo'],
-            'roles' => [
-                Role::ROLE_ID_SITE_ADMIN,
-                Role::ROLE_ID_MANAGER,
-                Role::ROLE_ID_SUB_EDITOR,
-                Role::ROLE_ID_ASSISTANT,
-            ],
+            'roles' => $roles,
         ];
 
-        return false;
+        $handler->requiresSubmissionAccess = array_values(array_unique(array_merge(
+            $handler->requiresSubmissionAccess,
+            self::SUBMISSION_ACCESS_ROUTES
+        )));
     }
 
     public function register($slimRequest, $response, $args)

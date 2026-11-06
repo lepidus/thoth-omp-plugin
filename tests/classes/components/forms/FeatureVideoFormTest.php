@@ -17,7 +17,7 @@ class FeatureVideoFormTest extends PKPTestCase
     {
         $temporaryFilesUrl = 'https://example.test/api/v1/temporaryFiles';
         $form = new FeatureVideoForm(
-            'https://example.test/api/v1/_submissions/1/featureVideo',
+            'https://example.test/api/v1/submissions/1/featureVideo',
             $temporaryFilesUrl
         );
 
