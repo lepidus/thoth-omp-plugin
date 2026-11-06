@@ -55,6 +55,31 @@ class ThothSchemaTest extends PKPTestCase
         $this->assertSame([], $errors);
     }
 
+    public function testRejectsFrontcoverSyncDataSubmittedForValidation(): void
+    {
+        $errors = [];
+        $props = [
+            'thothFrontcoverUrl' => 'https://attacker.example/cover.jpg',
+            'thothFrontcoverSha256' => 'abc',
+            'thothUploadFrontcover' => true,
+        ];
+        $args = [&$errors, 'edit', $props, ['en_US'], 'en_US'];
+
+        (new ThothSchema())->rejectApiWritesToPublicationProps('Publication::validate', $args);
+
+        $this->assertSame(['thothFrontcoverSha256', 'thothFrontcoverUrl'], array_keys($errors));
+    }
+
+    public function testAcceptsPublicationValidationWithoutFrontcoverSyncData(): void
+    {
+        $errors = [];
+        $args = [&$errors, 'edit', ['thothUploadFrontcover' => true, 'place' => 'London'], ['en_US'], 'en_US'];
+
+        (new ThothSchema())->rejectApiWritesToPublicationProps('Publication::validate', $args);
+
+        $this->assertSame([], $errors);
+    }
+
     public function testDoesNotAddFeatureVideoFieldsToPublicationSchema(): void
     {
         $schema = new stdClass();

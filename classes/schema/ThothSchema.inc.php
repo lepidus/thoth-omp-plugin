@@ -18,6 +18,9 @@ class ThothSchema
     /** Submission props written only by the plugin; never through the API. */
     public const API_WRITE_DISABLED_SUBMISSION_PROPS = ['thothWorkId'];
 
+    /** Publication props written only by the plugin (frontcover CDN sync); never through the API. */
+    public const API_WRITE_DISABLED_PUBLICATION_PROPS = ['thothFrontcoverSha256', 'thothFrontcoverUrl'];
+
     public function addWorkIdToSchema($hookName, $args)
     {
         $schema = & $args[0];
@@ -39,6 +42,14 @@ class ThothSchema
     {
         $errors = & $args[0];
         $this->addApiWriteErrors($errors, $args[2], self::API_WRITE_DISABLED_SUBMISSION_PROPS);
+
+        return false;
+    }
+
+    public function rejectApiWritesToPublicationProps($hookName, $args)
+    {
+        $errors = & $args[0];
+        $this->addApiWriteErrors($errors, $args[2], self::API_WRITE_DISABLED_PUBLICATION_PROPS);
 
         return false;
     }

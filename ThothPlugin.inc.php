@@ -159,6 +159,7 @@ class ThothPlugin extends GenericPlugin
         HookRegistry::register('Schema::get::submission', [$thothSchema, 'addWorkIdToSchema']);
         HookRegistry::register('Submission::validate', [$thothSchema, 'rejectApiWritesToSubmissionProps']);
         HookRegistry::register('Schema::get::publication', [$thothSchema, 'addToPublicationSchema']);
+        HookRegistry::register('Publication::validate', [$thothSchema, 'rejectApiWritesToPublicationProps']);
         HookRegistry::register('authordao::getAdditionalFieldNames', [$thothSchema, 'addToAdditionalFieldNames']);
         HookRegistry::register('Submission::getBackendListProperties::properties', [$thothSchema, 'addToBackendProps']);
     }
