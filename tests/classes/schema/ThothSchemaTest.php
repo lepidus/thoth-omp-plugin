@@ -38,6 +38,18 @@ class ThothSchemaTest extends PKPTestCase
         $this->assertSame('string', $schema->properties->thothFrontcoverUrl->type);
     }
 
+    public function testWorkIdCannotBeWrittenThroughApiButRemainsPersistable(): void
+    {
+        $schema = new stdClass();
+        $schema->properties = new stdClass();
+        $args = [&$schema];
+
+        (new ThothSchema())->addWorkIdToSchema('Schema::get::submission', $args);
+
+        $this->assertTrue($schema->properties->thothWorkId->writeDisabledInApi);
+        $this->assertTrue(empty($schema->properties->thothWorkId->readOnly));
+    }
+
     public function testDoesNotAddFeatureVideoFieldsToPublicationSchema(): void
     {
         $schema = new stdClass();
