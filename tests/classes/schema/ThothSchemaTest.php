@@ -35,6 +35,26 @@ class ThothSchemaTest extends PKPTestCase
         $this->assertSame('string', $schema->properties->thothFrontcoverUrl->type);
     }
 
+    public function testRejectsWorkIdSubmittedForValidation(): void
+    {
+        $errors = [];
+        $args = [&$errors, 'edit', ['thothWorkId' => 'another-work', 'locale' => 'en_US'], ['en_US'], 'en_US'];
+
+        (new ThothSchema())->rejectApiWritesToSubmissionProps('Submission::validate', $args);
+
+        $this->assertSame(['thothWorkId'], array_keys($errors));
+    }
+
+    public function testAcceptsSubmissionValidationWithoutWorkId(): void
+    {
+        $errors = [];
+        $args = [&$errors, 'edit', ['locale' => 'en_US'], ['en_US'], 'en_US'];
+
+        (new ThothSchema())->rejectApiWritesToSubmissionProps('Submission::validate', $args);
+
+        $this->assertSame([], $errors);
+    }
+
     public function testDoesNotAddFeatureVideoFieldsToPublicationSchema(): void
     {
         $schema = new stdClass();
