@@ -93,6 +93,8 @@ class ThothEndpoint
             ],
         ];
 
+        $handler->requiresSubmissionAccess[] = 'uploadFeatureVideo';
+
         return false;
     }
 
