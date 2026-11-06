@@ -19,7 +19,9 @@ namespace APP\plugins\generic\thoth\tests\classes\api;
 require_once(__DIR__ . '/../../../vendor/autoload.php');
 
 use APP\plugins\generic\thoth\classes\api\ThothEndpoint;
+use PKP\core\PKPBaseController;
 use PKP\core\PKPRequest;
+use PKP\handler\APIHandler;
 use PKP\plugins\interfaces\HasAuthorizationPolicy;
 use PKP\security\authorization\SubmissionAccessPolicy;
 use PKP\tests\PKPTestCase;
@@ -115,5 +117,31 @@ class ThothEndpointTest extends PKPTestCase
         self::assertInstanceOf(HasAuthorizationPolicy::class, $endpoint);
         self::assertCount(1, $policies);
         self::assertInstanceOf(SubmissionAccessPolicy::class, $policies[0]);
+    }
+
+    public function testEveryRouteRequiresSubmissionAccessPolicy(): void
+    {
+        $endpoint = $this->getMockBuilder(ThothEndpoint::class)
+            ->disableOriginalConstructor()->onlyMethods([])->getMock();
+        $routes = [];
+        $handler = $this->getMockBuilder(APIHandler::class)
+            ->disableOriginalConstructor()->onlyMethods(['addRoute'])->getMock();
+        $handler->method('addRoute')->willReturnCallback(
+            function (...$arguments) use (&$routes) {
+                $routes[$arguments[3]] = $arguments[5] ?? null;
+            }
+        );
+
+        $endpoint->addEndpoints(
+            'APIHandler::endpoints::_submissions',
+            $this->createMock(PKPBaseController::class),
+            $handler
+        );
+
+        self::assertArrayHasKey('thoth.featureVideo.form', $routes);
+        self::assertArrayHasKey('thoth.featureVideo.upload', $routes);
+        foreach ($routes as $name => $authorizer) {
+            self::assertSame($endpoint, $authorizer, "Route {$name} must apply the submission access policy.");
+        }
     }
 }
