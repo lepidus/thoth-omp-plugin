@@ -19,9 +19,11 @@ class ThothSchema
     public function addWorkIdToSchema($hookName, $args)
     {
         $schema = & $args[0];
+        // Not readOnly: the DAO drops readOnly props, and the plugin persists this value itself.
         $schema->properties->{'thothWorkId'} = (object) [
             'type' => 'string',
             'apiSummary' => true,
+            'writeDisabledInApi' => true,
             'validation' => ['nullable'],
         ];
         return false;
