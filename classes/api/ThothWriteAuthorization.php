@@ -21,7 +21,9 @@ use PKP\core\PKPRequest;
 use PKP\plugins\interfaces\HasAuthorizationPolicy;
 use PKP\security\authorization\internal\PublicationCanBeEditedPolicy;
 use PKP\security\authorization\PublicationWritePolicy;
+use PKP\security\authorization\StageRolePolicy;
 use PKP\security\authorization\SubmissionAccessPolicy;
+use PKP\security\Role;
 
 class ThothWriteAuthorization implements HasAuthorizationPolicy
 {
@@ -39,10 +41,12 @@ class ThothWriteAuthorization implements HasAuthorizationPolicy
             return [new PublicationWritePolicy($request, $args, $roleAssignments)];
         }
 
-        // Routes without {publicationId} keep the submission access check and add the core
-        // publication edit permission: site admins, managers or assignments that can change metadata.
+        // Routes without {publicationId} get the rest of PublicationWritePolicy: the submission access,
+        // a role assigned to the current stage (managers and site admins pass by their context role) and
+        // the publication edit permission (site admins, managers or assignments that can change metadata).
         return [
             new SubmissionAccessPolicy($request, $args, $roleAssignments),
+            new StageRolePolicy([Role::ROLE_ID_SUB_EDITOR, Role::ROLE_ID_ASSISTANT, Role::ROLE_ID_AUTHOR]),
             new PublicationCanBeEditedPolicy($request, 'api.submissions.403.userCantEdit'),
         ];
     }

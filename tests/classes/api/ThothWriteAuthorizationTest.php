@@ -23,6 +23,7 @@ use APP\plugins\generic\thoth\classes\api\ThothWriteAuthorization;
 use PKP\security\authorization\AuthorizationPolicy;
 use PKP\security\authorization\internal\PublicationCanBeEditedPolicy;
 use PKP\security\authorization\PublicationWritePolicy;
+use PKP\security\authorization\StageRolePolicy;
 use PKP\security\authorization\SubmissionAccessPolicy;
 use PKP\security\Role;
 use PKP\tests\PKPTestCase;
@@ -58,21 +59,58 @@ class ThothWriteAuthorizationTest extends PKPTestCase
             ->with(self::SUBMISSION_ID, self::USER_ID)
             ->willReturn($canEditPublication);
         app()->instance(\APP\submission\Repository::class, $repository);
-        $submission = $this->createMock(\APP\submission\Submission::class);
-        $submission->method('getId')->willReturn(self::SUBMISSION_ID);
         $args = [];
 
         $policies = (new ThothWriteAuthorization(false))->getPolicies($this->mockRequestWithUser(), $args, []);
 
-        self::assertCount(2, $policies);
+        self::assertCount(3, $policies);
         self::assertInstanceOf(SubmissionAccessPolicy::class, $policies[0]);
-        self::assertInstanceOf(PublicationCanBeEditedPolicy::class, $policies[1]);
-        $authorizedContext = [
-            Application::ASSOC_TYPE_SUBMISSION => $submission,
-            Application::ASSOC_TYPE_USER_ROLES => $userRoles,
-        ];
+        self::assertInstanceOf(StageRolePolicy::class, $policies[1]);
+        self::assertInstanceOf(PublicationCanBeEditedPolicy::class, $policies[2]);
+        $authorizedContext = $this->authorizedContext($userRoles, [WORKFLOW_STAGE_ID_PRODUCTION => $userRoles]);
+        $policies[2]->setAuthorizedContext($authorizedContext);
+        self::assertSame($expectedEffect, $policies[2]->effect());
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('currentStageAssignments')]
+    public function testSubmissionRoutesRequireARoleInTheCurrentStage(
+        array $userRoles,
+        array $accessibleStages,
+        int $expectedEffect
+    ): void {
+        $args = [];
+
+        $policies = (new ThothWriteAuthorization(false))->getPolicies($this->mockRequestWithUser(), $args, []);
+
+        $authorizedContext = $this->authorizedContext($userRoles, $accessibleStages);
         $policies[1]->setAuthorizedContext($authorizedContext);
         self::assertSame($expectedEffect, $policies[1]->effect());
+    }
+
+    public static function currentStageAssignments(): array
+    {
+        return [
+            'assistant assigned only to copyediting while the book is in production' => [
+                [Role::ROLE_ID_ASSISTANT],
+                [WORKFLOW_STAGE_ID_EDITING => [Role::ROLE_ID_ASSISTANT]],
+                AuthorizationPolicy::AUTHORIZATION_DENY,
+            ],
+            'assistant assigned to production' => [
+                [Role::ROLE_ID_ASSISTANT],
+                [WORKFLOW_STAGE_ID_PRODUCTION => [Role::ROLE_ID_ASSISTANT]],
+                AuthorizationPolicy::AUTHORIZATION_PERMIT,
+            ],
+            'manager without stage assignment' => [
+                [Role::ROLE_ID_MANAGER],
+                [],
+                AuthorizationPolicy::AUTHORIZATION_PERMIT,
+            ],
+            'site administrator without stage assignment' => [
+                [Role::ROLE_ID_SITE_ADMIN],
+                [],
+                AuthorizationPolicy::AUTHORIZATION_PERMIT,
+            ],
+        ];
     }
 
     public static function publicationEditPermissions(): array
@@ -103,6 +141,21 @@ class ThothWriteAuthorizationTest extends PKPTestCase
                 false,
                 AuthorizationPolicy::AUTHORIZATION_PERMIT,
             ],
+        ];
+    }
+
+    private function authorizedContext(array $userRoles, array $accessibleStages): array
+    {
+        $submission = $this->createMock(\APP\submission\Submission::class);
+        $submission->method('getId')->willReturn(self::SUBMISSION_ID);
+        $submission->method('getData')->willReturnCallback(
+            fn (string $key) => $key === 'stageId' ? WORKFLOW_STAGE_ID_PRODUCTION : null
+        );
+
+        return [
+            Application::ASSOC_TYPE_SUBMISSION => $submission,
+            Application::ASSOC_TYPE_USER_ROLES => $userRoles,
+            Application::ASSOC_TYPE_ACCESSIBLE_WORKFLOW_STAGES => $accessibleStages,
         ];
     }
 
