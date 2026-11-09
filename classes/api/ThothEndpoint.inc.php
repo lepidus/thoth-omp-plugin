@@ -35,6 +35,9 @@ class ThothEndpoint
     /** @var string[] Routes that act on one submission and need the core SubmissionAccessPolicy */
     public const SUBMISSION_ACCESS_ROUTES = ['getWorkStatus', 'unlinkWork', 'synchronize', 'uploadFeatureVideo'];
 
+    /** @var string[] Routes that edit one publication and need the core PublicationWritePolicy */
+    public const PUBLICATION_WRITE_ROUTES = ['synchronize'];
+
     public function addEndpoints($hookName, $args)
     {
         $endpoints = & $args[0];
@@ -105,6 +108,10 @@ class ThothEndpoint
             $handler->requiresSubmissionAccess,
             self::SUBMISSION_ACCESS_ROUTES
         )));
+        $handler->requiresPublicationWriteAccess = array_values(array_unique(array_merge(
+            $handler->requiresPublicationWriteAccess,
+            self::PUBLICATION_WRITE_ROUTES
+        )));
     }
 
     public function register($slimRequest, $response, $args)
@@ -133,6 +140,10 @@ class ThothEndpoint
 
         if (!$this->isSubmissionInContext($submission, $context)) {
             return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
+        }
+
+        if (!$this->canEditPublication($request, $submission)) {
+            return $response->withStatus(403)->withJsonError('api.submissions.403.userCantEdit');
         }
 
         if ($submission->getData('thothWorkId')) {
@@ -216,6 +227,9 @@ class ThothEndpoint
         }
         if (!$context || (int) $submission->getData('contextId') !== (int) $context->getId() || !$user) {
             return $response->withStatus(403)->withJsonError('api.submissions.403.contextRequired');
+        }
+        if (!$this->canEditPublication($request, $submission)) {
+            return $response->withStatus(403)->withJsonError('api.submissions.403.userCantEdit');
         }
 
         $params = (array) $slimRequest->getParsedBody();
@@ -302,6 +316,10 @@ class ThothEndpoint
             return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
         }
 
+        if (!$this->canEditPublication($request, $submission)) {
+            return $response->withStatus(403)->withJsonError('api.submissions.403.userCantEdit');
+        }
+
         $thothWorkId = $submission->getData('thothWorkId');
         if (!$thothWorkId) {
             return $response->withStatus(404)->withJsonError('plugins.generic.thoth.status.unregistered');
@@ -365,6 +383,24 @@ class ThothEndpoint
         }
 
         return $response->withJson(['status' => true], 200);
+    }
+
+    /**
+     * Same permission the core checks before editing a publication (PublicationCanBeEditedPolicy):
+     * site admins, or users allowed by Repo::submission()->canEditPublication(), i.e. managers
+     * or users whose stage assignment can change metadata.
+     */
+    protected function canEditPublication($request, $submission)
+    {
+        $userRoles = (array) $request->getRouter()->getHandler()
+            ->getAuthorizedContextObject(Application::ASSOC_TYPE_USER_ROLES);
+        if (in_array(Role::ROLE_ID_SITE_ADMIN, $userRoles)) {
+            return true;
+        }
+
+        $user = $request->getUser();
+
+        return $user && Repo::submission()->canEditPublication((int) $submission->getId(), (int) $user->getId());
     }
 
     protected function isSubmissionInContext($submission, $context)
