@@ -385,6 +385,9 @@ class ThothEndpoint
     protected function canEditPublication($request, $submission)
     {
         $authorizedContext = (array) $request->getRouter()->getHandler()->getAuthorizedContext();
+        // The core stores the context objects as references: unset before replacing the submission
+        // so the authorized context of the handler is not changed.
+        unset($authorizedContext[ASSOC_TYPE_SUBMISSION]);
         $authorizedContext[ASSOC_TYPE_SUBMISSION] = $submission;
         $stageRolePolicy = new StageRolePolicy([ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT, ROLE_ID_AUTHOR]);
         $stageRolePolicy->setAuthorizedContext($authorizedContext);
