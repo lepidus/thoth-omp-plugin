@@ -82,6 +82,7 @@ class ThothEndpoint
         );
 
         $handler->requiresSubmissionAccess[] = 'synchronize';
+        $handler->requiresPublicationWriteAccess[] = 'synchronize';
 
         $endpoints['POST'][] = [
             'pattern' => "{$rootPattern}/{submissionId:\d+}/featureVideo",
@@ -118,6 +119,10 @@ class ThothEndpoint
 
         if (!$request->getContext()) {
             return $response->withStatus(403)->withJsonError('api.submissions.403.contextRequired');
+        }
+
+        if (!$this->canEditPublication($request, $submission)) {
+            return $response->withStatus(403)->withJsonError('api.submissions.403.userCantEdit');
         }
 
         if ($submission->getData('thothWorkId')) {
@@ -189,7 +194,7 @@ class ThothEndpoint
     public function uploadFeatureVideo($slimRequest, $response, $args)
     {
         $request = Application::get()->getRequest();
-        $submission = Services::get('submission')->get((int) $args['submissionId']);
+        $submission = $this->getSubmissionService()->get((int) $args['submissionId']);
         $context = $request->getContext();
         $user = $request->getUser();
         if (!$submission) {
@@ -197,6 +202,9 @@ class ThothEndpoint
         }
         if (!$context || (int) $submission->getData('contextId') !== (int) $context->getId() || !$user) {
             return $response->withStatus(403)->withJsonError('api.submissions.403.contextRequired');
+        }
+        if (!$this->canEditPublication($request, $submission)) {
+            return $response->withStatus(403)->withJsonError('api.submissions.403.userCantEdit');
         }
 
         $params = (array) $slimRequest->getParsedBody();
@@ -297,6 +305,10 @@ class ThothEndpoint
             return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
         }
 
+        if (!$this->canEditPublication($request, $submission)) {
+            return $response->withStatus(403)->withJsonError('api.submissions.403.userCantEdit');
+        }
+
         $thothWorkId = $submission->getData('thothWorkId');
         if (!$thothWorkId) {
             return $response->withStatus(404)->withJsonError('plugins.generic.thoth.status.unregistered');
@@ -315,7 +327,7 @@ class ThothEndpoint
             ]);
         }
 
-        Services::get('submission')->edit($submission, ['thothWorkId' => null], $request);
+        $this->getSubmissionService()->edit($submission, ['thothWorkId' => null], $request);
 
         return $response->withJson(['status' => true], 200);
     }
@@ -362,6 +374,27 @@ class ThothEndpoint
         return $response->withJson(['status' => true], 200);
     }
 
+    /**
+     * Same permission the core checks before editing a publication (PublicationCanBeEditedPolicy):
+     * site admins, or users allowed by the submission service canEditPublication(), i.e. managers
+     * without assignments or users whose stage assignment can change metadata.
+     */
+    protected function canEditPublication($request, $submission)
+    {
+        $userRoles = (array) $request->getRouter()->getHandler()->getAuthorizedContextObject(ASSOC_TYPE_USER_ROLES);
+        if (in_array(ROLE_ID_SITE_ADMIN, $userRoles)) {
+            return true;
+        }
+
+        $user = $request->getUser();
+
+        return $user && $this->getSubmissionService()->canEditPublication($submission, $user->getId());
+    }
+
+    protected function getSubmissionService()
+    {
+        return Services::get('submission');
+    }
 
     public function handleNotification(
         $request,
