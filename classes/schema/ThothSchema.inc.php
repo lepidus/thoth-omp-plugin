@@ -15,6 +15,12 @@
 
 class ThothSchema
 {
+    /** Submission props written only by the plugin; never through the API. */
+    public const API_WRITE_DISABLED_SUBMISSION_PROPS = ['thothWorkId'];
+
+    /** Publication props written only by the plugin (frontcover CDN sync); never through the API. */
+    public const API_WRITE_DISABLED_PUBLICATION_PROPS = ['thothFrontcoverSha256', 'thothFrontcoverUrl'];
+
     public function addWorkIdToSchema($hookName, $args)
     {
         $schema = & $args[0];
@@ -26,6 +32,35 @@ class ThothSchema
         ];
 
         return false;
+    }
+
+    /**
+     * OMP 3.3 has no writeDisabledInApi, and readOnly props are dropped by the
+     * DAO, so API writes are rejected on validation. Internal edits do not validate.
+     */
+    public function rejectApiWritesToSubmissionProps($hookName, $args)
+    {
+        $errors = & $args[0];
+        $this->addApiWriteErrors($errors, $args[2], self::API_WRITE_DISABLED_SUBMISSION_PROPS);
+
+        return false;
+    }
+
+    public function rejectApiWritesToPublicationProps($hookName, $args)
+    {
+        $errors = & $args[0];
+        $this->addApiWriteErrors($errors, $args[2], self::API_WRITE_DISABLED_PUBLICATION_PROPS);
+
+        return false;
+    }
+
+    private function addApiWriteErrors(&$errors, $props, $propNames)
+    {
+        foreach ($propNames as $propName) {
+            if (array_key_exists($propName, (array) $props)) {
+                $errors[$propName] = [__('api.400.paramNotSupported', ['param' => $propName])];
+            }
+        }
     }
 
     public function addToPublicationSchema($hookName, $args)

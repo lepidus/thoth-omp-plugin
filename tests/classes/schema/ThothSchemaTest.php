@@ -35,6 +35,51 @@ class ThothSchemaTest extends PKPTestCase
         $this->assertSame('string', $schema->properties->thothFrontcoverUrl->type);
     }
 
+    public function testRejectsWorkIdSubmittedForValidation(): void
+    {
+        $errors = [];
+        $args = [&$errors, 'edit', ['thothWorkId' => 'another-work', 'locale' => 'en_US'], ['en_US'], 'en_US'];
+
+        (new ThothSchema())->rejectApiWritesToSubmissionProps('Submission::validate', $args);
+
+        $this->assertSame(['thothWorkId'], array_keys($errors));
+    }
+
+    public function testAcceptsSubmissionValidationWithoutWorkId(): void
+    {
+        $errors = [];
+        $args = [&$errors, 'edit', ['locale' => 'en_US'], ['en_US'], 'en_US'];
+
+        (new ThothSchema())->rejectApiWritesToSubmissionProps('Submission::validate', $args);
+
+        $this->assertSame([], $errors);
+    }
+
+    public function testRejectsFrontcoverSyncDataSubmittedForValidation(): void
+    {
+        $errors = [];
+        $props = [
+            'thothFrontcoverUrl' => 'https://attacker.example/cover.jpg',
+            'thothFrontcoverSha256' => 'abc',
+            'thothUploadFrontcover' => true,
+        ];
+        $args = [&$errors, 'edit', $props, ['en_US'], 'en_US'];
+
+        (new ThothSchema())->rejectApiWritesToPublicationProps('Publication::validate', $args);
+
+        $this->assertSame(['thothFrontcoverSha256', 'thothFrontcoverUrl'], array_keys($errors));
+    }
+
+    public function testAcceptsPublicationValidationWithoutFrontcoverSyncData(): void
+    {
+        $errors = [];
+        $args = [&$errors, 'edit', ['thothUploadFrontcover' => true, 'place' => 'London'], ['en_US'], 'en_US'];
+
+        (new ThothSchema())->rejectApiWritesToPublicationProps('Publication::validate', $args);
+
+        $this->assertSame([], $errors);
+    }
+
     public function testDoesNotAddFeatureVideoFieldsToPublicationSchema(): void
     {
         $schema = new stdClass();
