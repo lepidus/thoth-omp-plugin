@@ -101,12 +101,40 @@ class ThothEndpointTest extends PKPTestCase
         self::assertContains($response->getStatusCode(), [400, 403, 404]);
     }
 
+    /**
+     * @dataProvider writeActions
+     */
+    public function testWriteActionsDenyAssignedUserOutsideTheCurrentStage(string $action): void
+    {
+        $repository = $this->mockSubmissionRepository(true, null);
+        $repository->expects($this->never())->method('edit');
+
+        $response = $this->callWriteAction(
+            $action,
+            [Role::ROLE_ID_ASSISTANT],
+            [WORKFLOW_STAGE_ID_EDITING => [Role::ROLE_ID_ASSISTANT]]
+        );
+
+        self::assertSame(403, $response->getStatusCode());
+        self::assertSame('api.submissions.403.userCantEdit', json_decode((string) $response->getBody(), true)['error']);
+    }
+
+    public function testWriteActionsAllowManagerWithoutStageAssignment(): void
+    {
+        $this->mockSubmissionRepository(true, null);
+
+        $response = $this->callWriteAction('unlinkWork', [Role::ROLE_ID_MANAGER], []);
+
+        self::assertSame(404, $response->getStatusCode());
+        self::assertSame('plugins.generic.thoth.status.unregistered', json_decode((string) $response->getBody(), true)['error']);
+    }
+
     public function testWriteActionsAllowSiteAdministratorWithoutStageAssignment(): void
     {
         $repository = $this->mockSubmissionRepository(false, null);
         $repository->expects($this->never())->method('canEditPublication');
 
-        $response = $this->callWriteAction('unlinkWork', [Role::ROLE_ID_SITE_ADMIN]);
+        $response = $this->callWriteAction('unlinkWork', [Role::ROLE_ID_SITE_ADMIN], []);
 
         self::assertSame(404, $response->getStatusCode());
         self::assertSame('plugins.generic.thoth.status.unregistered', json_decode((string) $response->getBody(), true)['error']);
@@ -147,6 +175,7 @@ class ThothEndpointTest extends PKPTestCase
         $submission->method('getData')->willReturnMap([
             ['contextId', null, self::CONTEXT_ID],
             ['thothWorkId', null, $thothWorkId],
+            ['stageId', null, WORKFLOW_STAGE_ID_PRODUCTION],
         ]);
         $repository = $this->createMock(SubmissionRepository::class);
         $repository->method('get')->with(self::SUBMISSION_ID)->willReturn($submission);
@@ -158,11 +187,14 @@ class ThothEndpointTest extends PKPTestCase
         return $repository;
     }
 
-    private function callWriteAction(string $action, array $userRoles): APIResponse
+    private function callWriteAction(string $action, array $userRoles, ?array $accessibleStages = null): APIResponse
     {
         $handler = $this->createMock(\PKP\handler\APIHandler::class);
-        $handler->method('getAuthorizedContextObject')
-            ->willReturnCallback(fn ($assocType) => $assocType === Application::ASSOC_TYPE_USER_ROLES ? $userRoles : null);
+        $handler->method('getAuthorizedContext')->willReturn([
+            Application::ASSOC_TYPE_USER_ROLES => $userRoles,
+            Application::ASSOC_TYPE_ACCESSIBLE_WORKFLOW_STAGES
+                => $accessibleStages ?? [WORKFLOW_STAGE_ID_PRODUCTION => $userRoles],
+        ]);
         $router = $this->createMock(\PKP\core\APIRouter::class);
         $router->method('getHandler')->willReturn($handler);
         $context = $this->createMock(\APP\press\Press::class);

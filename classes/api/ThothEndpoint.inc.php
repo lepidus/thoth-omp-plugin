@@ -18,6 +18,8 @@ use APP\core\Application;
 use APP\facades\Repo;
 use APP\i18n\AppLocale;
 use PKP\db\DAORegistry;
+use PKP\security\authorization\AuthorizationPolicy;
+use PKP\security\authorization\StageRolePolicy;
 use PKP\security\Role;
 use ThothApi\Exception\QueryException;
 
@@ -386,14 +388,29 @@ class ThothEndpoint
     }
 
     /**
-     * Same permission the core checks before editing a publication (PublicationCanBeEditedPolicy):
-     * site admins, or users allowed by Repo::submission()->canEditPublication(), i.e. managers
-     * or users whose stage assignment can change metadata.
+     * Same checks as the core PublicationWritePolicy without the publication lookup: a role
+     * assigned to the current stage of the submission (StageRolePolicy, which managers and site
+     * admins pass by their context role), then PublicationCanBeEditedPolicy: site admins, or users
+     * allowed by Repo::submission()->canEditPublication(), i.e. managers or users whose stage
+     * assignment can change metadata.
      */
     protected function canEditPublication($request, $submission)
     {
-        $userRoles = (array) $request->getRouter()->getHandler()
-            ->getAuthorizedContextObject(Application::ASSOC_TYPE_USER_ROLES);
+        $authorizedContext = (array) $request->getRouter()->getHandler()->getAuthorizedContext();
+        $authorizedContext[Application::ASSOC_TYPE_SUBMISSION] = $submission;
+        $stageRolePolicy = new StageRolePolicy([
+            Role::ROLE_ID_MANAGER,
+            Role::ROLE_ID_SITE_ADMIN,
+            Role::ROLE_ID_SUB_EDITOR,
+            Role::ROLE_ID_ASSISTANT,
+            Role::ROLE_ID_AUTHOR,
+        ]);
+        $stageRolePolicy->setAuthorizedContext($authorizedContext);
+        if ($stageRolePolicy->effect() !== AuthorizationPolicy::AUTHORIZATION_PERMIT) {
+            return false;
+        }
+
+        $userRoles = (array) ($authorizedContext[Application::ASSOC_TYPE_USER_ROLES] ?? []);
         if (in_array(Role::ROLE_ID_SITE_ADMIN, $userRoles)) {
             return true;
         }
