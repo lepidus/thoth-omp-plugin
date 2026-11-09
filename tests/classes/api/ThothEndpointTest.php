@@ -19,6 +19,7 @@ namespace APP\plugins\generic\thoth\tests\classes\api;
 require_once(__DIR__ . '/../../../vendor/autoload.php');
 
 use APP\plugins\generic\thoth\classes\api\ThothEndpoint;
+use APP\plugins\generic\thoth\classes\api\ThothWriteAuthorization;
 use PKP\core\PKPBaseController;
 use PKP\core\PKPRequest;
 use PKP\handler\APIHandler;
@@ -119,7 +120,7 @@ class ThothEndpointTest extends PKPTestCase
         self::assertInstanceOf(SubmissionAccessPolicy::class, $policies[0]);
     }
 
-    public function testEveryRouteRequiresSubmissionAccessPolicy(): void
+    public function testReadRoutesRequireSubmissionAccessAndWriteRoutesRequirePublicationEditPermission(): void
     {
         $endpoint = $this->getMockBuilder(ThothEndpoint::class)
             ->disableOriginalConstructor()->onlyMethods([])->getMock();
@@ -138,10 +139,24 @@ class ThothEndpointTest extends PKPTestCase
             $handler
         );
 
-        self::assertArrayHasKey('thoth.featureVideo.form', $routes);
-        self::assertArrayHasKey('thoth.featureVideo.upload', $routes);
-        foreach ($routes as $name => $authorizer) {
-            self::assertSame($endpoint, $authorizer, "Route {$name} must apply the submission access policy.");
+        self::assertSame([
+            'thoth.register',
+            'thoth.workStatus',
+            'thoth.unlinkWork',
+            'thoth.synchronize',
+            'thoth.featureVideo.form',
+            'thoth.featureVideo.upload',
+        ], array_keys($routes));
+        foreach (['thoth.workStatus', 'thoth.featureVideo.form'] as $name) {
+            self::assertSame($endpoint, $routes[$name], "Route {$name} must apply the submission access policy.");
         }
+        foreach (['thoth.register', 'thoth.unlinkWork', 'thoth.featureVideo.upload'] as $name) {
+            self::assertEquals(
+                new ThothWriteAuthorization(false),
+                $routes[$name],
+                "Route {$name} must require the core permission to edit the publication."
+            );
+        }
+        self::assertEquals(new ThothWriteAuthorization(true), $routes['thoth.synchronize']);
     }
 }

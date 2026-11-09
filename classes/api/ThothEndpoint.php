@@ -61,7 +61,7 @@ class ThothEndpoint implements HasAuthorizationPolicy
                 Role::ROLE_ID_SITE_ADMIN,
                 Role::ROLE_ID_MANAGER,
             ],
-            $this
+            new ThothWriteAuthorization(false)
         );
 
         $apiHandler->addRoute(
@@ -89,7 +89,7 @@ class ThothEndpoint implements HasAuthorizationPolicy
                 Role::ROLE_ID_SUB_EDITOR,
                 Role::ROLE_ID_ASSISTANT,
             ],
-            $this
+            new ThothWriteAuthorization(false)
         );
 
         $apiHandler->addRoute(
@@ -103,7 +103,7 @@ class ThothEndpoint implements HasAuthorizationPolicy
                 Role::ROLE_ID_SUB_EDITOR,
                 Role::ROLE_ID_ASSISTANT,
             ],
-            $this
+            new ThothWriteAuthorization(true)
         );
 
         $apiHandler->addRoute(
@@ -131,7 +131,7 @@ class ThothEndpoint implements HasAuthorizationPolicy
                 Role::ROLE_ID_SUB_EDITOR,
                 Role::ROLE_ID_ASSISTANT,
             ],
-            $this
+            new ThothWriteAuthorization(false)
         );
 
         return false;
