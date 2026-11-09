@@ -68,19 +68,19 @@ class ThothSectionTemplateFilter
             $request,
             ROUTE_API,
             $request->getContext()->getData('urlPath'),
-            '_submissions/' . $submission->getId() . '/publications/__publicationId__/synchronize'
+            'submissions/' . $submission->getId() . '/publications/__publicationId__/synchronize'
         );
         $workStatusUrl = $request->getDispatcher()->url(
             $request,
             ROUTE_API,
             $request->getContext()->getData('urlPath'),
-            '_submissions/' . $submission->getId() . '/thothWorkStatus'
+            'submissions/' . $submission->getId() . '/thothWorkStatus'
         );
         $unlinkUrl = $request->getDispatcher()->url(
             $request,
             ROUTE_API,
             $request->getContext()->getData('urlPath'),
-            '_submissions/' . $submission->getId() . '/thothWork'
+            'submissions/' . $submission->getId() . '/thothWork'
         );
 
         $data = [

@@ -18,6 +18,8 @@ use APP\core\Application;
 use APP\facades\Repo;
 use APP\i18n\AppLocale;
 use PKP\db\DAORegistry;
+use PKP\security\authorization\AuthorizationPolicy;
+use PKP\security\authorization\StageRolePolicy;
 use PKP\security\Role;
 use ThothApi\Exception\QueryException;
 
@@ -32,15 +34,28 @@ require_once __DIR__ . '/../notification/ThothErrorFormatter.inc.php';
 
 class ThothEndpoint
 {
+    /** @var string[] Routes that act on one submission and need the core SubmissionAccessPolicy */
+    public const SUBMISSION_ACCESS_ROUTES = ['getWorkStatus', 'unlinkWork', 'synchronize', 'uploadFeatureVideo'];
+
+    /** @var string[] Routes that edit one publication and need the core PublicationWritePolicy */
+    public const PUBLICATION_WRITE_ROUTES = ['synchronize'];
+
     public function addEndpoints($hookName, $args)
     {
         $endpoints = & $args[0];
         $handler = $args[1];
 
-        if (!is_a($handler, 'APP\API\v1\_submissions\BackendSubmissionsHandler')) {
-            return false;
+        if (is_a($handler, 'APP\API\v1\_submissions\BackendSubmissionsHandler')) {
+            $this->addBackendEndpoints($endpoints);
+        } elseif (is_a($handler, 'PKP\API\v1\submissions\PKPSubmissionHandler')) {
+            $this->addSubmissionEndpoints($endpoints, $handler);
         }
 
+        return false;
+    }
+
+    private function addBackendEndpoints(&$endpoints)
+    {
         $rootPattern = '/{contextPath}/api/{version}/_submissions';
 
         $endpoints['PUT'][] = [
@@ -51,52 +66,54 @@ class ThothEndpoint
                 Role::ROLE_ID_MANAGER,
             ],
         ];
+    }
+
+    /**
+     * Routes on the submissions API, whose handler applies SubmissionAccessPolicy
+     * to the route names listed in requiresSubmissionAccess.
+     */
+    private function addSubmissionEndpoints(&$endpoints, $handler)
+    {
+        $rootPattern = $handler->getEndpointPattern();
+        $roles = [
+            Role::ROLE_ID_SITE_ADMIN,
+            Role::ROLE_ID_MANAGER,
+            Role::ROLE_ID_SUB_EDITOR,
+            Role::ROLE_ID_ASSISTANT,
+        ];
 
         $endpoints['GET'][] = [
             'pattern' => "{$rootPattern}/{submissionId:\d+}/thothWorkStatus",
             'handler' => [$this, 'getWorkStatus'],
-            'roles' => [
-                Role::ROLE_ID_SITE_ADMIN,
-                Role::ROLE_ID_MANAGER,
-                Role::ROLE_ID_SUB_EDITOR,
-                Role::ROLE_ID_ASSISTANT,
-            ],
+            'roles' => $roles,
         ];
 
         $endpoints['DELETE'][] = [
             'pattern' => "{$rootPattern}/{submissionId:\d+}/thothWork",
             'handler' => [$this, 'unlinkWork'],
-            'roles' => [
-                Role::ROLE_ID_SITE_ADMIN,
-                Role::ROLE_ID_MANAGER,
-                Role::ROLE_ID_SUB_EDITOR,
-                Role::ROLE_ID_ASSISTANT,
-            ],
+            'roles' => $roles,
         ];
 
         $endpoints['PUT'][] = [
             'pattern' => "{$rootPattern}/{submissionId:\d+}/publications/{publicationId:\d+}/synchronize",
             'handler' => [$this, 'synchronize'],
-            'roles' => [
-                Role::ROLE_ID_SITE_ADMIN,
-                Role::ROLE_ID_MANAGER,
-                Role::ROLE_ID_SUB_EDITOR,
-                Role::ROLE_ID_ASSISTANT,
-            ],
+            'roles' => $roles,
         ];
 
         $endpoints['POST'][] = [
             'pattern' => "{$rootPattern}/{submissionId:\d+}/featureVideo",
             'handler' => [$this, 'uploadFeatureVideo'],
-            'roles' => [
-                Role::ROLE_ID_SITE_ADMIN,
-                Role::ROLE_ID_MANAGER,
-                Role::ROLE_ID_SUB_EDITOR,
-                Role::ROLE_ID_ASSISTANT,
-            ],
+            'roles' => $roles,
         ];
 
-        return false;
+        $handler->requiresSubmissionAccess = array_values(array_unique(array_merge(
+            $handler->requiresSubmissionAccess,
+            self::SUBMISSION_ACCESS_ROUTES
+        )));
+        $handler->requiresPublicationWriteAccess = array_values(array_unique(array_merge(
+            $handler->requiresPublicationWriteAccess,
+            self::PUBLICATION_WRITE_ROUTES
+        )));
     }
 
     public function register($slimRequest, $response, $args)
@@ -125,6 +142,10 @@ class ThothEndpoint
 
         if (!$this->isSubmissionInContext($submission, $context)) {
             return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
+        }
+
+        if (!$this->canEditPublication($request, $submission)) {
+            return $response->withStatus(403)->withJsonError('api.submissions.403.userCantEdit');
         }
 
         if ($submission->getData('thothWorkId')) {
@@ -208,6 +229,9 @@ class ThothEndpoint
         }
         if (!$context || (int) $submission->getData('contextId') !== (int) $context->getId() || !$user) {
             return $response->withStatus(403)->withJsonError('api.submissions.403.contextRequired');
+        }
+        if (!$this->canEditPublication($request, $submission)) {
+            return $response->withStatus(403)->withJsonError('api.submissions.403.userCantEdit');
         }
 
         $params = (array) $slimRequest->getParsedBody();
@@ -294,6 +318,10 @@ class ThothEndpoint
             return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
         }
 
+        if (!$this->canEditPublication($request, $submission)) {
+            return $response->withStatus(403)->withJsonError('api.submissions.403.userCantEdit');
+        }
+
         $thothWorkId = $submission->getData('thothWorkId');
         if (!$thothWorkId) {
             return $response->withStatus(404)->withJsonError('plugins.generic.thoth.status.unregistered');
@@ -357,6 +385,42 @@ class ThothEndpoint
         }
 
         return $response->withJson(['status' => true], 200);
+    }
+
+    /**
+     * Same checks as the core PublicationWritePolicy without the publication lookup: a role
+     * assigned to the current stage of the submission (StageRolePolicy, which managers and site
+     * admins pass by their context role), then PublicationCanBeEditedPolicy: site admins, or users
+     * allowed by Repo::submission()->canEditPublication(), i.e. managers or users whose stage
+     * assignment can change metadata.
+     */
+    protected function canEditPublication($request, $submission)
+    {
+        $authorizedContext = (array) $request->getRouter()->getHandler()->getAuthorizedContext();
+        // The core stores the context objects as references: unset before replacing the submission
+        // so the authorized context of the handler is not changed.
+        unset($authorizedContext[Application::ASSOC_TYPE_SUBMISSION]);
+        $authorizedContext[Application::ASSOC_TYPE_SUBMISSION] = $submission;
+        $stageRolePolicy = new StageRolePolicy([
+            Role::ROLE_ID_MANAGER,
+            Role::ROLE_ID_SITE_ADMIN,
+            Role::ROLE_ID_SUB_EDITOR,
+            Role::ROLE_ID_ASSISTANT,
+            Role::ROLE_ID_AUTHOR,
+        ]);
+        $stageRolePolicy->setAuthorizedContext($authorizedContext);
+        if ($stageRolePolicy->effect() !== AuthorizationPolicy::AUTHORIZATION_PERMIT) {
+            return false;
+        }
+
+        $userRoles = (array) ($authorizedContext[Application::ASSOC_TYPE_USER_ROLES] ?? []);
+        if (in_array(Role::ROLE_ID_SITE_ADMIN, $userRoles)) {
+            return true;
+        }
+
+        $user = $request->getUser();
+
+        return $user && Repo::submission()->canEditPublication((int) $submission->getId(), (int) $user->getId());
     }
 
     protected function isSubmissionInContext($submission, $context)
