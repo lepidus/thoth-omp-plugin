@@ -57,6 +57,7 @@ class HookRegistrant
         Hook::add('Schema::get::eventLog', $thothSchema->addReasonToSchema(...));
         Hook::add('Schema::get::submission', $thothSchema->addWorkIdToSchema(...));
         Hook::add('Schema::get::publication', $thothSchema->addToPublicationSchema(...));
+        Hook::add('Publication::validate', $thothSchema->rejectApiWritesToPublicationProps(...));
         Hook::add('Schema::get::author', $thothSchema->addToAuthorSchema(...));
         Hook::add('Submission::getSubmissionsListProps', $thothSchema->addToSubmissionsListProps(...));
     }
