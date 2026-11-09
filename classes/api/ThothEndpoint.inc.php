@@ -22,6 +22,7 @@ import('plugins.generic.thoth.classes.exceptions.MetadataSynchronizationExceptio
 import('plugins.generic.thoth.classes.notification.ThothNotification');
 import('plugins.generic.thoth.classes.services.ThothMeCacheService');
 import('plugins.generic.thoth.classes.services.ThothWorkLinkService');
+import('lib.pkp.classes.security.authorization.StageRolePolicy');
 
 require_once __DIR__ . '/../notification/ThothErrorFormatter.inc.php';
 
@@ -375,13 +376,23 @@ class ThothEndpoint
     }
 
     /**
-     * Same permission the core checks before editing a publication (PublicationCanBeEditedPolicy):
-     * site admins, or users allowed by the submission service canEditPublication(), i.e. managers
-     * without assignments or users whose stage assignment can change metadata.
+     * Same checks as the core PublicationWritePolicy without the publication lookup: a role
+     * assigned to the current stage of the submission (StageRolePolicy, which managers pass by
+     * their context role), then PublicationCanBeEditedPolicy: site admins, or users allowed by the
+     * submission service canEditPublication(), i.e. managers without assignments or users whose
+     * stage assignment can change metadata.
      */
     protected function canEditPublication($request, $submission)
     {
-        $userRoles = (array) $request->getRouter()->getHandler()->getAuthorizedContextObject(ASSOC_TYPE_USER_ROLES);
+        $authorizedContext = (array) $request->getRouter()->getHandler()->getAuthorizedContext();
+        $authorizedContext[ASSOC_TYPE_SUBMISSION] = $submission;
+        $stageRolePolicy = new StageRolePolicy([ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT, ROLE_ID_AUTHOR]);
+        $stageRolePolicy->setAuthorizedContext($authorizedContext);
+        if ($stageRolePolicy->effect() !== AUTHORIZATION_PERMIT) {
+            return false;
+        }
+
+        $userRoles = isset($authorizedContext[ASSOC_TYPE_USER_ROLES]) ? (array) $authorizedContext[ASSOC_TYPE_USER_ROLES] : [];
         if (in_array(ROLE_ID_SITE_ADMIN, $userRoles)) {
             return true;
         }

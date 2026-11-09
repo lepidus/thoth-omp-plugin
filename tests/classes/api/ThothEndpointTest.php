@@ -101,12 +101,49 @@ class ThothEndpointTest extends PKPTestCase
         $this->assertContains($response->getStatusCode(), [400, 403, 404]);
     }
 
-    public function testWriteActionsAllowSiteAdministratorWithoutStageAssignment()
+    /**
+     * @dataProvider writeActions
+     */
+    public function testWriteActionsDenyAssignedUserOutsideTheCurrentStage($action)
+    {
+        $submissionService = $this->mockSubmissionService(true);
+        $submissionService->expects($this->never())->method('edit');
+
+        $response = $this->callWriteAction(
+            $action,
+            [ROLE_ID_ASSISTANT],
+            $submissionService,
+            null,
+            [WORKFLOW_STAGE_ID_EDITING => [ROLE_ID_ASSISTANT]]
+        );
+
+        $this->assertSame(403, $response->getStatusCode());
+        $this->assertSame('api.submissions.403.userCantEdit', json_decode((string) $response->getBody(), true)['error']);
+    }
+
+    public function testWriteActionsAllowManagerWithoutStageAssignment()
+    {
+        $response = $this->callWriteAction('unlinkWork', [ROLE_ID_MANAGER], $this->mockSubmissionService(true), null, []);
+
+        $this->assertSame(404, $response->getStatusCode());
+        $this->assertSame(
+            'plugins.generic.thoth.status.unregistered',
+            json_decode((string) $response->getBody(), true)['error']
+        );
+    }
+
+    public function testWriteActionsAllowSiteAdministratorManagingThePressWithoutStageAssignment()
     {
         $submissionService = $this->mockSubmissionService(false);
         $submissionService->expects($this->never())->method('canEditPublication');
 
-        $response = $this->callWriteAction('unlinkWork', [ROLE_ID_SITE_ADMIN], $submissionService, null);
+        $response = $this->callWriteAction(
+            'unlinkWork',
+            [ROLE_ID_SITE_ADMIN, ROLE_ID_MANAGER],
+            $submissionService,
+            null,
+            []
+        );
 
         $this->assertSame(404, $response->getStatusCode());
         $this->assertSame(
@@ -139,26 +176,36 @@ class ThothEndpointTest extends PKPTestCase
         return $submissionService;
     }
 
-    private function callWriteAction($action, array $userRoles, $submissionService, $thothWorkId)
+    private function callWriteAction($action, array $userRoles, $submissionService, $thothWorkId, $accessibleStages = null)
     {
         $submission = $this->getMockBuilder(Submission::class)
             ->setMethods(['getId', 'getData'])
             ->getMock();
         $submission->method('getId')->willReturn(self::SUBMISSION_ID);
         $submission->method('getData')->willReturnCallback(function ($key) use ($thothWorkId) {
-            return $key === 'contextId' ? self::CONTEXT_ID : ($key === 'thothWorkId' ? $thothWorkId : null);
+            $values = [
+                'contextId' => self::CONTEXT_ID,
+                'thothWorkId' => $thothWorkId,
+                'stageId' => WORKFLOW_STAGE_ID_PRODUCTION,
+            ];
+            return isset($values[$key]) ? $values[$key] : null;
         });
         $submissionService->method('get')->willReturn($submission);
         $handler = $this->getMockBuilder(APIHandler::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getAuthorizedContextObject'])
+            ->setMethods(['getAuthorizedContextObject', 'getAuthorizedContext'])
             ->getMock();
+        $authorizedContext = [
+            ASSOC_TYPE_USER_ROLES => $userRoles,
+            ASSOC_TYPE_SUBMISSION => $submission,
+            ASSOC_TYPE_ACCESSIBLE_WORKFLOW_STAGES => $accessibleStages === null
+                ? [WORKFLOW_STAGE_ID_PRODUCTION => $userRoles]
+                : $accessibleStages,
+        ];
+        $handler->method('getAuthorizedContext')->willReturn($authorizedContext);
         $handler->method('getAuthorizedContextObject')->willReturnCallback(
-            function ($assocType) use ($userRoles, $submission) {
-                if ($assocType === ASSOC_TYPE_USER_ROLES) {
-                    return $userRoles;
-                }
-                return $assocType === ASSOC_TYPE_SUBMISSION ? $submission : null;
+            function ($assocType) use ($authorizedContext) {
+                return isset($authorizedContext[$assocType]) ? $authorizedContext[$assocType] : null;
             }
         );
         $router = $this->getMockBuilder(APIRouter::class)->setMethods(['getHandler'])->getMock();
